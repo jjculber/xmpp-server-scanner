@@ -9,7 +9,7 @@
 define("JABBER_SERVER","server12.example.com");
 define("JABBER_USERNAME","a_user");
 define("JABBER_PASSWORD","the_password");
-define("JABBER_RESOURCE","servicebot2-nexus-test");
+define("JABBER_RESOURCE","servicebot-nexus");
 
 define("RUN_TIME",14400);	// set a maximum run time of 4 hours (40 minutes should be sufficient)
 define("CBK_FREQ",2);	// fire a callback event every second
@@ -28,18 +28,17 @@ define("QUERY_TIMEOUT",60);// seconds (some servers are very slow)
 define('RETRYS_IF_DISCARDED',3);
 
 // set your MySQL server hostname, username, ........ here
-define("MYSQL_SERVER","localhost");
-define("MYSQL_USERNAME","user");
-define("MYSQL_PASSWORD","sql_password");
-define("MYSQL_DB","server_list");
-define('MYSQL_TABLE','servers');
-
-// set your MySQL server hostname, username, ........ here
 // define("MYSQL_SERVER","localhost");
-// define("MYSQL_USERNAME","dbuser");
-// define("MYSQL_PASSWORD","dbpassword");
-// define("MYSQL_DB","xmpp_servers");
+// define("MYSQL_USERNAME","user");
+// define("MYSQL_PASSWORD","sql_password");
+// define("MYSQL_DB","server_list");
 // define('MYSQL_TABLE','servers');
 
+// set your MySQL server hostname, username, ........ here
+define("MYSQL_SERVER","localhost");
+define("MYSQL_USERNAME","dbuser");
+define("MYSQL_PASSWORD","dbpassword");
+define("MYSQL_DB","xmpp_servers");
+define('MYSQL_TABLE','servers');
 
 ?>
