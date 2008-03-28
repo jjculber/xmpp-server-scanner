@@ -1,15 +1,15 @@
 <?php
 // set your Jabber server hostname, username, and password here
-define("JABBER_SERVER","host.example.com");
-define("JABBER_USERNAME","xxx");
-define("JABBER_PASSWORD","passwd");
-define("JABBER_RESOURCE","servicebot2-nexus");
+// define("JABBER_SERVER","host.example.com");
+// define("JABBER_USERNAME","xxx");
+// define("JABBER_PASSWORD","passwd");
+// define("JABBER_RESOURCE","servicebot2-nexus");
 
 // set your Jabber server hostname, username, and password here
-// define("JABBER_SERVER","server12.example.com");
-// define("JABBER_USERNAME","a_user");
-// define("JABBER_PASSWORD","the_password");
-// define("JABBER_RESOURCE","servicebot2-nexus");
+define("JABBER_SERVER","server12.example.com");
+define("JABBER_USERNAME","a_user");
+define("JABBER_PASSWORD","the_password");
+define("JABBER_RESOURCE","servicebot2-nexus-test");
 
 define("RUN_TIME",14400);	// set a maximum run time of 4 hours (40 minutes should be sufficient)
 define("CBK_FREQ",2);	// fire a callback event every second
@@ -32,7 +32,7 @@ define("MYSQL_SERVER","localhost");
 define("MYSQL_USERNAME","user");
 define("MYSQL_PASSWORD","sql_password");
 define("MYSQL_DB","server_list");
-define('MYSQL_TABLE','servers2');
+define('MYSQL_TABLE','servers');
 
 // set your MySQL server hostname, username, ........ here
 // define("MYSQL_SERVER","localhost");

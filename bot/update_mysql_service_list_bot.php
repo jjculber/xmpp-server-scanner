@@ -72,6 +72,7 @@ function getServers($xml_file){
 	xml_set_element_handler($parser, "handleStartElement", False);
 	if (!xml_parse($parser,$xml_data,True)) die("Can't parse the server list");
 	xml_parser_free($parser);
+	
 	return array_unique($servers);
 }
 

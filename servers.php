@@ -142,7 +142,9 @@
 		<div id="container">
 			<div id="header">
 				<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
-				<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored</div></div>
+				<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored.</div>
+				<div class="note">Greyed icons mean that those services aren't accesible from external servers. Most times that indicates that they are only available for users of that server.</div>
+			</div>
 			<?php
 				
 				$query = "SELECT * FROM ".MYSQL_TABLE." ";
@@ -220,84 +222,138 @@
 										break;	
 									default:
 // 										echo "\t\t<td>".($row[$field]?"<img src=\"images/button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />":"<img src=\"images/button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />")."</td>\n";
-										if($row[$field]){
-											echo "\t\t<td class=\"feature yes ".$field."\">";
-// 											switch($OS){
-// 												case 'WINDOWS':
-// 													echo 'a';
-// 													break;
-// 												case 'LINUX':
-// 													echo '✔';
-// 													break;
-// 												case 'MACOSX':
-// 													echo 'a';
-// 													break;
-// 												default:
-// 													echo "<img src=\"images/button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />";
-// 													break;
-// 											}
-											switch($field){
-												case 'has_muc':
-													echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_irc':
-													echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_aim':
-													echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_gg':
-													echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_icq':
-													echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_msn':
-													echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_sms':
-													echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_yahoo':
-													echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_jud':
-													echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_newmail':
-													echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_rss':
-													echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-												case 'has_weather':
-													echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-// 												case 'has_msn':
-// 													echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-// 													break;
-												default:
-													echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-													break;
-											}
-											echo "</td>\n";
-										}else{
-											echo "\t\t<td class=\"feature no ".$field."\">";
-// 											switch($OS){
-// 												case 'WINDOWS':
-// 													echo 'r';
-// 													break;
-// 												case 'LINUX':
-// 													echo '✘';
-// 													break;
-// 												case 'MACOSX':
-// 													echo 'r';
-// 													break;
-// 												default:
-// 													echo "<img src=\"images/button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />";
-// 													break;
-// 											}
-											echo "</td>\n";
+										switch($row[$field]){
+											case 255:  // Available
+												echo "\t\t<td class=\"feature yes ".$field."\">";
+	// 											switch($OS){
+	// 												case 'WINDOWS':
+	// 													echo 'a';
+	// 													break;
+	// 												case 'LINUX':
+	// 													echo '✔';
+	// 													break;
+	// 												case 'MACOSX':
+	// 													echo 'a';
+	// 													break;
+	// 												default:
+	// 													echo "<img src=\"images/button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />";
+	// 													break;
+	// 											}
+												switch($field){
+													case 'has_muc':
+														echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_irc':
+														echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_aim':
+														echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_gg':
+														echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_icq':
+														echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_msn':
+														echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_sms':
+														echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_yahoo':
+														echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_jud':
+														echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_newmail':
+														echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_rss':
+														echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_weather':
+														echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+	// 												case 'has_msn':
+	// 													echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+	// 													break;
+													default:
+														echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+												}
+												echo "</td>\n";
+												break;
+											
+											case 1:
+												//1 Available but not accesible (i.e. error 404 due a bad DNS configuration)
+												echo "\t\t<td class=\"feature not-accesible ".$field."\">";
+												switch($field){
+													case 'has_muc':
+														echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_irc':
+														echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_aim':
+														echo "<img src=\"images/aim_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_gg':
+														echo "<img src=\"images/gadu_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_icq':
+														echo "<img src=\"images/icq_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_msn':
+														echo "<img src=\"images/msn_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_sms':
+														echo "<img src=\"images/sms-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_yahoo':
+														echo "<img src=\"images/yahoo_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_jud':
+														echo "<img src=\"images/directory-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_newmail':
+														echo "<img src=\"images/email-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_rss':
+														echo "<img src=\"images/feed-icon-16x16-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+													case 'has_weather':
+														echo "<img src=\"images/weather-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+	// 												case 'has_msn':
+	// 													echo "<img src=\"images/msn_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+	// 													break;
+													default:
+														echo "<img src=\"images/button_ok-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+														break;
+												}
+												echo "</td>\n";
+												break;
+												
+											case 0: //Uavailable
+											default:
+												echo "\t\t<td class=\"feature no ".$field."\">";
+	// 											switch($OS){
+	// 												case 'WINDOWS':
+	// 													echo 'r';
+	// 													break;
+	// 												case 'LINUX':
+	// 													echo '✘';
+	// 													break;
+	// 												case 'MACOSX':
+	// 													echo 'r';
+	// 													break;
+	// 												default:
+	// 													echo "<img src=\"images/button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />";
+	// 													break;
+	// 											}
+												echo "</td>\n";
 										}
 								}
 						}
