@@ -126,7 +126,7 @@
 			<div id="header">
 				<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
 				<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored.</div>
-				<div class="note">Greyed icons mean that those services aren't accesible from external servers. Most times that indicates that they are only available for users of that server.</div>
+				<div class="note">Greyed icons mean that those services aren't accessible from external servers. Most times that indicates that they are only available for users of that server.</div>
 			</div>
 			<?php
 				
