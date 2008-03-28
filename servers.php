@@ -219,7 +219,7 @@
 										echo "\t\t<td class=\"times_offline\">".htmlspecialchars($row[$field])."</td>\n";
 										break;	
 									default:
-// 										echo "\t\t<td>".($row[$field]?"<img src=\"button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />":"<img src=\"button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />")."</td>\n";
+// 										echo "\t\t<td>".($row[$field]?"<img src=\"images/button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />":"<img src=\"images/button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />")."</td>\n";
 										if($row[$field]){
 											echo "\t\t<td class=\"feature yes ".$field."\">";
 // 											switch($OS){
@@ -233,51 +233,51 @@
 // 													echo 'a';
 // 													break;
 // 												default:
-// 													echo "<img src=\"button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />";
+// 													echo "<img src=\"images/button_ok.png\" width=\"22\" height=\"22\" title=\"Yes\" alt=\"Yes\" />";
 // 													break;
 // 											}
 											switch($field){
 												case 'has_muc':
-													echo "<img src=\"irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_irc':
-													echo "<img src=\"irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_aim':
-													echo "<img src=\"aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_gg':
-													echo "<img src=\"gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_icq':
-													echo "<img src=\"icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_msn':
-													echo "<img src=\"msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_sms':
-													echo "<img src=\"sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_yahoo':
-													echo "<img src=\"yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_jud':
-													echo "<img src=\"directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_newmail':
-													echo "<img src=\"email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_rss':
-													echo "<img src=\"feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 												case 'has_weather':
-													echo "<img src=\"weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 // 												case 'has_msn':
-// 													echo "<img src=\"msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+// 													echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 // 													break;
 												default:
-													echo "<img src=\"button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+													echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
 													break;
 											}
 											echo "</td>\n";
@@ -294,7 +294,7 @@
 // 													echo 'r';
 // 													break;
 // 												default:
-// 													echo "<img src=\"button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />";
+// 													echo "<img src=\"images/button_cancel.png\" width=\"22\" height=\"22\" title=\"No\" alt=\"No\" />";
 // 													break;
 // 											}
 											echo "</td>\n";
