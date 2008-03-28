@@ -45,19 +45,10 @@ class update_mysql_service_list_bot extends service_query_bot {
 		
 		$this->jab = &$jab;
 		$this->servers = &$servers;
-// 		$this->servers = array("im.drazzib.com");
-// 		print_r($this->servers);
 	}
 	
 	function processServers() {
 		
-		
-// 		echo "\n\n\n------------------------PARENTS-------------\n\n\n";
-// 		print_r($this->parents);
-// 		echo "\n\n\n----------------------services---------------\n\n\n";
-// 		print_r($this->jab->services);
-// 		echo "\n\n\n------------------------servers_services-------------\n\n\n";
-// 		print_r($this->servers_services);
 		foreach($this->servers_services as $server => $services) {
 			
 			$has_muc = 0;
