@@ -14,7 +14,7 @@ define("JABBER_RESOURCE","servicebot2-nexus-test");
 define("RUN_TIME",14400);	// set a maximum run time of 4 hours (40 minutes should be sufficient)
 define("CBK_FREQ",2);	// fire a callback event every second
 
-// define('XML_SERVER_LIST','http://www.jabber.org/servers.xml');
+// define('XML_SERVER_LIST','http://www.jabber.org/basicservers.xml');
 define('XML_SERVER_LIST','servers.xml');
 // If a server has been offline more, we hide or mark it on the list
 define('TIMES_OFFLINE_ALLOWED',5);
