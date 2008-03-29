@@ -256,6 +256,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 						} //foreach identity
 					}else{
 						//There is no finfo about the service (maybe a 404 error while exploring) so we try to guess using the JID
+						// TODO: use regular expresions instead cases
 						preg_match('/^[^.]+/',$jid,$match);
 						switch($match[0]){
 							case 'conference':
@@ -270,6 +271,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								break;
 							case 'aim':
 							case 'aim-icq':
+							case 'aim-jab':
 								$has_aim = 1;
 								break;
 							case 'gg':
@@ -283,6 +285,8 @@ class update_mysql_service_list_bot extends service_query_bot {
 							case 'icqt':
 							case 'aim-icq':
 							case 'jit-icq':
+							case 'icq-jab':
+							case 'icq2':
 								$has_icq = 1;
 								break;
 							case 'msn':
