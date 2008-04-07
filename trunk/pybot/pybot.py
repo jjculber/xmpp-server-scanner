@@ -12,20 +12,20 @@
 #jabberresource="pybot"
 #jabberserver="jabberes.org"
 
-jabberuser="my_user"
-jabberpassword="my_user"
-jabberresource="pybot"
-jabberserver="xmpp.example.net"
+jabberuser     = "xxxxxxx"
+jabberpassword = "xxxxxxx"
+jabberresource = "pybot"
+jabberserver   = "xmpp.example.net"
 
-dbuser="user"
-dbpassword="my_user"
-dbhost="xmpp.example.net"
-dbdatabase=""
-dbtable=""
+dbuser         = "user"
+dbpassword     = "xxxxxxx"
+dbhost         = "xmpp.example.net"
+dbdatabase     = ""
+dbtable        = ""
 
-useurl=False
-servers_url="http://www.jabber.org/basicservers.xml"
-servers_file="servers.xml"
+useurl         = False
+servers_url    = "http://www.jabber.org/basicservers.xml"
+servers_file   = "servers.xml"
 
 
 #from xmpp import *
@@ -204,7 +204,7 @@ def addServiceUnavailable(jid, serviceSet):
 
 
 def disco(dispatcher, service, server):
-	isParent=False
+	isParent = False
 	#cl.Process(1)
 	try:
 		print 'DISCO' + service[u'jid'] + service[u'node']
@@ -222,16 +222,16 @@ def disco(dispatcher, service, server):
 	
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
-		isParent=False
+		isParent = False
 		addServiceAvailable(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
 			if (identity['category'] == u'server') | ((identity['category'] == u'hierarchy') & (identity['type'] == u'branch')):
-				isParent=True
+				isParent = True
 				print service[u'jid'] + ' is a parent'
 			
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
+		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
 		if u'node' in service.keys():
 			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
 		else:
@@ -240,14 +240,14 @@ def disco(dispatcher, service, server):
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
 		# Process items
-		service[u'items']=[]
+		service[u'items'] = []
 		for item in service[u'info'][0]:
 			if inSameDomain(service[u'jid'], item[u'jid']):
 				service[u'items'].append(disco(dispatcher, item, server))
 		
-		isParent=False # We already have the items
+		isParent = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
+		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
 	elif (len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0):
 		# We have to guess what feature is using the JID
 		addServiceUnavailable(service[u'jid'], server[u'unavailableServices'])
@@ -256,14 +256,14 @@ def disco(dispatcher, service, server):
 			# It's a server. It probably uses jabber:iq:browse
 			# Adapt the information
 			# Process items
-			service[u'items']=[]
+			service[u'items'] = []
 			for item in service[u'info'][0]:
 				if inSameDomain(service[u'jid'], item[u'jid']):
 					service[u'items'].append(disco(dispatcher, item, server))
 			
-			isParent=False # We already have the items
+			isParent = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
+			service[u'info'] = (({u'category': u'server', u'type': u'im'}),service[u'info'][1])
 		else:
 			try:
 				addServiceAvailable(service[u'info'][0], server[u'availableServices'])
@@ -284,32 +284,32 @@ def disco(dispatcher, service, server):
 		for item in list(service[u'items']):
 			if inSameDomain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
-					item=disco(dispatcher, item, server)
+					item = disco(dispatcher, item, server)
 				elif u'node' in service.keys():
 					if (service[u'jid'] == item[u'jid']) & (service[u'node'] != item[u'node']):
-						item=disco(dispatcher, item, server)
+						item = disco(dispatcher, item, server)
 			else:
 				service[u'items'].remove(item)
 		
 	return service
 
 def showNode(node, indent=0):
-	print node;
-	for n in range(0,indent+1): print ' ',
+	print node
+	for n in range(0, indent+1): print ' ',
 	print 'JID:     ' + node[u'jid']
-	try:
-		for n in range(0,indent+1): print ' ',
-		print 'node:     ' + node[u'node']
-	except:
-		pass
+	#try:
+	for n in range(0, indent+1): print ' ',
+	print 'node:     ' + node[u'node']
+	#except:
+		#pass
 	
 	
 	if u'info' in node.keys():
 		for identity in node[u'info'][0]:
-			for n in range(0,indent+1): print ' ',
+			for n in range(0, indent+1): print ' ',
 			print 'INFO: id: ' + str(identity)
 		for feature in node[u'info'][1]:
-			for n in range(0,indent+1): print ' ',
+			for n in range(0, indent+1): print ' ',
 			print 'INFO: ft: ' + str(feature)
 	
 	if u'items' in node.keys():
@@ -373,8 +373,8 @@ cl.Process(1)
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 #try:
-mijid='noalwin@jabberes.org'
-mijid='kaos@nexus.2mydns.net/nexus'
+mijid = 'user@jab.example.org'
+mijid = 'kaos@xmpp.example.net/pybot'
 #cl.send(Message(mijid,'\n\n\t\tStarting\n\n ','chat'))
 
 for server in servers:
