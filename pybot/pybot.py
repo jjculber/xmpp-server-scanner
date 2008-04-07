@@ -43,6 +43,7 @@ urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(
 
 
 def inSameDomain(parent, child):
+	'''Check if parent and child are in the same domain'''
 	
 	if child.count('@') > 0:
 		return False
@@ -62,140 +63,147 @@ def inSameDomain(parent, child):
 		return parentMatch.group('fulldomain') == childMatch.group('fulldomain')
 	
 
-# Process Identities and update the set of server components
-def addFeature(identity, components):
-	if identity[u'category'] == u'conference':
-		if identity[u'type'] == u'text':
-			#if u'http://jabber.org/protocol/muc' in service[u'info'][1]:
-				components.add('muc')
-		elif identity[u'type'] == u'irc':
-			components.add('irc')
-		
-	if identity[u'category'] == u'gateway':
-		if identity[u'type'] == u'aim':
-			components.add('aim')
-		elif identity[u'type'] == u'gadu-gadu':
-			components.add('gadu-gadu')
-		elif identity[u'type'] == u'http-ws':
-			components.add('http-ws')
-		elif identity[u'type'] == u'icq':
-			components.add('icq')
-		elif identity[u'type'] == u'msn':
-			components.add('msn')
-		elif identity[u'type'] == u'qq':
-			components.add('qq')
-		elif identity[u'type'] == u'sms':
-			components.add('sms')
-		elif identity[u'type'] == u'smtp':
-			components.add('smtp')
-		elif identity[u'type'] == u'tlen':
-			components.add('tlen')
-		elif identity[u'type'] == u'yahoo':
-			components.add('yahoo')
-		
-	if identity[u'category'] == u'directory':
-		if identity[u'type'] == u'user':
-			components.add('jud')
-		
-	if identity[u'category'] == u'pubsub':
-		if identity[u'type'] == u'service': # XEP
-			components.add('pubsub')
-		elif identity[u'type'] == u'generic': # ejabberd 1.1.3
-			components.add('pubsub')
-		elif identity[u'type'] == u'pep':
-			components.add('pep')
-		
-	if identity[u'category'] == u'component':
-		if identity[u'type'] == u'presence':
-			components.add('presence')
-		
-	if identity[u'category'] == u'headline':
-		if identity[u'type'] == u'newmail':
-			components.add('newmail')
-		elif identity[u'type'] == u'rss':
-			components.add('rss')
-		elif identity[u'type'] == u'weather':
-			components.add('weather')
-		
-	if identity[u'category'] == u'proxy':
-		if identity[u'type'] == u'bytestreams':
-			components.add('proxy')
-		
-	# Non standard components
+
+def addServiceAvailable(identities, serviceSet):
+	'''Process identity and update the set of server serviceSet'''
 	
-	if identity[u'category'] == u'agent': 
-		if identity[u'type'] == u'weather':
-			components.add('weather')
+	for identity in identities:
+		if identity[u'category'] == u'conference':
+			if identity[u'type'] == u'text':
+				#if u'http://jabber.org/protocol/muc' in service[u'info'][1]:
+					serviceSet.add('muc')
+			elif identity[u'type'] == u'irc':
+				serviceSet.add('irc')
+			
+		if identity[u'category'] == u'gateway':
+			if identity[u'type'] == u'aim':
+				serviceSet.add('aim')
+			elif identity[u'type'] == u'gadu-gadu':
+				serviceSet.add('gadu-gadu')
+			elif identity[u'type'] == u'http-ws':
+				serviceSet.add('http-ws')
+			elif identity[u'type'] == u'icq':
+				serviceSet.add('icq')
+			elif identity[u'type'] == u'msn':
+				serviceSet.add('msn')
+			elif identity[u'type'] == u'qq':
+				serviceSet.add('qq')
+			elif identity[u'type'] == u'sms':
+				serviceSet.add('sms')
+			elif identity[u'type'] == u'smtp':
+				serviceSet.add('smtp')
+			elif identity[u'type'] == u'tlen':
+				serviceSet.add('tlen')
+			elif identity[u'type'] == u'yahoo':
+				serviceSet.add('yahoo')
+			
+		if identity[u'category'] == u'directory':
+			if identity[u'type'] == u'user':
+				serviceSet.add('jud')
+			
+		if identity[u'category'] == u'pubsub':
+			if identity[u'type'] == u'service': # XEP
+				serviceSet.add('pubsub')
+			elif identity[u'type'] == u'generic': # ejabberd 1.1.3
+				serviceSet.add('pubsub')
+			elif identity[u'type'] == u'pep':
+				serviceSet.add('pep')
+			
+		if identity[u'category'] == u'component':
+			if identity[u'type'] == u'presence':
+				serviceSet.add('presence')
+			
+		if identity[u'category'] == u'headline':
+			if identity[u'type'] == u'newmail':
+				serviceSet.add('newmail')
+			elif identity[u'type'] == u'rss':
+				serviceSet.add('rss')
+			elif identity[u'type'] == u'weather':
+				serviceSet.add('weather')
+			
+		if identity[u'category'] == u'proxy':
+			if identity[u'type'] == u'bytestreams':
+				serviceSet.add('proxy')
+			
+		# Non standard serviceSet
 		
-	if identity[u'category'] == u'x-service':
-		if identity[u'type'] == u'x-rss': # PyRSS
-			components.add('rss')
+		if identity[u'category'] == u'agent': 
+			if identity[u'type'] == u'weather':
+				serviceSet.add('weather')
+			
+		if identity[u'category'] == u'x-service':
+			if identity[u'type'] == u'x-rss': # PyRSS
+				serviceSet.add('rss')
+			
 		
 	
-# Guess the feature using the JIDs and update the set of server components
-def guessFeature(jid, components):
+
+def addServiceUnavailable(jid, serviceSet):
+	'''Guess the service using the JIDs and update the set of server serviceSet'''
+	
+	print 'Guessing '+jid
 	
 	# Conference
 	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
-		components.add('muc')
+		serviceSet.add('muc')
 	elif jid.startswith(u'irc.'):
-		components.add('irc')
+		serviceSet.add('irc')
 	
 	# Transports
 	elif jid.startswith((u'aim.', u'aim-jab.')):
-		components.add('aim')
+		serviceSet.add('aim')
 	elif jid.startswith(u'aim-icq.'):
-		components.add('aim')
-		components.add('icq')
+		serviceSet.add('aim')
+		serviceSet.add('icq')
 	elif jid.startswith((u'gg.', u'gadugadu.', u'gadu-gadu.')):
-		components.add('gg')
+		serviceSet.add('gg')
 	elif jid.startswith(u'http-ws.'):
-		components.add('http-ws')
+		serviceSet.add('http-ws')
 	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
-		components.add('icq')
+		serviceSet.add('icq')
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
-		components.add('msn')
+		serviceSet.add('msn')
 	elif jid.startswith(u'qq.'):
-		components.add('qq')
+		serviceSet.add('qq')
 	elif jid.startswith(u'sms.'):
-		components.add('sms')
+		serviceSet.add('sms')
 	elif jid.startswith(u'smtp.'):
-		components.add('smtp')
+		serviceSet.add('smtp')
 	elif jid.startswith(u'tlen.'):
-		components.add('tlen')
+		serviceSet.add('tlen')
 	elif jid.startswith(u'yahoo.'):
-		components.add('yahoo')
+		serviceSet.add('yahoo')
 	
 	# Directories
 	elif jid.startswith((u'jud.', u'vjud.', u'search.', u'users.')):
-		components.add('jud')
+		serviceSet.add('jud')
 	
 	# PubSub
 	elif jid.startswith(u'pubsub.'):
-		components.add('pubsub')
+		serviceSet.add('pubsub')
 	elif jid.startswith(u'pep.'):
-		components.add('pep')
+		serviceSet.add('pep')
 	
 	# Presence
 	elif jid.startswith((u'presence.', u'webpresence.')):
-		components.add('presence')
+		serviceSet.add('presence')
 	
 	# Headline
 	elif jid.startswith((u'newmail.', u'mail.', u'jmc.')):
-		components.add('newmail')
+		serviceSet.add('newmail')
 	elif jid.startswith(u'rss.'):
-		components.add('rss')
+		serviceSet.add('rss')
 	elif jid.startswith(u'weather.'):
-		components.add('weather')
+		serviceSet.add('weather')
 	
 	# Proxy
 	elif jid.startswith((u'proxy.', u'proxy65')):
-		components.add('proxy')
+		serviceSet.add('proxy')
 	
 	
 
 
-def disco(service, server):
+def disco(dispatcher, service, server):
 	isParent=False
 	#cl.Process(1)
 	try:
@@ -205,9 +213,9 @@ def disco(service, server):
 	
 	#Process Info
 	try:
-		service[u'info'] = features.discoverInfo(cl.Dispatcher, service[u'jid'], service[u'node'])
+		service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
 	except KeyError:
-		service[u'info'] = features.discoverInfo(cl.Dispatcher, service[u'jid'])
+		service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
 	
 	
 	print service
@@ -215,10 +223,8 @@ def disco(service, server):
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
 		isParent=False
+		addServiceAvailable(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
-			print "ADD "+service[u'jid']+" to "+server[u'jid']+" features"
-			addFeature(identity, server[u'features'])
-			
 			if (identity['category'] == u'server') | ((identity['category'] == u'hierarchy') & (identity['type'] == u'branch')):
 				isParent=True
 				print service[u'jid'] + ' is a parent'
@@ -227,9 +233,9 @@ def disco(service, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
 		if u'node' in service.keys():
-			service[u'items'] = features.discoverItems(cl.Dispatcher, service[u'jid'], service[u'node'])
+			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
 		else:
-			service[u'items'] = features.discoverItems(cl.Dispatcher, service[u'jid'])
+			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
 			
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
@@ -237,34 +243,32 @@ def disco(service, server):
 		service[u'items']=[]
 		for item in service[u'info'][0]:
 			if inSameDomain(service[u'jid'], item[u'jid']):
-				service[u'items'].append(disco(item, server))
+				service[u'items'].append(disco(dispatcher, item, server))
 		
 		isParent=False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
 	elif (len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0):
 		# We have to guess what feature is using the JID
-		guessFeature(service[u'jid'], server[u'features'])
+		addServiceUnavailable(service[u'jid'], server[u'unavailableServices'])
 	else:
-		if u'features' in service.keys():
+		if u'availableServices' in service.keys():
 			# It's a server. It probably uses jabber:iq:browse
 			# Adapt the information
 			# Process items
 			service[u'items']=[]
 			for item in service[u'info'][0]:
 				if inSameDomain(service[u'jid'], item[u'jid']):
-					service[u'items'].append(disco(item, server))
+					service[u'items'].append(disco(dispatcher, item, server))
 			
 			isParent=False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
 			service[u'info']=(({u'category': u'server', u'type': u'im'}),service[u'info'][1])
 		else:
 			try:
-				for identity in service[u'info'][0]:
-					print "ADD "+service[u'jid']+" to "+server[u'jid']+" features"
-					addFeature(identity, server[u'features'])
+				addServiceAvailable(service[u'info'][0], server[u'availableServices'])
 			except:
-				guessFeature(service[u'jid'], server[u'features'])
+				addServiceUnavailable(service[u'jid'], server[u'unavailableServices'])
 		
 	
 	
@@ -272,18 +276,18 @@ def disco(service, server):
 	# Process Items
 	if isParent:
 		if u'node' in service.keys():
-			service[u'items'] = features.discoverItems(cl.Dispatcher, service[u'jid'], service[u'node'])
+			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
 		else:
-			service[u'items'] = features.discoverItems(cl.Dispatcher, service[u'jid'])
+			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
 		
 		#print service
 		for item in list(service[u'items']):
 			if inSameDomain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
-					item=disco(item, server)
+					item=disco(dispatcher, item, server)
 				elif u'node' in service.keys():
 					if (service[u'jid'] == item[u'jid']) & (service[u'node'] != item[u'node']):
-						item=disco(item, server)
+						item=disco(dispatcher, item, server)
 			else:
 				service[u'items'].remove(item)
 		
@@ -338,7 +342,8 @@ servers = []
 
 for item in items:
 	if {u'jid': item.getAttr("jid")} not in servers:
-		servers.append({u'jid': item.getAttr("jid"), u'features': Set()})
+		servers.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
+	
 
 
 print servers
@@ -365,7 +370,7 @@ cl.Process(1)
 #servers=[{u'jid': u'jabber.org.ar'}]
 #servers=[{u'jid': u'startcom.org'}]
 #servers=[{u'jid': u'jabber.com.ar'}]
-#servers=[{u'jid': u'jabberes.org', u'features': Set()}, {u'jid': u'jab.undernet.cz', u'features': Set()}, {u'jid': u'12jabber.com', u'features': Set()}]
+#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 #try:
 mijid='noalwin@jabberes.org'
@@ -379,7 +384,7 @@ for server in servers:
 	#print "\ndisco: "+server[u'jid']+"\n"
 	#cl.Process(1)
 	#try:
-	disco(server, server)
+	disco(cl.Dispatcher, server, server)
 	#except:
 		#print '\n\n>>>>>>>>>>>>>>>>>>>>>>>\n'
 		#print '\n\nFALLO en el disco de '+server[u'jid']+' \n'
@@ -418,7 +423,11 @@ print "\n\n\n"
 for server in servers:
 	print
 	print server[u'jid']
-	print server[u'features']
+	print "Available:",
+	for service in server[u'availableServices']: print " "+service,
+	print "\nUnavailable:",
+	for service in server[u'unavailableServices']: print " "+service
+	print ''
 	
 
 
