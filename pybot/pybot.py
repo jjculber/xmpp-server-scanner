@@ -6,22 +6,29 @@
 # 
 # TODO: Si falla un query, reintentar?
 
+# Multithread
+# Testing
+# Make the code more prettier, pylint
+# Check for SQL injections
+
 
 #jabberuser="my_user"
 #jabberpassword="password"
 #jabberresource="pybot"
 #jabberserver="jabberes.org"
 
+# Jabber account
 jabberuser     = "xxxxxxx"
 jabberpassword = "xxxxxxx"
 jabberresource = "pybot"
 jabberserver   = "xmpp.example.net"
 
+# Database
 dbuser         = "user"
-dbpassword     = "xxxxxxx"
-dbhost         = "xmpp.example.net"
-dbdatabase     = ""
-dbtable        = ""
+dbpassword     = "sql_password"
+dbhost         = "localhost"
+dbdatabase     = "server_list"
+dbtable        = "pyservers"
 
 useurl         = False
 servers_url    = "http://www.jabber.org/basicservers.xml"
@@ -35,6 +42,7 @@ import MySQLdb
 import urllib
 import re
 from sets import Set
+import pickle
 
 
 urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(?P<fulldomain>(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$))')
@@ -429,6 +437,84 @@ for server in servers:
 	for service in server[u'unavailableServices']: print " "+service
 	print ''
 	
+#f = open('servers.dump', 'wb')
+#pickle.dump(servers, f)
 
+#f = open('servers.dump', 'rb')
+#servers = pickle.load(f)
 
+db = MySQLdb.Connection(user = dbuser, passwd = dbpassword, host = dbhost, db = dbdatabase)
+
+f.close()
+
+# feature: database field
+dbfields = {
+	u'muc': 'has_muc',
+	u'irc': 'has_irc',
+	u'aim': 'has_aim',
+	u'gg': 'has_gg',
+	u'http-ws': 'has_httpws',
+	u'icq': 'has_icq',
+	u'msn': 'has_msn',
+	u'qq': 'has_qq',
+	u'sms': 'has_sms',
+	u'smtp': 'has_smtp',
+	u'tlen': 'has_tlen',
+	u'yahoo': 'has_yahoo',
+	u'jud': 'has_jud',
+	u'pubsub': u'has_pubsub',
+	u'pep': 'has_pep',
+	u'presence': 'has_presence',
+	u'newmail': 'has_newmail',
+	u'rss': 'has_rss',
+	u'weather': 'has_weather',
+	u'proxy': u'has_proxy'
+}
+
+# u'muc', u'irc', u'aim', u'gg', u'http-ws', u'icq', u'msn', u'qq', u'sms', u'smtp', u'tlen', u'yahoo', u'jud', u'pubsub', u'pep', u'presence', u'newmail', u'rss', u'weather', u'proxy'
+
+for server in servers:
+	if server[u'info'] != ([], []):
+		
+		query = "`name` = '"+server[u'jid']+"', "
+		
+		for service in dbfields.keys():
+			if service in server[u'availableServices']:
+				query += "`"+dbfields[service]+"` = 255, "
+			elif service in server[u'unavailableServices']:
+				query += "`"+dbfields[service]+"` = 1, "
+			else:
+				query += "`"+dbfields[service]+"` = 0, "
+		
+		query += "`times_offline` = 0"
+			
+		query = "INSERT "+dbtable+" SET "+query+" ON DUPLICATE KEY UPDATE "+query
+		
+	else:
+		
+		query = "`name` = '"+server[u'jid']+"', "
+		for service in dbfields.keys():
+			query += "`"+dbfields[service]+"` = 0, "
+		query += "`times_offline` = `times_offline` + 1"
+		
+		query = "INSERT "+dbtable+" SET "+query+" ON DUPLICATE KEY UPDATE "+query
+	
+	print query
+	db.query(query)
+
+# Clean the table
+c = db.cursor(MySQLdb.cursors.DictCursor)
+c.execute("SELECT name FROM "+dbtable)
+resulset = c.nextset()
+while resulset != None:
+	exists = False
+	for server in servers:
+		if resulset[u'name'] == server['jid']:
+			exists = True
+			break
+		
+	if not exists:
+		db.execute("DELETE FROM "+dbtable+" WHERE name = '"+resulset[u'name']+"'")
+
+c.close()
 
