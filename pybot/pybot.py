@@ -12,6 +12,7 @@
 # Check for SQL injections
 
 
+
 #jabberuser="my_user"
 #jabberpassword="password"
 #jabberresource="pybot"
@@ -240,10 +241,7 @@ def disco(dispatcher, service, server):
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
-		if u'node' in service.keys():
-			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
-		else:
-			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
+		isParent = True
 			
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
@@ -378,7 +376,7 @@ cl.Process(1)
 #servers=[{u'jid': u'jabber.org.ar'}]
 #servers=[{u'jid': u'startcom.org'}]
 #servers=[{u'jid': u'jabber.com.ar'}]
-#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}]
+#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 #try:
 mijid = 'user@jab.example.org'
@@ -445,7 +443,7 @@ for server in servers:
 
 db = MySQLdb.Connection(user = dbuser, passwd = dbpassword, host = dbhost, db = dbdatabase)
 
-f.close()
+#f.close()
 
 # feature: database field
 dbfields = {
