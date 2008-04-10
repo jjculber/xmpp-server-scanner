@@ -37,13 +37,13 @@ servers_file   = "servers.xml"
 
 
 #from xmpp import *
-from xmpp import Client, features, simplexml
-from xmpp.protocol import Message
-import MySQLdb
 import urllib
 import re
 from sets import Set
 import pickle
+import MySQLdb
+from xmpp import Client, features, simplexml
+from xmpp.protocol import Message
 
 
 urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(?P<fulldomain>(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$))')
@@ -51,7 +51,7 @@ urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(
 #re.search('/(([^.]+\.)?(?=[^.]+\.[^.]+)((([^.]+)\.)([^.]+)$))/')
 
 
-def inSameDomain(parent, child):
+def in_same_domain(parent, child):
 	'''Check if parent and child are in the same domain'''
 	
 	if child.count('@') > 0:
@@ -66,14 +66,14 @@ def inSameDomain(parent, child):
 		return True
 	elif childMatch.group('domain') in ('com', 'net', 'org', 'co', 'gov', 'edu'):
 		# It's a country code second level domain, until the third level
-		return parentMatch.group('fullsubdomain') == childMatch.group('fullsubdomain')
+		return (parentMatch.group('fullsubdomain') == childMatch.group('fullsubdomain'))
 	else:
 		# It's a usual domain name, check until the second level
-		return parentMatch.group('fulldomain') == childMatch.group('fulldomain')
+		return (parentMatch.group('fulldomain') == childMatch.group('fulldomain'))
 	
 
 
-def addServiceAvailable(identities, serviceSet):
+def add_service_available(identities, serviceSet):
 	'''Process identity and update the set of server serviceSet'''
 	
 	for identity in identities:
@@ -147,7 +147,7 @@ def addServiceAvailable(identities, serviceSet):
 		
 	
 
-def addServiceUnavailable(jid, serviceSet):
+def add_service_unavailable(jid, serviceSet):
 	'''Guess the service using the JIDs and update the set of server serviceSet'''
 	
 	print 'Guessing '+jid
@@ -232,7 +232,7 @@ def disco(dispatcher, service, server):
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
 		isParent = False
-		addServiceAvailable(service[u'info'][0], server[u'availableServices'])
+		add_service_available(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
 			if (identity['category'] == u'server') | ((identity['category'] == u'hierarchy') & (identity['type'] == u'branch')):
 				isParent = True
@@ -248,7 +248,7 @@ def disco(dispatcher, service, server):
 		# Process items
 		service[u'items'] = []
 		for item in service[u'info'][0]:
-			if inSameDomain(service[u'jid'], item[u'jid']):
+			if in_same_domain(service[u'jid'], item[u'jid']):
 				service[u'items'].append(disco(dispatcher, item, server))
 		
 		isParent = False # We already have the items
@@ -256,7 +256,7 @@ def disco(dispatcher, service, server):
 		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
 	elif (len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0):
 		# We have to guess what feature is using the JID
-		addServiceUnavailable(service[u'jid'], server[u'unavailableServices'])
+		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 	else:
 		if u'availableServices' in service.keys():
 			# It's a server. It probably uses jabber:iq:browse
@@ -264,7 +264,7 @@ def disco(dispatcher, service, server):
 			# Process items
 			service[u'items'] = []
 			for item in service[u'info'][0]:
-				if inSameDomain(service[u'jid'], item[u'jid']):
+				if in_same_domain(service[u'jid'], item[u'jid']):
 					service[u'items'].append(disco(dispatcher, item, server))
 			
 			isParent = False # We already have the items
@@ -272,9 +272,9 @@ def disco(dispatcher, service, server):
 			service[u'info'] = (({u'category': u'server', u'type': u'im'}),service[u'info'][1])
 		else:
 			try:
-				addServiceAvailable(service[u'info'][0], server[u'availableServices'])
+				add_service_available(service[u'info'][0], server[u'availableServices'])
 			except:
-				addServiceUnavailable(service[u'jid'], server[u'unavailableServices'])
+				add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 		
 	
 	
@@ -288,7 +288,7 @@ def disco(dispatcher, service, server):
 		
 		#print service
 		for item in list(service[u'items']):
-			if inSameDomain(service[u'jid'], item[u'jid']):
+			if in_same_domain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
 					item = disco(dispatcher, item, server)
 				elif u'node' in service.keys():
@@ -504,7 +504,7 @@ for server in servers:
 c = db.cursor(MySQLdb.cursors.DictCursor)
 c.execute("SELECT name FROM "+dbtable)
 resulset = c.nextset()
-while resulset != None:
+while resulset is not None:
 	exists = False
 	for server in servers:
 		if resulset[u'name'] == server['jid']:
