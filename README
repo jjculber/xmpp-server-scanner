@@ -1,0 +1,122 @@
+
+Author/Autor: Cesar Alcalde
+e-mail: lambda512@gmail.com
+JabberID: lambda512@jabberes.org
+
+
+
+
+I started this project because it seemed neccesary to update the old servers and
+services list on the jabber.org website and I wanted to write some code related 
+with Jabber/XMPP. It isn't a serious project, but an project to experiment and 
+learn. But it works, (al least it seems to work ;) ) and some people like it.
+
+The information gathering is done with a bot that can be executed via cron.
+This bot explores the servers and saves the information on a database (MySQL)
+
+
+PHP Bot
+
+This bot is based on Jabberclass 0.8, this version was done thinking on php4 but
+it should work on php5 woth some compatibility options activated.
+
+The library original didn't support Service Discovery, so I had to write it. I
+also wrote code to detect when a server or a service isn't accesible ant to
+paralellize querys.
+
+Unafortunately, the code is complex and caotic. So I thought on do a rewrite
+using Python
+
+
+Python Bot
+
+This bot is based on the xmpppy library. I had done a little modification to
+avoid an exception while exploring old servers.
+
+The bot make the queries one by one, so it can take a lot of time, about 80
+minutes exploring about 250 servers. This is due some servers don't exists
+anymore and some services doesn't reply to the queries, so the script has to
+wait to the timeouts.
+
+It shouldn't be a problem, after all the script is designed to run on
+background, but paralelizing the queries can reduce the time to 20 minutes or
+even less.
+
+
+About the server list
+
+The original http://www.jabber.org/servers.xml file it's included. This file
+has many errors like servers that are no more working, or duplicated entries.
+That file has now been replaced by http://www.jabber.org/basicservers.xml but
+this new list have very few servers, so I use the old list by default.
+
+
+
+
+
+
+
+Empece este proyecto debido a que parecia necesario actualizar la vieja lista de 
+servidores y servicios de jabber.org y queria programar algo relacionado con
+Jabber/XMPP. No es un proyecto serio, sino que simplemente es un proyecto para
+experimentar y aprender. Pero funciona, (o al menos eso parece ;) ) y a algunas
+personas les ha gustado.
+
+El proceso de obtener la informacion de los servidores se realiza a través de
+un bot que puede ser ejecutado cada dia usando cron. Este bot explora los
+servidores y guarda la informacion en una base de datos (MySQL) para poderla
+consultar desde la página web.
+
+
+PHP Bot
+
+Este bot esta basado en Jabberclass 0.8, esta versión se hizo pensando en php4
+aunque funciona en php5 si se activan algunas opciones de compatibilidad.
+
+La biblioteca original no soportaba service discovery asi que tuve que
+implementarlo, con mas o menos exito. Tambien hay codigo para controlar cuando
+un servidor o un componente no esta accesible y para paralelizar las consultas.
+
+Lamentablemente, el código es complejo y algo caotico. Por esta razón, (y
+porque queria aprender python), me plantee reescribirlo en Python.
+
+
+Python Bot
+
+Este bot esta basado en la biblioteca xmpppy. He realizado una pequeña
+modificación para evitar una excepción al trabajar con algunos servidores
+antiguos.
+
+El bot realiza las consultas de una en una, por ello tarda bastante tiempo
+(unos 80 minutos) en explorar los servidores (unos 250) Muchos servidores ya
+no existen, o tienen componentes configurados para no responder a las consultas
+lo cual implica que el script debe esperar hasta que se produzca un timeout.
+
+Esto no deberia ser un problema, ya que el script esta pensado para ejecutarse
+en segundo plano. No obstante, haciendo las consultas en paralelo, se puede
+reducir el tiempo a la cuarta parte, o incluso menos.
+
+
+Sobre la lista de servidores
+
+Se incluye el archivo servers.xml originalmente accesible desde 
+http://www.jabber.org/servers.xml El fichero es el original, tal como estaba
+en la web. Esto significa que tiene muchos errores, como servidores
+inexistentes, o entradas duplicadas. El archivo original ha sido sustituido
+por http://www.jabber.org/basicservers.xml Al tiempo de escribir esto, la
+nueva lista tiene un numero muy escaso de servidores y, por tanto, no la uso
+como opcion por defecto.
+
+
+
+
+
+Jabberclass
+http://code.blitzaffe.com/pages/phpclasses/files/php_jabber_client_52-11
+http://code.blitzaffe.com/data/files/jabberclass-0.8.tar.gz
+
+
+xmpppy
+http://xmpppy.sourceforge.net
+
+
