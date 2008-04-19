@@ -35,10 +35,16 @@ useurl         = False
 servers_url    = "http://www.jabber.org/basicservers.xml"
 servers_file   = "servers.xml"
 
+threads        = 8
+seconds        = 10
+
 
 #from xmpp import *
 import urllib
 import re
+import sys
+from threading import Thread
+from Queue import Queue
 from sets import Set
 import pickle
 import MySQLdb
@@ -46,7 +52,14 @@ from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
 
 
-urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(?P<fulldomain>(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$))')
+urlRegExp = re.compile(
+	r'(?P<fullsubdomain>' +
+		r'(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?' +
+		r'(?P<fulldomain>'+
+			r'(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$' +
+	   r')' +
+	r')'
+	)
 #, 'subdomain.domain.tld').groups() 
 #re.search('/(([^.]+\.)?(?=[^.]+\.[^.]+)((([^.]+)\.)([^.]+)$))/')
 
@@ -150,7 +163,7 @@ def add_service_available(identities, serviceSet):
 def add_service_unavailable(jid, serviceSet):
 	'''Guess the service using the JIDs and update the set of server serviceSet'''
 	
-	print 'Guessing '+jid
+	#print 'Guessing '+jid
 	
 	# Conference
 	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
@@ -215,10 +228,10 @@ def add_service_unavailable(jid, serviceSet):
 def disco(dispatcher, service, server):
 	isParent = False
 	#cl.Process(1)
-	try:
-		print 'DISCO' + service[u'jid'] + service[u'node']
-	except KeyError:
-		print 'DISCO' + service[u'jid']
+	#try:
+		#print 'DISCO' + service[u'jid'] + service[u'node']
+	#except KeyError:
+		#print 'DISCO' + service[u'jid']
 	
 	#Process Info
 	try:
@@ -227,7 +240,7 @@ def disco(dispatcher, service, server):
 		service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
 	
 	
-	print service
+	#print service
 	
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
@@ -275,9 +288,6 @@ def disco(dispatcher, service, server):
 				add_service_available(service[u'info'][0], server[u'availableServices'])
 			except:
 				add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
-		
-	
-	
 	
 	# Process Items
 	if isParent:
@@ -298,6 +308,46 @@ def disco(dispatcher, service, server):
 				service[u'items'].remove(item)
 		
 	return service
+
+def disco_server(servers, num):
+	
+	# Connect to server
+	
+	cl=Client(jabberserver, debug=['socket'])
+	if not cl.connect(secure=0):
+		raise IOError('Can not connect to server.')
+	
+	if not cl.auth(jabberuser, jabberpassword, jabberresource+'-'+str(num)):
+		raise IOError('Can not auth with server.')
+	
+	cl.sendInitPresence()
+	
+	cl.Process(1)
+	
+	while True:
+		try:
+			cl.Process(seconds)
+			server=q.get()
+			print "Thread "+str(num)+": starts discovering "+str(server[u'jid'])
+			sys.stdout.flush()
+			disco(cl.Dispatcher, server, server)
+			print "Thread "+str(num)+": ends discovering "+str(server[u'jid'])+" \t "+str(server)
+			sys.stdout.flush()
+			servers.append(server)
+		except:
+			print "Exception in a thread!"
+			cl.Process(1)
+			cl.disconnect()
+			raise
+		finally:
+			q.task_done()
+	cl.Process(1)
+	#cl.send(Message('lambda512@jabberes.org','Test message'))
+	cl.Process(1)
+	cl.disconnect()
+	
+
+
 
 def showNode(node, indent=0):
 	print node
@@ -344,31 +394,31 @@ node = simplexml.XML2Node(xml)
 #items = node.getChildren()
 items = node.getTags(name="item")
 
-servers = []
+server_list = []
 
 for item in items:
-	if {u'jid': item.getAttr("jid")} not in servers:
-		servers.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
+	if {u'jid': item.getAttr("jid")} not in server_list:
+		server_list.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
 	
 
 
-print servers
+print server_list
 
 
-# Connect to server
+## Connect to server
 
-cl=Client(jabberserver, debug=[])
-if not cl.connect(secure=0):
-	raise IOError('Can not connect to server.')
+#cl=Client(jabberserver, debug=[])
+#if not cl.connect(secure=0):
+	#raise IOError('Can not connect to server.')
 
-if not cl.auth(jabberuser, jabberpassword, jabberresource):
-	raise IOError('Can not auth with server.')
+#if not cl.auth(jabberuser, jabberpassword, jabberresource):
+	#raise IOError('Can not auth with server.')
 
-cl.sendInitPresence()
+#cl.sendInitPresence()
 
-cl.Process(1)
+#cl.Process(1)
 #servers=[{u'jid': u'jabberes.org', u'features': Set()}]
-#servers=[{u'jid': u'jabberfr.org', u'features': Set()}]
+##servers=[{u'jid': u'jabberfr.org', u'features': Set()}]
 #servers=[{u'jid': u'2on.net', u'features': Set()}]
 #servers=[{u'jid': u'brauchen.info'},{u'jid': u'egbers.info'}]
 #servers=[{u'jid': u'jab.undernet.cz', u'features': Set()}]
@@ -377,42 +427,33 @@ cl.Process(1)
 #servers=[{u'jid': u'startcom.org'}]
 #servers=[{u'jid': u'jabber.com.ar'}]
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
+#server_list=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 #try:
-mijid = 'user@jab.example.org'
-mijid = 'kaos@xmpp.example.net/pybot'
+#mijid = 'user@jab.example.org'
+#mijid = 'kaos@xmpp.example.net/pybot'
 #cl.send(Message(mijid,'\n\n\t\tStarting\n\n ','chat'))
 
-for server in servers:
-	#server[u'jid']
-	#server[u'jid'].encode()
-	#cl.send(Message(mijid,'Begin Disco '+server[u'jid'],'chat'))
-	#print "\ndisco: "+server[u'jid']+"\n"
-	#cl.Process(1)
-	#try:
-	disco(cl.Dispatcher, server, server)
-	#except:
-		#print '\n\n>>>>>>>>>>>>>>>>>>>>>>>\n'
-		#print '\n\nFALLO en el disco de '+server[u'jid']+' \n'
-		#print '\n<<<<<<<<<<<<<<<<<<<<<<<\n\n'
-		#print "Unexpected error:", sys.exc_info()[0]
-		#raise
-	#finally:
-		#cl.send(Message('noalwin@jabberes.org','End Disco '+server[u'jid'],'chat'))
-#except:
-	#print '\n\n>>>>>>>>>>>>>>>>>>>>>>>\n'
-	#print '\n\nFALLO Esta es la lista \n'
-	#print '\n<<<<<<<<<<<<<<<<<<<<<<<\n\n'
-	#cl.Process(10)
-	#for server in servers:
-		#showNode(server)
+
+q=Queue()
+servers=[]
+
+for server in server_list:
+	q.put(server)
+	#disco(cl.Dispatcher, server, server)
+
+for n in range(threads):
+	t=Thread(target=disco_server, kwargs={'servers': servers, 'num': n})
+	t.setDaemon(True)
+	t.start()
 	
-	#server[u'info'] = features.discoverInfo(cl.Dispatcher, server[u'jid'].encode())
-	#server[u'items'] = features.discoverItems(cl.Dispatcher, server[u'jid'].encode())
-	
-cl.Process(1)
+q.join()
+
+print servers
+
+#cl.Process(1)
 #cl.send(Message(mijid,'\n\n\t\tEnding\n\n ','chat'))
-cl.Process(10)
+#cl.Process(10)
 
 #for server in servers:
 #	showNode(server)
@@ -420,10 +461,10 @@ cl.Process(10)
 	
 #print servers
 
-cl.Process(1)
+#cl.Process(1)
 #cl.send(Message('lambda512@jabberes.org','Test message'))
-cl.Process(1)
-cl.disconnect()
+#cl.Process(1)
+#cl.disconnect()
 
 print "\n\n\n"
 for server in servers:
