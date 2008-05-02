@@ -35,16 +35,24 @@ useurl         = False
 servers_url    = "http://www.jabber.org/basicservers.xml"
 servers_file   = "servers-fixed.xml"
 
-
 #from xmpp import *
-import urllib
-import re
+import logging
 import pickle
+import re
 from sets import Set
+import urllib
 import xml.parsers.expat
+
 import MySQLdb
+
 from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
+
+
+logging.basicConfig(
+	level=logging.DEBUG,
+	format='%(asctime)s %(levelname)s %(message)s'
+	)
 
 
 urlRegExp = re.compile(
@@ -154,7 +162,7 @@ def add_service_available(identities, serviceSet):
 def add_service_unavailable(jid, serviceSet):
 	'''Guess the service using the JIDs and update the set of server serviceSet'''
 	
-	print 'Guessing '+jid
+	logging.debug('Guessing type of %s', jid)
 	
 	# Conference
 	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
@@ -217,10 +225,6 @@ def add_service_unavailable(jid, serviceSet):
 def discover_item(dispatcher, service, server):
 	isParent = False
 	#cl.Process(1)
-	try:
-		print 'DISCO' + service[u'jid'] + service[u'node']
-	except KeyError:
-		print 'DISCO' + service[u'jid']
 	
 	#Process Info
 	
@@ -229,18 +233,20 @@ def discover_item(dispatcher, service, server):
 	if not service[u'jid'].endswith('.localhost'):
 		try:
 			try:
+				logging.debug('Discovering service %s (node %s)', service[u'jid'], service[u'node'])
 				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
 			except KeyError:
+				logging.debug('Discovering service %s', service[u'jid'])
 				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
 		except xml.parsers.expat.ExpatError:
+			logging.warning('%s sent malformed XMPP', service[u'jid'])
 			service[u'info'] = ([], [])
 			add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 			raise
 			
 	else:
+		logging.debug('Ignoring %s', service[u'jid'])
 		service[u'info'] = ([], [])
-	
-	#print service
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
 		isParent = False
@@ -248,7 +254,6 @@ def discover_item(dispatcher, service, server):
 		for identity in service[u'info'][0]:
 			if (identity['category'] == u'server') | ((identity['category'] == u'hierarchy') & (identity['type'] == u'branch')):
 				isParent = True
-				print service[u'jid'] + ' is a parent'
 			
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
@@ -295,7 +300,6 @@ def discover_item(dispatcher, service, server):
 		else:
 			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
 		
-		#print service
 		for item in list(service[u'items']):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
@@ -356,6 +360,8 @@ for item in items:
 #servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 
+logging.info('Begin discovery')
+
 # Connect to server
 
 cl=Client(jabberserver, debug=[])
@@ -373,6 +379,7 @@ for server in servers:
 	
 	except xml.parsers.expat.ExpatError: # Restart the client
 		#cl.disconnect()
+		logging.warning('Aborting discovery of %s server. Restarting the client.', server[u'jid'])
 		cl=Client(jabberserver, debug=[])
 		if not cl.connect(secure=0):
 			raise IOError('Can not connect to server.')
@@ -385,16 +392,16 @@ cl.Process(10)
 #for server in servers:
 #	showNode(server)
 cl.disconnect()
-#print servers
 
-print "\n\n\n"
+logging.info('Discovery Finished')
+
 for server in servers:
 	print
-	print server[u'jid']
+	print 'Server: ' + server[u'jid']
 	print "Available:",
-	for service in server[u'availableServices']: print " "+service,
+	for service in server[u'availableServices']: print " " + service,
 	print "\nUnavailable:",
-	for service in server[u'unavailableServices']: print " "+service
+	for service in server[u'unavailableServices']: print " " + service
 	print ''
 	
 #f = open('servers.dump', 'wb')
@@ -402,6 +409,9 @@ for server in servers:
 
 #f = open('servers.dump', 'rb')
 #servers = pickle.load(f)
+
+
+logging.info('Updating Database')
 
 db = MySQLdb.Connection(user = dbuser, passwd = dbpassword, host = dbhost, db = dbdatabase)
 
@@ -459,7 +469,7 @@ for server in servers:
 		
 		query = "INSERT "+dbtable+" SET "+query+" ON DUPLICATE KEY UPDATE "+query
 	
-	print query
+	logging.debug('Executing query: %s', query)
 	db.query(query)
 
 # Clean the table
@@ -474,6 +484,10 @@ while resulset is not None:
 			break
 		
 	if not exists:
-		db.execute("DELETE FROM "+dbtable+" WHERE name = '"+resulset[u'name']+"'")
+		query = "DELETE FROM "+dbtable+" WHERE name = '"+resulset[u'name']+"'"
+		logging.debug('Executing query: %s', query)
+		db.execute(query)
 
 c.close()
+
+logging.info('Database updated')
