@@ -35,6 +35,8 @@ useurl         = False
 servers_url    = "http://www.jabber.org/basicservers.xml"
 servers_file   = "servers-fixed.xml"
 
+logfile='out.log'
+
 #from xmpp import *
 import logging
 import pickle
@@ -48,11 +50,19 @@ import MySQLdb
 from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
 
+if logfile is None:
+	logging.basicConfig(
+		level=logging.DEBUG,
+		format='%(asctime)s %(levelname)s %(message)s'
+		)
+else:
+	logging.basicConfig(
+		level=logging.DEBUG,
+		format='%(asctime)s %(levelname)s %(message)s',
+		filename=logfile,
+		filemode='w'
+		)
 
-logging.basicConfig(
-	level=logging.DEBUG,
-	format='%(asctime)s %(levelname)s %(message)s'
-	)
 
 
 urlRegExp = re.compile(
@@ -239,7 +249,7 @@ def discover_item(dispatcher, service, server):
 				logging.debug('Discovering service %s', service[u'jid'])
 				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
 		except xml.parsers.expat.ExpatError:
-			logging.warning('%s sent malformed XMPP', service[u'jid'])
+			logging.warning('%s sent malformed XMPP', service[u'jid'], exc_info=True)
 			service[u'info'] = ([], [])
 			add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 			raise
@@ -360,7 +370,6 @@ for item in items:
 #servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 
-logging.info('Begin discovery')
 
 # Connect to server
 
@@ -372,6 +381,8 @@ if not cl.auth(jabberuser, jabberpassword, jabberresource):
 
 cl.sendInitPresence()
 cl.Process(1)
+
+logging.info('Begin discovery')
 
 for server in servers:
 	try:
