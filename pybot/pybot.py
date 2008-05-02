@@ -86,7 +86,7 @@ def in_same_domain(parent, child):
 	
 	if childMatch.group('tld') == 'localhost':
 		return True
-	elif 'domain' not in childMatch.groupdict().keys():
+	elif 'domain' not in childMatch.groupdict():
 		return True
 	elif childMatch.group('domain') in ('com', 'net', 'org', 'co', 'gov', 'edu'):
 		# It's a country code second level domain, until the third level
@@ -242,10 +242,10 @@ def discover_item(dispatcher, service, server):
 	# Then, we don't need to waste resources querying them
 	if not service[u'jid'].endswith('.localhost'):
 		try:
-			try:
+			if u'node' in service:
 				logging.debug('Discovering service %s (node %s)', service[u'jid'], service[u'node'])
 				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
-			except KeyError:
+			else:
 				logging.debug('Discovering service %s', service[u'jid'])
 				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
 		except xml.parsers.expat.ExpatError:
@@ -285,7 +285,7 @@ def discover_item(dispatcher, service, server):
 		# We have to guess what feature is using the JID
 		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 	else:
-		if u'availableServices' in service.keys():
+		if u'availableServices' in service:
 			# It's a server. It probably uses jabber:iq:browse
 			# Adapt the information
 			# Process items
@@ -305,7 +305,7 @@ def discover_item(dispatcher, service, server):
 	
 	# Process Items
 	if isParent:
-		if u'node' in service.keys():
+		if u'node' in service:
 			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
 		else:
 			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
@@ -314,7 +314,7 @@ def discover_item(dispatcher, service, server):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
 					item = discover_item(dispatcher, item, server)
-				elif u'node' in service.keys():
+				elif u'node' in service:
 					if (service[u'jid'] == item[u'jid']) & (service[u'node'] != item[u'node']):
 						item = discover_item(dispatcher, item, server)
 			else:
@@ -331,7 +331,7 @@ def showNode(node, indent=0):
 	for n in range(0, indent+1): print ' ',
 	print 'node:     ' + node[u'node']
 	
-	if u'info' in node.keys():
+	if u'info' in node:
 		for identity in node[u'info'][0]:
 			for n in range(0, indent+1): print ' ',
 			print 'INFO: id: ' + str(identity)
@@ -339,7 +339,7 @@ def showNode(node, indent=0):
 			for n in range(0, indent+1): print ' ',
 			print 'INFO: ft: ' + str(feature)
 	
-	if u'items' in node.keys():
+	if u'items' in node:
 		for item in node[u'items']:
 			showNode(item, indent+4)
 	
