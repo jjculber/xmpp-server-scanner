@@ -221,10 +221,16 @@ def disco(dispatcher, service, server):
 		print 'DISCO' + service[u'jid']
 	
 	#Process Info
-	try:
-		service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
-	except KeyError:
-		service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
+	
+	# Some components adresses ends in .localhost so the querys will end on a 404 error
+	# Then, we don't need to waste resources querying them
+	if not service[u'jid'].endswith('.localhost'):
+		try:
+			service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
+		except KeyError:
+			service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
+	else:
+		service[u'info'] = ([], [])
 	
 	
 	print service
