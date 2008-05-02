@@ -39,8 +39,9 @@ servers_file   = "servers-fixed.xml"
 #from xmpp import *
 import urllib
 import re
-from sets import Set
 import pickle
+from sets import Set
+import xml.parsers.expat
 import MySQLdb
 from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
@@ -213,7 +214,7 @@ def add_service_unavailable(jid, serviceSet):
 		serviceSet.add('proxy')
 
 
-def disco(dispatcher, service, server):
+def discover_item(dispatcher, service, server):
 	isParent = False
 	#cl.Process(1)
 	try:
@@ -227,9 +228,15 @@ def disco(dispatcher, service, server):
 	# Then, we don't need to waste resources querying them
 	if not service[u'jid'].endswith('.localhost'):
 		try:
-			service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
-		except KeyError:
-			service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
+			try:
+				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
+			except KeyError:
+				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
+		except xml.parsers.expat.ExpatError:
+			service[u'info'] = ([], [])
+			add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+			raise
+			
 	else:
 		service[u'info'] = ([], [])
 	
@@ -254,7 +261,7 @@ def disco(dispatcher, service, server):
 		service[u'items'] = []
 		for item in service[u'info'][0]:
 			if in_same_domain(service[u'jid'], item[u'jid']):
-				service[u'items'].append(disco(dispatcher, item, server))
+				service[u'items'].append(discover_item(dispatcher, item, server))
 		
 		isParent = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
@@ -270,7 +277,7 @@ def disco(dispatcher, service, server):
 			service[u'items'] = []
 			for item in service[u'info'][0]:
 				if in_same_domain(service[u'jid'], item[u'jid']):
-					service[u'items'].append(disco(dispatcher, item, server))
+					service[u'items'].append(discover_item(dispatcher, item, server))
 			
 			isParent = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
@@ -292,14 +299,15 @@ def disco(dispatcher, service, server):
 		for item in list(service[u'items']):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
-					item = disco(dispatcher, item, server)
+					item = discover_item(dispatcher, item, server)
 				elif u'node' in service.keys():
 					if (service[u'jid'] == item[u'jid']) & (service[u'node'] != item[u'node']):
-						item = disco(dispatcher, item, server)
+						item = discover_item(dispatcher, item, server)
 			else:
 				service[u'items'].remove(item)
 		
 	return service
+
 
 def showNode(node, indent=0):
 	print node
@@ -330,10 +338,10 @@ if useurl:
 else:
 	f = open(servers_file, 'r')
 
-xml = f.read()
+xmldata = f.read()
 f.close()
 
-node = simplexml.XML2Node(xml)
+node = simplexml.XML2Node(xmldata)
 
 #items = node.getChildren()
 items = node.getTags(name="item")
@@ -344,32 +352,40 @@ for item in items:
 	if {u'jid': item.getAttr("jid")} not in servers:
 		servers.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
 
-#print servers
+#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
+#servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}]
+
 
 # Connect to server
 
 cl=Client(jabberserver, debug=[])
 if not cl.connect(secure=0):
 	raise IOError('Can not connect to server.')
-
 if not cl.auth(jabberuser, jabberpassword, jabberresource):
 	raise IOError('Can not auth with server.')
 
 cl.sendInitPresence()
-
 cl.Process(1)
-#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
-
 
 for server in servers:
-	disco(cl.Dispatcher, server, server)
-
+	try:
+		discover_item(cl.Dispatcher, server, server)
+	
+	except xml.parsers.expat.ExpatError: # Restart the client
+		#cl.disconnect()
+		cl=Client(jabberserver, debug=[])
+		if not cl.connect(secure=0):
+			raise IOError('Can not connect to server.')
+		if not cl.auth(jabberuser, jabberpassword, jabberresource):
+			raise IOError('Can not auth with server.')
+		cl.sendInitPresence()
+		cl.Process(1)
+	
 cl.Process(10)
-
 #for server in servers:
 #	showNode(server)
-
 cl.disconnect()
+#print servers
 
 print "\n\n\n"
 for server in servers:
