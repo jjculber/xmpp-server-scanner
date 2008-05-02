@@ -332,12 +332,18 @@ def discover_item(dispatcher, service, server):
 	
 	# Process Items
 	if is_parent:
-		if u'node' in service:
-			service[u'items'] = features.discoverItems(dispatcher,
-			                        service[u'jid'], service[u'node'])
-		else:
-			service[u'items'] = features.discoverItems(dispatcher,
-			                                           service[u'jid'])
+		try:
+			if u'node' in service:
+				service[u'items'] = features.discoverItems(dispatcher,
+			                             service[u'jid'], service[u'node'])
+			else:
+				service[u'items'] = features.discoverItems(dispatcher,
+			                                               service[u'jid'])
+		except xml.parsers.expat.ExpatError:
+			logging.warning('%s sent malformed XMPP', service[u'jid'],
+			                exc_info=True)
+			service[u'items'] = []
+			raise
 		
 		for item in list(service[u'items']):
 			if in_same_domain(service[u'jid'], item[u'jid']):
