@@ -12,12 +12,13 @@
 #
 
 
-# TODO: Si falla un query, reintentar?
-
+# TODO:
+# Si falla un query, reintentar?
 # Multithread
 # Testing
 # Make the code more prettier, pylint
 # Check for SQL injections
+# Simplify discover_item()
 
 
 
@@ -60,16 +61,16 @@ from xmpp.protocol import Message
 
 if LOGFILE is None:
 	logging.basicConfig(
-		level=logging.DEBUG,
-		format='%(asctime)s %(levelname)s %(message)s'
-		)
+	    level=logging.DEBUG,
+	    format='%(asctime)s %(levelname)s %(message)s'
+	    )
 else:
 	logging.basicConfig(
-		level=logging.DEBUG,
-		format='%(asctime)s %(levelname)s %(message)s',
-		filename=LOGFILE,
-		filemode='w'
-		)
+	    level=logging.DEBUG,
+	    format='%(asctime)s %(levelname)s %(message)s',
+	    filename=LOGFILE,
+	    filemode='w'
+	    )
 
 
 
@@ -96,8 +97,8 @@ def in_same_domain(parent, child):
 		return True
 	elif 'domain' not in childMatch.groupdict():
 		return True
-	elif childMatch.group('domain') in ('com', 'net', 'org', 'co',
-		                                'gov', 'edu'):
+	elif childMatch.group('domain') in ('com', 'net', 'org',
+		                                'co', 'gov', 'edu'):
 		# It's a country code second level domain, until the third level
 		return (parentMatch.group('fullsubdomain') == 
 		        childMatch.group('fullsubdomain'))
@@ -247,7 +248,7 @@ def discover_item(dispatcher, service, server):
 	is_parent = False
 	#cl.Process(1)
 	
-	#Process Info
+	#Get Info
 	
 	# Some components adresses ends in .localhost so the querys
 	# will end on a 404 error
@@ -275,8 +276,10 @@ def discover_item(dispatcher, service, server):
 		logging.debug('Ignoring %s', service[u'jid'])
 		service[u'info'] = ([], [])
 	
-	if ((u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) |
-	        (u'http://jabber.org/protocol/disco' in service[u'info'][1])):
+	# Detect if it's a server or a branch (if it have child items)
+	
+	if (  (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) |
+	      (u'http://jabber.org/protocol/disco' in service[u'info'][1])  ):
 		is_parent = False
 		add_service_available(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
@@ -285,13 +288,13 @@ def discover_item(dispatcher, service, server):
 			        (identity['type'] == u'branch')
 			   ) ):
 				is_parent = True
-			
+	
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info'] = (({u'category': u'server', u'type': u'im'}),
-		                    service[u'info'][1])
+		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		                     service[u'info'][1] )
 		is_parent = True
-		
+	
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
 		# Process items
@@ -304,9 +307,11 @@ def discover_item(dispatcher, service, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
 		                    service[u'info'][1] )
-	elif (len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0):
+	
+	elif ((len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0)):
 		# We have to guess what feature is using the JID
 		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+	
 	else:
 		if u'availableServices' in service:
 			# It's a server. It probably uses jabber:iq:browse
@@ -330,7 +335,8 @@ def discover_item(dispatcher, service, server):
 				add_service_unavailable(service[u'jid'],
 				                        server[u'unavailableServices'])
 	
-	# Process Items
+	# If it's a server or a branch node, get the child items
+	
 	if is_parent:
 		try:
 			if u'node' in service:
@@ -344,6 +350,8 @@ def discover_item(dispatcher, service, server):
 			                exc_info=True)
 			service[u'items'] = []
 			raise
+		
+		# Process items
 		
 		for item in list(service[u'items']):
 			if in_same_domain(service[u'jid'], item[u'jid']):
