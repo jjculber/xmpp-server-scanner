@@ -33,7 +33,7 @@ dbtable        = "pyservers"
 
 useurl         = False
 servers_url    = "http://www.jabber.org/basicservers.xml"
-servers_file   = "servers.xml"
+servers_file   = "servers-fixed.xml"
 
 
 #from xmpp import *
