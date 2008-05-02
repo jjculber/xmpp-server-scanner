@@ -46,9 +46,14 @@ from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
 
 
-urlRegExp = re.compile(r'(?P<fullsubdomain>(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?(?P<fulldomain>(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$))')
-#, 'subdomain.domain.tld').groups() 
-#re.search('/(([^.]+\.)?(?=[^.]+\.[^.]+)((([^.]+)\.)([^.]+)$))/')
+urlRegExp = re.compile(
+	r'(?P<fullsubdomain>' +
+		r'(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?' +
+		r'(?P<fulldomain>'+
+			r'(?:(?P<domain>\w+)\.)?(?P<tld>\w+)$' +
+	   r')' +
+	r')'
+	)
 
 
 def in_same_domain(parent, child):
@@ -143,9 +148,7 @@ def add_service_available(identities, serviceSet):
 		if identity[u'category'] == u'x-service':
 			if identity[u'type'] == u'x-rss': # PyRSS
 				serviceSet.add('rss')
-			
-		
-	
+
 
 def add_service_unavailable(jid, serviceSet):
 	'''Guess the service using the JIDs and update the set of server serviceSet'''
@@ -208,8 +211,6 @@ def add_service_unavailable(jid, serviceSet):
 	# Proxy
 	elif jid.startswith((u'proxy.', u'proxy65')):
 		serviceSet.add('proxy')
-	
-	
 
 
 def disco(dispatcher, service, server):
@@ -232,9 +233,7 @@ def disco(dispatcher, service, server):
 	else:
 		service[u'info'] = ([], [])
 	
-	
-	print service
-	
+	#print service
 	
 	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
 		isParent = False
@@ -248,7 +247,7 @@ def disco(dispatcher, service, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
 		isParent = True
-			
+		
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
 		# Process items
@@ -281,9 +280,6 @@ def disco(dispatcher, service, server):
 				add_service_available(service[u'info'][0], server[u'availableServices'])
 			except:
 				add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
-		
-	
-	
 	
 	# Process Items
 	if isParent:
@@ -309,12 +305,9 @@ def showNode(node, indent=0):
 	print node
 	for n in range(0, indent+1): print ' ',
 	print 'JID:     ' + node[u'jid']
-	#try:
+	
 	for n in range(0, indent+1): print ' ',
 	print 'node:     ' + node[u'node']
-	#except:
-		#pass
-	
 	
 	if u'info' in node.keys():
 		for identity in node[u'info'][0]:
@@ -331,11 +324,6 @@ def showNode(node, indent=0):
 
 
 # Get server list
-
-#lista de diccionarios
-# jid
-# info
-# items (que seria otra lista de diccionarios)
 
 if useurl:
 	f = urllib.urlopen(servers_url)
@@ -355,11 +343,8 @@ servers = []
 for item in items:
 	if {u'jid': item.getAttr("jid")} not in servers:
 		servers.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
-	
 
-
-print servers
-
+#print servers
 
 # Connect to server
 
@@ -373,62 +358,17 @@ if not cl.auth(jabberuser, jabberpassword, jabberresource):
 cl.sendInitPresence()
 
 cl.Process(1)
-#servers=[{u'jid': u'jabberes.org', u'features': Set()}]
-#servers=[{u'jid': u'jabberfr.org', u'features': Set()}]
-#servers=[{u'jid': u'2on.net', u'features': Set()}]
-#servers=[{u'jid': u'brauchen.info'},{u'jid': u'egbers.info'}]
-#servers=[{u'jid': u'jab.undernet.cz', u'features': Set()}]
-#servers=[{u'jid': u'12jabber.com', u'features': Set()}]
-#servers=[{u'jid': u'jabber.org.ar'}]
-#servers=[{u'jid': u'startcom.org'}]
-#servers=[{u'jid': u'jabber.com.ar'}]
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 
-#try:
-mijid = 'user@jab.example.org'
-mijid = 'kaos@xmpp.example.net/pybot'
-#cl.send(Message(mijid,'\n\n\t\tStarting\n\n ','chat'))
 
 for server in servers:
-	#server[u'jid']
-	#server[u'jid'].encode()
-	#cl.send(Message(mijid,'Begin Disco '+server[u'jid'],'chat'))
-	#print "\ndisco: "+server[u'jid']+"\n"
-	#cl.Process(1)
-	#try:
 	disco(cl.Dispatcher, server, server)
-	#except:
-		#print '\n\n>>>>>>>>>>>>>>>>>>>>>>>\n'
-		#print '\n\nFALLO en el disco de '+server[u'jid']+' \n'
-		#print '\n<<<<<<<<<<<<<<<<<<<<<<<\n\n'
-		#print "Unexpected error:", sys.exc_info()[0]
-		#raise
-	#finally:
-		#cl.send(Message('noalwin@jabberes.org','End Disco '+server[u'jid'],'chat'))
-#except:
-	#print '\n\n>>>>>>>>>>>>>>>>>>>>>>>\n'
-	#print '\n\nFALLO Esta es la lista \n'
-	#print '\n<<<<<<<<<<<<<<<<<<<<<<<\n\n'
-	#cl.Process(10)
-	#for server in servers:
-		#showNode(server)
-	
-	#server[u'info'] = features.discoverInfo(cl.Dispatcher, server[u'jid'].encode())
-	#server[u'items'] = features.discoverItems(cl.Dispatcher, server[u'jid'].encode())
-	
-cl.Process(1)
-#cl.send(Message(mijid,'\n\n\t\tEnding\n\n ','chat'))
+
 cl.Process(10)
 
 #for server in servers:
 #	showNode(server)
-	
-	
-#print servers
 
-cl.Process(1)
-#cl.send(Message('lambda512@jabberes.org','Test message'))
-cl.Process(1)
 cl.disconnect()
 
 print "\n\n\n"
@@ -521,4 +461,3 @@ while resulset is not None:
 		db.execute("DELETE FROM "+dbtable+" WHERE name = '"+resulset[u'name']+"'")
 
 c.close()
-
