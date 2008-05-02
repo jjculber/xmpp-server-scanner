@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-15 -*-
 
-# 
+# $id$
+
+#
 # Under GNU General Public License
-# 
+#
+# Author:   noalwin
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
+
 # TODO: Si falla un query, reintentar?
 
 # Multithread
