@@ -27,23 +27,23 @@
 #jabberserver="jabberes.org"
 
 # Jabber account
-jabberuser     = "xxxxxxx"
-jabberpassword = "xxxxxxx"
-jabberresource = "pybot"
-jabberserver   = "xmpp.example.net"
+JABBERUSER     = "xxxxxxx"
+JABBERPASSWORD = "xxxxxxx"
+JABBERRESOURCE = "pybot"
+JABBERSERVER   = "xmpp.example.net"
 
 # Database
-dbuser         = "user"
-dbpassword     = "sql_password"
-dbhost         = "localhost"
-dbdatabase     = "server_list"
-dbtable        = "pyservers"
+DBUSER         = "user"
+DBPASSWORD     = "sql_password"
+DBHOST         = "localhost"
+DBDATABASE     = "server_list"
+DBTABLE        = "pyservers"
 
-useurl         = False
-servers_url    = "http://www.jabber.org/basicservers.xml"
-servers_file   = "servers-fixed.xml"
+USEURL         = False
+SERVERS_URL    = "http://www.jabber.org/basicservers.xml"
+SERVERS_FILE   = "servers-fixed.xml"
 
-logfile='out.log'
+LOGFILE        = 'out.log'
 
 #from xmpp import *
 import logging
@@ -58,7 +58,7 @@ import MySQLdb
 from xmpp import Client, features, simplexml
 from xmpp.protocol import Message
 
-if logfile is None:
+if LOGFILE is None:
 	logging.basicConfig(
 		level=logging.DEBUG,
 		format='%(asctime)s %(levelname)s %(message)s'
@@ -67,13 +67,13 @@ else:
 	logging.basicConfig(
 		level=logging.DEBUG,
 		format='%(asctime)s %(levelname)s %(message)s',
-		filename=logfile,
+		filename=LOGFILE,
 		filemode='w'
 		)
 
 
 
-urlRegExp = re.compile(
+URLREGEXP = re.compile(
 	r'(?P<fullsubdomain>' +
 		r'(?:(?P<subdomain>\w+)\.(?=\w+\.\w))?' +
 		r'(?P<fulldomain>'+
@@ -89,16 +89,18 @@ def in_same_domain(parent, child):
 	if child.count('@') > 0:
 		return False
 	
-	parentMatch = urlRegExp.search(parent)
-	childMatch = urlRegExp.search(child)
+	parentMatch = URLREGEXP.search(parent)
+	childMatch = URLREGEXP.search(child)
 	
 	if childMatch.group('tld') == 'localhost':
 		return True
 	elif 'domain' not in childMatch.groupdict():
 		return True
-	elif childMatch.group('domain') in ('com', 'net', 'org', 'co', 'gov', 'edu'):
+	elif childMatch.group('domain') in ('com', 'net', 'org', 'co',
+		                                'gov', 'edu'):
 		# It's a country code second level domain, until the third level
-		return (parentMatch.group('fullsubdomain') == childMatch.group('fullsubdomain'))
+		return (parentMatch.group('fullsubdomain') == 
+		        childMatch.group('fullsubdomain'))
 	else:
 		# It's a usual domain name, check until the second level
 		return (parentMatch.group('fulldomain') == childMatch.group('fulldomain'))
@@ -178,7 +180,8 @@ def add_service_available(identities, serviceSet):
 
 
 def add_service_unavailable(jid, serviceSet):
-	'''Guess the service using the JIDs and update the set of server serviceSet'''
+	'''Guess the service using the JIDs and update the set of servers
+	serviceSet'''
 	
 	logging.debug('Guessing type of %s', jid)
 	
@@ -241,42 +244,53 @@ def add_service_unavailable(jid, serviceSet):
 
 
 def discover_item(dispatcher, service, server):
-	isParent = False
+	is_parent = False
 	#cl.Process(1)
 	
 	#Process Info
 	
-	# Some components adresses ends in .localhost so the querys will end on a 404 error
+	# Some components adresses ends in .localhost so the querys
+	# will end on a 404 error
 	# Then, we don't need to waste resources querying them
 	if not service[u'jid'].endswith('.localhost'):
 		try:
 			if u'node' in service:
-				logging.debug('Discovering service %s (node %s)', service[u'jid'], service[u'node'])
-				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'], service[u'node'])
+				logging.debug('Discovering service %s (node %s)',
+				              service[u'jid'], service[u'node'])
+				service[u'info'] = features.discoverInfo(dispatcher,
+				                        service[u'jid'], service[u'node'])
 			else:
 				logging.debug('Discovering service %s', service[u'jid'])
-				service[u'info'] = features.discoverInfo(dispatcher, service[u'jid'])
+				service[u'info'] = features.discoverInfo(dispatcher,
+				                                         service[u'jid'])
 		except xml.parsers.expat.ExpatError:
-			logging.warning('%s sent malformed XMPP', service[u'jid'], exc_info=True)
+			logging.warning('%s sent malformed XMPP', service[u'jid'],
+			                exc_info=True)
 			service[u'info'] = ([], [])
-			add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+			add_service_unavailable(service[u'jid'],
+			                        server[u'unavailableServices'])
 			raise
 			
 	else:
 		logging.debug('Ignoring %s', service[u'jid'])
 		service[u'info'] = ([], [])
 	
-	if (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) | (u'http://jabber.org/protocol/disco' in service[u'info'][1]):
-		isParent = False
+	if ((u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) |
+	        (u'http://jabber.org/protocol/disco' in service[u'info'][1])):
+		is_parent = False
 		add_service_available(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
-			if (identity['category'] == u'server') | ((identity['category'] == u'hierarchy') & (identity['type'] == u'branch')):
-				isParent = True
+			if ( (identity['category'] == u'server') | (
+			        (identity['category'] == u'hierarchy') &
+			        (identity['type'] == u'branch')
+			   ) ):
+				is_parent = True
 			
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
-		isParent = True
+		service[u'info'] = (({u'category': u'server', u'type': u'im'}),
+		                    service[u'info'][1])
+		is_parent = True
 		
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
@@ -286,9 +300,10 @@ def discover_item(dispatcher, service, server):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				service[u'items'].append(discover_item(dispatcher, item, server))
 		
-		isParent = False # We already have the items
+		is_parent = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info'] = (({u'category': u'server', u'type': u'im'}), service[u'info'][1])
+		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		                    service[u'info'][1] )
 	elif (len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0):
 		# We have to guess what feature is using the JID
 		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
@@ -300,30 +315,37 @@ def discover_item(dispatcher, service, server):
 			service[u'items'] = []
 			for item in service[u'info'][0]:
 				if in_same_domain(service[u'jid'], item[u'jid']):
-					service[u'items'].append(discover_item(dispatcher, item, server))
+					service[u'items'].append(discover_item(dispatcher, item,
+					                                       server))
 			
-			isParent = False # We already have the items
+			is_parent = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			service[u'info'] = (({u'category': u'server', u'type': u'im'}),service[u'info'][1])
+			service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+			                    service[u'info'][1] )
 		else:
 			try:
-				add_service_available(service[u'info'][0], server[u'availableServices'])
+				add_service_available(service[u'info'][0],
+				                      server[u'availableServices'])
 			except:
-				add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+				add_service_unavailable(service[u'jid'],
+				                        server[u'unavailableServices'])
 	
 	# Process Items
-	if isParent:
+	if is_parent:
 		if u'node' in service:
-			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'], service[u'node'])
+			service[u'items'] = features.discoverItems(dispatcher,
+			                        service[u'jid'], service[u'node'])
 		else:
-			service[u'items'] = features.discoverItems(dispatcher, service[u'jid'])
+			service[u'items'] = features.discoverItems(dispatcher,
+			                                           service[u'jid'])
 		
 		for item in list(service[u'items']):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				if (service[u'jid'] != item[u'jid']):
 					item = discover_item(dispatcher, item, server)
 				elif u'node' in service:
-					if (service[u'jid'] == item[u'jid']) & (service[u'node'] != item[u'node']):
+					if (  (service[u'jid'] == item[u'jid']) &
+						  (service[u'node'] != item[u'node'])  ):
 						item = discover_item(dispatcher, item, server)
 			else:
 				service[u'items'].remove(item)
@@ -355,10 +377,10 @@ def showNode(node, indent=0):
 
 # Get server list
 
-if useurl:
-	f = urllib.urlopen(servers_url)
+if USEURL:
+	f = urllib.urlopen(SERVERS_URL)
 else:
-	f = open(servers_file, 'r')
+	f = open(SERVERS_FILE, 'r')
 
 xmldata = f.read()
 f.close()
@@ -372,7 +394,9 @@ servers = []
 
 for item in items:
 	if {u'jid': item.getAttr("jid")} not in servers:
-		servers.append({u'jid': item.getAttr("jid"), u'availableServices': Set(), u'unavailableServices': Set()})
+		servers.append({ u'jid': item.getAttr("jid"),
+		                 u'availableServices': Set(), 
+	                     u'unavailableServices': Set() })
 
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
 #servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}]
@@ -381,10 +405,10 @@ for item in items:
 
 # Connect to server
 
-cl=Client(jabberserver, debug=[])
+cl = Client(JABBERSERVER, debug=[])
 if not cl.connect(secure=0):
 	raise IOError('Can not connect to server.')
-if not cl.auth(jabberuser, jabberpassword, jabberresource):
+if not cl.auth(JABBERUSER, JABBERPASSWORD, JABBERRESOURCE):
 	raise IOError('Can not auth with server.')
 
 cl.sendInitPresence()
@@ -398,11 +422,12 @@ for server in servers:
 	
 	except xml.parsers.expat.ExpatError: # Restart the client
 		#cl.disconnect()
-		logging.warning('Aborting discovery of %s server. Restarting the client.', server[u'jid'])
-		cl=Client(jabberserver, debug=[])
+		logging.warning('Aborting discovery of %s server. ' +
+		                'Restarting the client.', server[u'jid'])
+		cl = Client(JABBERSERVER, debug=[])
 		if not cl.connect(secure=0):
 			raise IOError('Can not connect to server.')
-		if not cl.auth(jabberuser, jabberpassword, jabberresource):
+		if not cl.auth(JABBERUSER, JABBERPASSWORD, JABBERRESOURCE):
 			raise IOError('Can not auth with server.')
 		cl.sendInitPresence()
 		cl.Process(1)
@@ -432,68 +457,72 @@ for server in servers:
 
 logging.info('Updating Database')
 
-db = MySQLdb.Connection(user = dbuser, passwd = dbpassword, host = dbhost, db = dbdatabase)
+db = MySQLdb.Connection(user=DBUSER, passwd=DBPASSWORD, host=DBHOST, db=DBDATABASE)
 
 #f.close()
 
 # feature: database field
 dbfields = {
-	u'muc': 'has_muc',
-	u'irc': 'has_irc',
-	u'aim': 'has_aim',
-	u'gg': 'has_gg',
-	u'http-ws': 'has_httpws',
-	u'icq': 'has_icq',
-	u'msn': 'has_msn',
-	u'qq': 'has_qq',
-	u'sms': 'has_sms',
-	u'smtp': 'has_smtp',
-	u'tlen': 'has_tlen',
-	u'yahoo': 'has_yahoo',
-	u'jud': 'has_jud',
-	u'pubsub': u'has_pubsub',
-	u'pep': 'has_pep',
-	u'presence': 'has_presence',
-	u'newmail': 'has_newmail',
-	u'rss': 'has_rss',
-	u'weather': 'has_weather',
-	u'proxy': u'has_proxy'
+	'muc':       'has_muc',
+	'irc':       'has_irc',
+	'aim':       'has_aim',
+	'gg':        'has_gg',
+	'http-ws':   'has_httpws',
+	'icq':       'has_icq',
+	'msn':       'has_msn',
+	'qq':        'has_qq',
+	'sms':       'has_sms',
+	'smtp':      'has_smtp',
+	'tlen':      'has_tlen',
+	'yahoo':     'has_yahoo',
+	'jud':       'has_jud',
+	'pubsub':    'has_pubsub',
+	'pep':       'has_pep',
+	'presence':  'has_presence',
+	'newmail':   'has_newmail',
+	'rss':       'has_rss',
+	'weather':   'has_weather',
+	'proxy':     'has_proxy'
 }
 
-# u'muc', u'irc', u'aim', u'gg', u'http-ws', u'icq', u'msn', u'qq', u'sms', u'smtp', u'tlen', u'yahoo', u'jud', u'pubsub', u'pep', u'presence', u'newmail', u'rss', u'weather', u'proxy'
+# u'muc', u'irc', u'aim', u'gg', u'http-ws', u'icq', u'msn', u'qq',
+# u'sms', u'smtp', u'tlen', u'yahoo', u'jud', u'pubsub', u'pep', u'presence',
+# u'newmail', u'rss', u'weather', u'proxy'
 
 for server in servers:
 	if server[u'info'] != ([], []):
 		
-		query = "`name` = '"+server[u'jid']+"', "
+		query = "`name` = '" + server[u'jid'] + "', "
 		
 		for service in dbfields.keys():
 			if service in server[u'availableServices']:
-				query += "`"+dbfields[service]+"` = 255, "
+				query += "`" + dbfields[service] + "` = 255, "
 			elif service in server[u'unavailableServices']:
-				query += "`"+dbfields[service]+"` = 1, "
+				query += "`" + dbfields[service] + "` = 1, "
 			else:
-				query += "`"+dbfields[service]+"` = 0, "
+				query += "`" + dbfields[service] + "` = 0, "
 		
 		query += "`times_offline` = 0"
-			
-		query = "INSERT "+dbtable+" SET "+query+" ON DUPLICATE KEY UPDATE "+query
+		
+		query = ( "INSERT " + DBTABLE + " SET " + query +
+		          " ON DUPLICATE KEY UPDATE " + query )
 		
 	else:
 		
-		query = "`name` = '"+server[u'jid']+"', "
+		query = "`name` = '" + server[u'jid'] + "', "
 		for service in dbfields.keys():
-			query += "`"+dbfields[service]+"` = 0, "
+			query += "`" + dbfields[service] + "` = 0, "
 		query += "`times_offline` = `times_offline` + 1"
 		
-		query = "INSERT "+dbtable+" SET "+query+" ON DUPLICATE KEY UPDATE "+query
+		query = ( "INSERT " + DBTABLE+" SET " + query +
+		         " ON DUPLICATE KEY UPDATE " + query )
 	
 	logging.debug('Executing query: %s', query)
 	db.query(query)
 
 # Clean the table
 c = db.cursor(MySQLdb.cursors.DictCursor)
-c.execute("SELECT name FROM "+dbtable)
+c.execute("SELECT name FROM " + DBTABLE)
 resulset = c.nextset()
 while resulset is not None:
 	exists = False
@@ -503,7 +532,8 @@ while resulset is not None:
 			break
 		
 	if not exists:
-		query = "DELETE FROM "+dbtable+" WHERE name = '"+resulset[u'name']+"'"
+		query = ( "DELETE FROM " + DBTABLE + " WHERE name = '" +
+		          resulset[u'name'] + "'" )
 		logging.debug('Executing query: %s', query)
 		db.execute(query)
 
