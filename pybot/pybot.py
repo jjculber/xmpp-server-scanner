@@ -440,7 +440,7 @@ for item in items:
 	                     u'unavailableServices': Set() })
 
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
-servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'amessage.be', u'availableServices': Set(), u'unavailableServices': Set()}]
+#servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'amessage.be', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 
 
