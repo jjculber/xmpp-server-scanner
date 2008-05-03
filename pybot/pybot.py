@@ -60,7 +60,7 @@ from xmpp.protocol import Message
 
 if LOGFILE is None:
 	logging.basicConfig(
-	    level=logging.DEBUG,
+	    level=logging.WARNING,
 	    format='%(asctime)s %(levelname)s %(message)s'
 	    )
 else:
