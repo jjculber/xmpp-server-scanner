@@ -12,13 +12,12 @@
 #
 
 
-# TODO:
-# Si falla un query, reintentar?
-# Multithread
-# Testing
-# Make the code more prettier, pylint
-# Check for SQL injections
-# Simplify discover_item()
+# TODO: Si falla un query, reintentar?
+# TODO: Multithread
+# TODO: Testing
+# TODO: Make the code more prettier, pylint
+# TODO: Check for SQL injections
+# TODO: Simplify discover_item()
 
 
 
@@ -90,165 +89,163 @@ def in_same_domain(parent, child):
 	if child.count('@') > 0:
 		return False
 	
-	parentMatch = URLREGEXP.search(parent)
-	childMatch = URLREGEXP.search(child)
+	parent_match = URLREGEXP.search(parent)
+	child_match = URLREGEXP.search(child)
 	
-	if childMatch.group('tld') == 'localhost':
+	if child_match.group('tld') == 'localhost':
 		return True
-	elif 'domain' not in childMatch.groupdict():
+	elif 'domain' not in child_match.groupdict():
 		return True
-	elif childMatch.group('domain') in ('com', 'net', 'org',
+	elif child_match.group('domain') in ('com', 'net', 'org',
 		                                'co', 'gov', 'edu'):
 		# It's a country code second level domain, until the third level
-		return (parentMatch.group('fullsubdomain') == 
-		        childMatch.group('fullsubdomain'))
+		return (parent_match.group('fullsubdomain') == 
+		        child_match.group('fullsubdomain'))
 	else:
 		# It's a usual domain name, check until the second level
-		return (parentMatch.group('fulldomain') == childMatch.group('fulldomain'))
+		return (parent_match.group('fulldomain') == child_match.group('fulldomain'))
 	
 
 
-def add_service_available(identities, serviceSet):
-	'''Process identity and update the set of server serviceSet'''
+def add_service_available(identities, service_set):
+	'''Process identity and update the set of server service_set'''
 	
 	for identity in identities:
 		if identity[u'category'] == u'conference':
 			if identity[u'type'] == u'text':
 				#if u'http://jabber.org/protocol/muc' in service[u'info'][1]:
-					serviceSet.add('muc')
+					service_set.add('muc')
 			elif identity[u'type'] == u'irc':
-				serviceSet.add('irc')
+				service_set.add('irc')
 			
 		if identity[u'category'] == u'gateway':
 			if identity[u'type'] == u'aim':
-				serviceSet.add('aim')
+				service_set.add('aim')
 			elif identity[u'type'] == u'gadu-gadu':
-				serviceSet.add('gadu-gadu')
+				service_set.add('gadu-gadu')
 			elif identity[u'type'] == u'http-ws':
-				serviceSet.add('http-ws')
+				service_set.add('http-ws')
 			elif identity[u'type'] == u'icq':
-				serviceSet.add('icq')
+				service_set.add('icq')
 			elif identity[u'type'] == u'msn':
-				serviceSet.add('msn')
+				service_set.add('msn')
 			elif identity[u'type'] == u'qq':
-				serviceSet.add('qq')
+				service_set.add('qq')
 			elif identity[u'type'] == u'sms':
-				serviceSet.add('sms')
+				service_set.add('sms')
 			elif identity[u'type'] == u'smtp':
-				serviceSet.add('smtp')
+				service_set.add('smtp')
 			elif identity[u'type'] == u'tlen':
-				serviceSet.add('tlen')
+				service_set.add('tlen')
 			elif identity[u'type'] == u'yahoo':
-				serviceSet.add('yahoo')
+				service_set.add('yahoo')
 			
 		if identity[u'category'] == u'directory':
 			if identity[u'type'] == u'user':
-				serviceSet.add('jud')
+				service_set.add('jud')
 			
 		if identity[u'category'] == u'pubsub':
 			if identity[u'type'] == u'service': # XEP
-				serviceSet.add('pubsub')
+				service_set.add('pubsub')
 			elif identity[u'type'] == u'generic': # ejabberd 1.1.3
-				serviceSet.add('pubsub')
+				service_set.add('pubsub')
 			elif identity[u'type'] == u'pep':
-				serviceSet.add('pep')
+				service_set.add('pep')
 			
 		if identity[u'category'] == u'component':
 			if identity[u'type'] == u'presence':
-				serviceSet.add('presence')
+				service_set.add('presence')
 			
 		if identity[u'category'] == u'headline':
 			if identity[u'type'] == u'newmail':
-				serviceSet.add('newmail')
+				service_set.add('newmail')
 			elif identity[u'type'] == u'rss':
-				serviceSet.add('rss')
+				service_set.add('rss')
 			elif identity[u'type'] == u'weather':
-				serviceSet.add('weather')
+				service_set.add('weather')
 			
 		if identity[u'category'] == u'proxy':
 			if identity[u'type'] == u'bytestreams':
-				serviceSet.add('proxy')
+				service_set.add('proxy')
 			
-		# Non standard serviceSet
+		# Non standard service_set
 		
 		if identity[u'category'] == u'agent': 
 			if identity[u'type'] == u'weather':
-				serviceSet.add('weather')
+				service_set.add('weather')
 			
 		if identity[u'category'] == u'x-service':
 			if identity[u'type'] == u'x-rss': # PyRSS
-				serviceSet.add('rss')
+				service_set.add('rss')
 
 
-def add_service_unavailable(jid, serviceSet):
+def add_service_unavailable(jid, service_set):
 	'''Guess the service using the JIDs and update the set of servers
-	serviceSet'''
+	service_set'''
 	
 	logging.debug('Guessing type of %s', jid)
 	
 	# Conference
 	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
-		serviceSet.add('muc')
+		service_set.add('muc')
 	elif jid.startswith(u'irc.'):
-		serviceSet.add('irc')
+		service_set.add('irc')
 	
 	# Transports
 	elif jid.startswith((u'aim.', u'aim-jab.')):
-		serviceSet.add('aim')
+		service_set.add('aim')
 	elif jid.startswith(u'aim-icq.'):
-		serviceSet.add('aim')
-		serviceSet.add('icq')
+		service_set.add('aim')
+		service_set.add('icq')
 	elif jid.startswith((u'gg.', u'gadugadu.', u'gadu-gadu.')):
-		serviceSet.add('gg')
+		service_set.add('gg')
 	elif jid.startswith(u'http-ws.'):
-		serviceSet.add('http-ws')
+		service_set.add('http-ws')
 	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
-		serviceSet.add('icq')
+		service_set.add('icq')
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
-		serviceSet.add('msn')
+		service_set.add('msn')
 	elif jid.startswith(u'qq.'):
-		serviceSet.add('qq')
+		service_set.add('qq')
 	elif jid.startswith(u'sms.'):
-		serviceSet.add('sms')
+		service_set.add('sms')
 	elif jid.startswith(u'smtp.'):
-		serviceSet.add('smtp')
+		service_set.add('smtp')
 	elif jid.startswith(u'tlen.'):
-		serviceSet.add('tlen')
+		service_set.add('tlen')
 	elif jid.startswith(u'yahoo.'):
-		serviceSet.add('yahoo')
+		service_set.add('yahoo')
 	
 	# Directories
 	elif jid.startswith((u'jud.', u'vjud.', u'search.', u'users.')):
-		serviceSet.add('jud')
+		service_set.add('jud')
 	
 	# PubSub
 	elif jid.startswith(u'pubsub.'):
-		serviceSet.add('pubsub')
+		service_set.add('pubsub')
 	elif jid.startswith(u'pep.'):
-		serviceSet.add('pep')
+		service_set.add('pep')
 	
 	# Presence
 	elif jid.startswith((u'presence.', u'webpresence.')):
-		serviceSet.add('presence')
+		service_set.add('presence')
 	
 	# Headline
 	elif jid.startswith((u'newmail.', u'mail.', u'jmc.')):
-		serviceSet.add('newmail')
+		service_set.add('newmail')
 	elif jid.startswith(u'rss.'):
-		serviceSet.add('rss')
+		service_set.add('rss')
 	elif jid.startswith(u'weather.'):
-		serviceSet.add('weather')
+		service_set.add('weather')
 	
 	# Proxy
 	elif jid.startswith((u'proxy.', u'proxy65')):
-		serviceSet.add('proxy')
+		service_set.add('proxy')
 
 
-def discover_item(dispatcher, service, server):
-	is_parent = False
-	#cl.Process(1)
-	
-	#Get Info
+
+def get_item_info(dispatcher, service):
+	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
 	# will end on a 404 error
@@ -258,42 +255,83 @@ def discover_item(dispatcher, service, server):
 			if u'node' in service:
 				logging.debug('Discovering service %s (node %s)',
 				              service[u'jid'], service[u'node'])
-				service[u'info'] = features.discoverInfo(dispatcher,
-				                        service[u'jid'], service[u'node'])
+				return features.discoverInfo(dispatcher, service[u'jid'],
+				                             service[u'node'])
 			else:
 				logging.debug('Discovering service %s', service[u'jid'])
-				service[u'info'] = features.discoverInfo(dispatcher,
-				                                         service[u'jid'])
+				return features.discoverInfo(dispatcher, service[u'jid'])
 		except xml.parsers.expat.ExpatError:
 			logging.warning('%s sent malformed XMPP', service[u'jid'],
 			                exc_info=True)
-			service[u'info'] = ([], [])
-			add_service_unavailable(service[u'jid'],
-			                        server[u'unavailableServices'])
+			#return ([], [])
+			#add_service_unavailable(service[u'jid'],
+			                        #server[u'unavailableServices'])
 			raise
 			
 	else:
 		logging.debug('Ignoring %s', service[u'jid'])
+		return  ([], [])
+
+
+def get_items(dispatcher, service):
+	'''Query the child items and nodes of service.
+	Only returns items whose address it's equal or a subdomain of service'''
+	
+	try:
+		if u'node' in service:
+			items = features.discoverItems(dispatcher,
+				                           service[u'jid'], service[u'node'])
+		else:
+			items = features.discoverItems(dispatcher,
+			                               service[u'jid'])
+	except xml.parsers.expat.ExpatError:
+		logging.warning('%s sent malformed XMPP', service[u'jid'],
+		                exc_info=True)
+		#items = []
+		raise
+	
+	# Process items
+	
+	for item in list(items):
+		if not in_same_domain(service[u'jid'], item[u'jid']):
+			items.remove(item)
+	
+	return items
+
+
+def discover_item(dispatcher, service, server):
+	'''Explore the service and its childs and 
+	update the service list in server.
+	Both, service and server, variables are modified.'''
+	
+	needs_to_query_items = False
+	#cl.Process(1)
+	
+	try:
+		service[u'info'] = get_item_info(dispatcher, service)
+	except xml.parsers.expat.ExpatError:
 		service[u'info'] = ([], [])
+		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+		raise
 	
 	# Detect if it's a server or a branch (if it have child items)
 	
 	if (  (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) |
 	      (u'http://jabber.org/protocol/disco' in service[u'info'][1])  ):
-		is_parent = False
+		needs_to_query_items = False
 		add_service_available(service[u'info'][0], server[u'availableServices'])
 		for identity in service[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
 			        (identity['type'] == u'branch')
 			   ) ):
-				is_parent = True
+				needs_to_query_items = True
 	
 	elif u'jabber:iq:agents' in service[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
 		                     service[u'info'][1] )
-		is_parent = True
+		needs_to_query_items = True
 	
 	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
@@ -303,12 +341,12 @@ def discover_item(dispatcher, service, server):
 			if in_same_domain(service[u'jid'], item[u'jid']):
 				service[u'items'].append(discover_item(dispatcher, item, server))
 		
-		is_parent = False # We already have the items
+		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
 		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
-		                    service[u'info'][1] )
+		                     service[u'info'][1] )
 	
-	elif ((len(service[u'info'][0]) == 0) & (len(service[u'info'][1]) == 0)):
+	elif (service[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
 		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
 	
@@ -323,69 +361,58 @@ def discover_item(dispatcher, service, server):
 					service[u'items'].append(discover_item(dispatcher, item,
 					                                       server))
 			
-			is_parent = False # We already have the items
+			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
 			service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
 			                    service[u'info'][1] )
 		else:
-			try:
+			#try:
 				add_service_available(service[u'info'][0],
 				                      server[u'availableServices'])
-			except:
-				add_service_unavailable(service[u'jid'],
-				                        server[u'unavailableServices'])
+			#except:
+				#add_service_unavailable(service[u'jid'],
+				                        #server[u'unavailableServices'])
 	
 	# If it's a server or a branch node, get the child items
 	
-	if is_parent:
+	if needs_to_query_items:
 		try:
-			if u'node' in service:
-				service[u'items'] = features.discoverItems(dispatcher,
-			                             service[u'jid'], service[u'node'])
-			else:
-				service[u'items'] = features.discoverItems(dispatcher,
-			                                               service[u'jid'])
+			service[u'items'] = get_items(dispatcher, service)
 		except xml.parsers.expat.ExpatError:
-			logging.warning('%s sent malformed XMPP', service[u'jid'],
-			                exc_info=True)
 			service[u'items'] = []
 			raise
 		
-		# Process items
-		
 		for item in list(service[u'items']):
-			if in_same_domain(service[u'jid'], item[u'jid']):
-				if (service[u'jid'] != item[u'jid']):
+			if (service[u'jid'] != item[u'jid']):
+				item = discover_item(dispatcher, item, server)
+			elif u'node' in service:
+				if (  (service[u'jid'] == item[u'jid']) &
+					  (service[u'node'] != item[u'node'])  ):
 					item = discover_item(dispatcher, item, server)
-				elif u'node' in service:
-					if (  (service[u'jid'] == item[u'jid']) &
-						  (service[u'node'] != item[u'node'])  ):
-						item = discover_item(dispatcher, item, server)
-			else:
-				service[u'items'].remove(item)
-		
+	
 	return service
 
 
-def showNode(node, indent=0):
+def show_node(node, indent=0):
+	'''Print the node and its childs'''
 	print node
-	for n in range(0, indent+1): print ' ',
+	print ' '*indent,
 	print 'JID:     ' + node[u'jid']
 	
-	for n in range(0, indent+1): print ' ',
+	print ' '*indent,
 	print 'node:     ' + node[u'node']
 	
 	if u'info' in node:
 		for identity in node[u'info'][0]:
-			for n in range(0, indent+1): print ' ',
+			print ' '*indent,
 			print 'INFO: id: ' + str(identity)
 		for feature in node[u'info'][1]:
-			for n in range(0, indent+1): print ' ',
+			print ' '*indent,
 			print 'INFO: ft: ' + str(feature)
 	
 	if u'items' in node:
 		for item in node[u'items']:
-			showNode(item, indent+4)
+			show_node(item, indent+4)
 	
 
 
@@ -413,7 +440,7 @@ for item in items:
 	                     u'unavailableServices': Set() })
 
 #servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
-#servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}]
+servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'amessage.be', u'availableServices': Set(), u'unavailableServices': Set()}]
 
 
 
@@ -448,7 +475,7 @@ for server in servers:
 	
 cl.Process(10)
 #for server in servers:
-#	showNode(server)
+#	show_node(server)
 cl.disconnect()
 
 logging.info('Discovery Finished')
@@ -471,7 +498,8 @@ for server in servers:
 
 logging.info('Updating Database')
 
-db = MySQLdb.Connection(user=DBUSER, passwd=DBPASSWORD, host=DBHOST, db=DBDATABASE)
+db = MySQLdb.Connection( user=DBUSER, passwd=DBPASSWORD, host=DBHOST,
+                         db=DBDATABASE )
 
 #f.close()
 
