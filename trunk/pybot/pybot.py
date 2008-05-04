@@ -495,13 +495,13 @@ for server in servers:
 #f = open('servers.dump', 'rb')
 #servers = pickle.load(f)
 
+#f.close()
 
 logging.info('Updating Database')
 
 db = MySQLdb.Connection( user=DBUSER, passwd=DBPASSWORD, host=DBHOST,
                          db=DBDATABASE )
-
-#f.close()
+db.autocommit(True)
 
 # feature: database field
 dbfields = {
@@ -565,19 +565,18 @@ for server in servers:
 # Clean the table
 c = db.cursor(MySQLdb.cursors.DictCursor)
 c.execute("SELECT name FROM " + DBTABLE)
-resulset = c.nextset()
-while resulset is not None:
+for row in c.fetchall():
 	exists = False
 	for server in servers:
-		if resulset[u'name'] == server['jid']:
+		if row[u'name'] == server['jid']:
 			exists = True
 			break
 		
 	if not exists:
 		query = ( "DELETE FROM " + DBTABLE + " WHERE name = '" +
-		          resulset[u'name'] + "'" )
+		          row[u'name'] + "'" )
 		logging.debug('Executing query: %s', query)
-		db.execute(query)
+		db.query(query)
 
 c.close()
 
