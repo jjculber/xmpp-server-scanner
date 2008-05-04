@@ -78,7 +78,7 @@ class mysqliDatabase extends abstractDatabase{
 	}
 	
 	public function error(){
-		return $this->db->error();
+		return $this->db->error;
 	}
 	
 	public function query($query){
