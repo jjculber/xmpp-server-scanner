@@ -16,7 +16,24 @@ define("MYSQL_SERVER","localhost");
 define("MYSQL_USERNAME","user");
 define("MYSQL_PASSWORD","sql_password");
 define("MYSQL_DB","server_list");
-	
+
+
+function write_table_header($types){
+	echo "\t<tr class=\"table_header\">";
+	echo "<th class='name".(((!$_GET['order'])||($_GET['order']=='name'))?" sortedby":"")."'>";
+	echo "<a href='?order=name'>Name</a>";
+	echo "</th>";
+	foreach($types as $type){
+		echo "<th class='$type".(($_GET['order']==$type)?" sortedby":"")."'>";
+		echo "<a href='?order=$type'>$type</a>";
+		echo "</th>";
+// 								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
+	}
+	echo "<th class='times_offline'>Times Offline</th>";
+	echo "</tr>\n";
+}
+
+
 // 	$db = new mysqli ( MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DB );
 // 	
 // 	/* check connection */
@@ -104,7 +121,7 @@ define("MYSQL_DB","server_list");
 				padding: 6px 4px;
 				}
 			tr.table_header th.sortedby{
-				background: #DAF2DA;
+				background: #CFCFCF;
 				}
 			tr.table_header th.sortedby a{
 				font-weight: bolder;
@@ -114,7 +131,7 @@ define("MYSQL_DB","server_list");
 				}
 			th.times_offline,td.times_offline{
 				/*display: none;*/
-				}
+			}
 			td.feature{
 /* 				font-size: 2em; */
 			}
@@ -126,6 +143,12 @@ define("MYSQL_DB","server_list");
 			}
 			.unavailable{
 				color: #808080;/*grey;*/
+			}
+			tr.odd td.sortedby{
+				background: #DCE5EF;
+			}
+			tr.even td.sortedby{
+				background: #EFEFEF;
 			}
 			div.components span{
 				display: block;
@@ -164,14 +187,28 @@ define("MYSQL_DB","server_list");
 				
 				
 				
+				if(in_array($_GET['order'], $types)){
+					$query = "SELECT *, (".
+									"SELECT COUNT(jid) FROM pybot_components ".
+									"WHERE pybot_servers.jid=server_jid AND ".
+										"type='".$db->real_escape_string($_GET['order'])."' AND ".
+										"available=True ".
+								") AS num_components_available ,(".
+									"SELECT COUNT(jid) FROM pybot_components ".
+									"WHERE pybot_servers.jid=server_jid AND ".
+										"type='".$db->real_escape_string($_GET['order'])."' AND ".
+										"available=False ".
+								") AS num_components_unavailable ".
+								"FROM pybot_servers ".
+								"ORDER BY ".
+									"num_components_available DESC, ".
+									"num_components_unavailable DESC, ".
+									"jid ASC";
+				}else{
+					$query = "SELECT * FROM pybot_servers ORDER BY jid";
+				}
 				
-				
-				$query = "SELECT * FROM pybot_servers ORDER BY jid";
-				
-				
-				$query = $db->real_escape_string($query);
 				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
-				
 				
 				$server_row = $servers_result->fetch_assoc();
 				
@@ -182,16 +219,7 @@ define("MYSQL_DB","server_list");
 					
 // 					if($servers_row['times_offline']<TIMES_OFFLINE_ALLOWED){
 						if($row_number%ROWS_BETWEEN_TITLES==0){
-							echo "\t<tr class=\"table_header\">";
-							echo "<th class='name'>Name</th>";
-							foreach($types as $type){
-								// TODO: Add if it's sorted in the class attribute
-								// TODO: Add the links to sort the columns
-								echo "<th class='$type'>$type</th>";
-// 								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
-							}
-							echo "<th class='times_offline'>Times Offline</th>";
-							echo "</tr>\n";
+							write_table_header($types);
 						}
 						
 // 						echo "<tr class='".(($row_number%2)==1?"odd":"even")."'>";
@@ -207,7 +235,9 @@ define("MYSQL_DB","server_list");
 						echo "\t<tr class='$class'>\n";
 						
 						
-						echo "\t\t<td class=\"name\"><a name=\"".htmlspecialchars($server_row['jid'])."\"></a>".htmlspecialchars($server_row['jid'])."</td>\n";
+						echo "\t\t<td class='name".(((!$_GET['order'])||($_GET['order']=='name'))?" sortedby":"")."'>";
+						echo "<a name='".htmlspecialchars($server_row['jid'])."'>".htmlspecialchars($server_row['jid'])."</a>";
+						echo "</td>\n";
 						foreach($types as $type){
 							
 							
@@ -224,12 +254,12 @@ define("MYSQL_DB","server_list");
 							
 							if(is_null($component_row)){
 								// The server doesn't provide this service
-								echo "\t\t<td class=\"feature no ".$type."\">";
+								echo "\t\t<td class='feature no ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
 								echo "</td>\n";
 							}else{
 							
 								if($component_row['available']){
-									echo "\t\t<td class=\"feature yes available".$type."\">";
+									echo "\t\t<td class='feature yes available ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
 									switch($type){
 										case 'muc':
 											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
@@ -275,7 +305,7 @@ define("MYSQL_DB","server_list");
 								}else{
 									// Unavailable service
 									// i.e. error 404 due a bad DNS configuration)
-									echo "\t\t<td class=\"feature yes unavailable".$type."\">";
+									echo "\t\t<td class='feature yes unavailable ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
 									switch($type){
 										case 'muc':
 											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
@@ -352,16 +382,7 @@ define("MYSQL_DB","server_list");
 				
 				// The last header
 				if($row_number%ROWS_BETWEEN_TITLES!=1){
-					echo "\t<tr class=\"table_header\">";
-					echo "<th class='name'>Name</th>";
-					foreach($types as $type){
-						// TODO: Add if it's sorted in the class attribute
-						// TODO: Add the links to sort the columns
-						echo "<th class='$type'>$type</th>";
-// 								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
-					}
-					echo "<th class='times_offline'>Times Offline</th>";
-					echo "</tr>\n";
+					write_table_header($types);
 				}
 				
 				echo "</table>";
