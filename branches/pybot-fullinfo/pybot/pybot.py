@@ -37,19 +37,21 @@ DBUSER         = "user"
 DBPASSWORD     = "sql_password"
 DBHOST         = "localhost"
 DBDATABASE     = "server_list"
-DBTABLE        = "pyservers"
 
+# Server list
 USEURL         = False
 SERVERS_URL    = "http://www.jabber.org/basicservers.xml"
 SERVERS_FILE   = "servers-fixed.xml"
 
+# Logs
 LOGFILE        = 'out.log'
+LOGFILE        = None
 
 #from xmpp import *
 import logging
 import pickle
 import re
-from sets import Set
+#from sets import Set
 import urllib
 import xml.parsers.expat
 
@@ -60,7 +62,8 @@ from xmpp.protocol import Message
 
 if LOGFILE is None:
 	logging.basicConfig(
-	    level=logging.WARNING,
+#	    level=logging.WARNING,
+	    level=logging.DEBUG,
 	    format='%(asctime)s %(levelname)s %(message)s'
 	    )
 else:
@@ -107,185 +110,194 @@ def in_same_domain(parent, child):
 	
 
 
-def add_service_available(identities, service_set):
-	'''Process identity and update the set of server service_set'''
+def _add_to_services_list(services_list, service_type, component_jid):
+	'''Add the compoenent to the server services list.
+	There can be several components providing the same service.'''
+	if service_type in services_list:
+		services_list[service_type].append(component_jid)
+	else:
+		services_list[service_type] = [(component_jid)]
+
+
+def add_component_available(component, services_list):
+	'''Process identity and update the set of server services_list'''
 	
-	for identity in identities:
+	for identity in component[u'info'][0]:
 		if identity[u'category'] == u'conference':
 			if identity[u'type'] == u'text':
-				#if u'http://jabber.org/protocol/muc' in service[u'info'][1]:
-					service_set.add('muc')
+				if u'http://jabber.org/protocol/muc' in component[u'info'][1]:
+					_add_to_services_list(services_list, 'muc', component['jid'])
 			elif identity[u'type'] == u'irc':
-				service_set.add('irc')
+				_add_to_services_list(services_list, 'irc', component['jid'])
 			
 		if identity[u'category'] == u'gateway':
 			if identity[u'type'] == u'aim':
-				service_set.add('aim')
+				_add_to_services_list(services_list, 'aim', component['jid'])
 			elif identity[u'type'] == u'gadu-gadu':
-				service_set.add('gadu-gadu')
+				_add_to_services_list(services_list, 'gadu-gadu', component['jid'])
 			elif identity[u'type'] == u'http-ws':
-				service_set.add('http-ws')
+				_add_to_services_list(services_list, 'http-ws', component['jid'])
 			elif identity[u'type'] == u'icq':
-				service_set.add('icq')
+				_add_to_services_list(services_list, 'icq', component['jid'])
 			elif identity[u'type'] == u'msn':
-				service_set.add('msn')
+				_add_to_services_list(services_list, 'msn', component['jid'])
 			elif identity[u'type'] == u'qq':
-				service_set.add('qq')
+				_add_to_services_list(services_list, 'qq', component['jid'])
 			elif identity[u'type'] == u'sms':
-				service_set.add('sms')
+				_add_to_services_list(services_list, 'sms', component['jid'])
 			elif identity[u'type'] == u'smtp':
-				service_set.add('smtp')
+				_add_to_services_list(services_list, 'smtp', component['jid'])
 			elif identity[u'type'] == u'tlen':
-				service_set.add('tlen')
+				_add_to_services_list(services_list, 'tlen', component['jid'])
 			elif identity[u'type'] == u'yahoo':
-				service_set.add('yahoo')
+				_add_to_services_list(services_list, 'yahoo', component['jid'])
 			
 		if identity[u'category'] == u'directory':
 			if identity[u'type'] == u'user':
-				service_set.add('jud')
+				_add_to_services_list(services_list, 'jud', component['jid'])
 			
 		if identity[u'category'] == u'pubsub':
 			if identity[u'type'] == u'service': # XEP
-				service_set.add('pubsub')
+				_add_to_services_list(services_list, 'pubsub', component['jid'])
 			elif identity[u'type'] == u'generic': # ejabberd 1.1.3
-				service_set.add('pubsub')
+				_add_to_services_list(services_list, 'pubsub', component['jid'])
 			elif identity[u'type'] == u'pep':
-				service_set.add('pep')
+				_add_to_services_list(services_list, 'pep', component['jid'])
 			
 		if identity[u'category'] == u'component':
 			if identity[u'type'] == u'presence':
-				service_set.add('presence')
+				_add_to_services_list(services_list, 'presence', component['jid'])
 			
 		if identity[u'category'] == u'headline':
 			if identity[u'type'] == u'newmail':
-				service_set.add('newmail')
+				_add_to_services_list(services_list, 'newmail', component['jid'])
 			elif identity[u'type'] == u'rss':
-				service_set.add('rss')
+				_add_to_services_list(services_list, 'rss', component['jid'])
 			elif identity[u'type'] == u'weather':
-				service_set.add('weather')
+				_add_to_services_list(services_list, 'weather', component['jid'])
 			
 		if identity[u'category'] == u'proxy':
 			if identity[u'type'] == u'bytestreams':
-				service_set.add('proxy')
+				_add_to_services_list(services_list, 'proxy', component['jid'])
 			
-		# Non standard service_set
+		# Non standard services_list
 		
 		if identity[u'category'] == u'agent': 
 			if identity[u'type'] == u'weather':
-				service_set.add('weather')
+				_add_to_services_list(services_list, 'weather', component['jid'])
 			
 		if identity[u'category'] == u'x-service':
 			if identity[u'type'] == u'x-rss': # PyRSS
-				service_set.add('rss')
+				_add_to_services_list(services_list, 'rss', component['jid'])
 
 
-def add_service_unavailable(jid, service_set):
+def add_component_unavailable(jid, services_list):
 	'''Guess the service using the JIDs and update the set of servers
-	service_set'''
+	services_list'''
 	
 	logging.debug('Guessing type of %s', jid)
 	
 	# Conference
 	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
-		service_set.add('muc')
+		_add_to_services_list(services_list, 'muc', jid)
 	elif jid.startswith(u'irc.'):
-		service_set.add('irc')
+		_add_to_services_list(services_list, 'irc', jid)
 	
 	# Transports
 	elif jid.startswith((u'aim.', u'aim-jab.')):
-		service_set.add('aim')
+		_add_to_services_list(services_list, 'aim', jid)
 	elif jid.startswith(u'aim-icq.'):
-		service_set.add('aim')
-		service_set.add('icq')
+		_add_to_services_list(services_list, 'aim', jid)
+		_add_to_services_list(services_list, 'icq', jid)
 	elif jid.startswith((u'gg.', u'gadugadu.', u'gadu-gadu.')):
-		service_set.add('gg')
+		_add_to_services_list(services_list, 'gadu-gadu', jid)
 	elif jid.startswith(u'http-ws.'):
-		service_set.add('http-ws')
+		_add_to_services_list(services_list, 'http-ws', jid)
 	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
-		service_set.add('icq')
+		_add_to_services_list(services_list, 'icq', jid)
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
-		service_set.add('msn')
+		_add_to_services_list(services_list, 'msn', jid)
 	elif jid.startswith(u'qq.'):
-		service_set.add('qq')
+		_add_to_services_list(services_list, 'qq', jid)
 	elif jid.startswith(u'sms.'):
-		service_set.add('sms')
+		_add_to_services_list(services_list, 'sms', jid)
 	elif jid.startswith(u'smtp.'):
-		service_set.add('smtp')
+		_add_to_services_list(services_list, 'smtp', jid)
 	elif jid.startswith(u'tlen.'):
-		service_set.add('tlen')
+		_add_to_services_list(services_list, 'tlen', jid)
 	elif jid.startswith(u'yahoo.'):
-		service_set.add('yahoo')
+		_add_to_services_list(services_list, 'yahoo', jid)
 	
 	# Directories
 	elif jid.startswith((u'jud.', u'vjud.', u'search.', u'users.')):
-		service_set.add('jud')
+		_add_to_services_list(services_list, 'jud', jid)
 	
 	# PubSub
 	elif jid.startswith(u'pubsub.'):
-		service_set.add('pubsub')
+		_add_to_services_list(services_list, 'pubsub', jid)
 	elif jid.startswith(u'pep.'):
-		service_set.add('pep')
+		_add_to_services_list(services_list, 'pep', jid)
 	
 	# Presence
 	elif jid.startswith((u'presence.', u'webpresence.')):
-		service_set.add('presence')
+		_add_to_services_list(services_list, 'presence', jid)
 	
 	# Headline
 	elif jid.startswith((u'newmail.', u'mail.', u'jmc.')):
-		service_set.add('newmail')
+		_add_to_services_list(services_list, 'newmail', jid)
 	elif jid.startswith(u'rss.'):
-		service_set.add('rss')
+		_add_to_services_list(services_list, 'rss', jid)
 	elif jid.startswith(u'weather.'):
-		service_set.add('weather')
+		_add_to_services_list(services_list, 'weather', jid)
 	
 	# Proxy
 	elif jid.startswith((u'proxy.', u'proxy65')):
-		service_set.add('proxy')
+		_add_to_services_list(services_list, 'proxy', jid)
 
 
 
-def get_item_info(dispatcher, service):
+def get_item_info(dispatcher, component):
 	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
 	# will end on a 404 error
 	# Then, we don't need to waste resources querying them
-	if not service[u'jid'].endswith('.localhost'):
+	if not component[u'jid'].endswith('.localhost'):
 		try:
-			if u'node' in service:
-				logging.debug('Discovering service %s (node %s)',
-				              service[u'jid'], service[u'node'])
-				return features.discoverInfo(dispatcher, service[u'jid'],
-				                             service[u'node'])
+			if u'node' in component:
+				logging.debug('Discovering component %s (node %s)',
+				              component[u'jid'], component[u'node'])
+				return features.discoverInfo(dispatcher, component[u'jid'],
+				                             component[u'node'])
 			else:
-				logging.debug('Discovering service %s', service[u'jid'])
-				return features.discoverInfo(dispatcher, service[u'jid'])
+				logging.debug('Discovering component %s', component[u'jid'])
+				return features.discoverInfo(dispatcher, component[u'jid'])
 		except xml.parsers.expat.ExpatError:
-			logging.warning('%s sent malformed XMPP', service[u'jid'],
+			logging.warning('%s sent malformed XMPP', component[u'jid'],
 			                exc_info=True)
 			#return ([], [])
-			#add_service_unavailable(service[u'jid'],
+			#add_component_unavailable(component[u'jid'],
 			                        #server[u'unavailableServices'])
 			raise
 			
 	else:
-		logging.debug('Ignoring %s', service[u'jid'])
+		logging.debug('Ignoring %s', component[u'jid'])
 		return  ([], [])
 
 
-def get_items(dispatcher, service):
-	'''Query the child items and nodes of service.
-	Only returns items whose address it's equal or a subdomain of service'''
+def get_items(dispatcher, component):
+	'''Query the child items and nodes of component.
+	Only returns items whose address it's equal or a subdomain of component'''
 	
 	try:
-		if u'node' in service:
+		if u'node' in component:
 			items = features.discoverItems(dispatcher,
-				                           service[u'jid'], service[u'node'])
+				                           component[u'jid'], component[u'node'])
 		else:
 			items = features.discoverItems(dispatcher,
-			                               service[u'jid'])
+			                               component[u'jid'])
 	except xml.parsers.expat.ExpatError:
-		logging.warning('%s sent malformed XMPP', service[u'jid'],
+		logging.warning('%s sent malformed XMPP', component[u'jid'],
 		                exc_info=True)
 		#items = []
 		raise
@@ -293,104 +305,103 @@ def get_items(dispatcher, service):
 	# Process items
 	
 	for item in list(items):
-		if not in_same_domain(service[u'jid'], item[u'jid']):
+		if not in_same_domain(component[u'jid'], item[u'jid']):
 			items.remove(item)
 	
 	return items
 
 
-def discover_item(dispatcher, service, server):
-	'''Explore the service and its childs and 
-	update the service list in server.
-	Both, service and server, variables are modified.'''
+def discover_item(dispatcher, component, server):
+	'''Explore the component and its childs and 
+	update the component list in server.
+	Both, component and server, variables are modified.'''
 	
 	needs_to_query_items = False
 	#cl.Process(1)
 	
 	try:
-		service[u'info'] = get_item_info(dispatcher, service)
+		component[u'info'] = get_item_info(dispatcher, component)
 	except xml.parsers.expat.ExpatError:
-		service[u'info'] = ([], [])
-		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+		component[u'info'] = ([], [])
+		add_component_unavailable(component[u'jid'], server[u'unavailableServices'])
 		raise
 	
 	# Detect if it's a server or a branch (if it have child items)
 	
-	if (  (u'http://jabber.org/protocol/disco#info' in service[u'info'][1]) |
-	      (u'http://jabber.org/protocol/disco' in service[u'info'][1])  ):
+	if (  (u'http://jabber.org/protocol/disco#info' in component[u'info'][1]) |
+	      (u'http://jabber.org/protocol/disco' in component[u'info'][1])  ):
 		needs_to_query_items = False
-		add_service_available(service[u'info'][0], server[u'availableServices'])
-		for identity in service[u'info'][0]:
+		add_component_available(component, server[u'availableServices'])
+		for identity in component[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
 			        (identity['type'] == u'branch')
 			   ) ):
 				needs_to_query_items = True
 	
-	elif u'jabber:iq:agents' in service[u'info'][1]:
+	elif u'jabber:iq:agents' in component[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
-		                     service[u'info'][1] )
+		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		                     component[u'info'][1] )
 		needs_to_query_items = True
 	
-	elif u'jabber:iq:browse' in service[u'info'][1]: #Not sure if it's really used
+	elif u'jabber:iq:browse' in component[u'info'][1]: #Not sure if it's really used
 		# Adapt the information
 		# Process items
-		service[u'items'] = []
-		for item in service[u'info'][0]:
-			if in_same_domain(service[u'jid'], item[u'jid']):
-				service[u'items'].append(discover_item(dispatcher, item, server))
+		component[u'items'] = []
+		for item in component[u'info'][0]:
+			if in_same_domain(component[u'jid'], item[u'jid']):
+				component[u'items'].append(discover_item(dispatcher, item, server))
 		
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
-		service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
-		                     service[u'info'][1] )
+		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		                     component[u'info'][1] )
 	
-	elif (service[u'info'] == ([], [])):
+	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
-		add_service_unavailable(service[u'jid'], server[u'unavailableServices'])
+		add_component_unavailable(component[u'jid'], server[u'unavailableServices'])
 	
 	else:
-		if u'availableServices' in service:
+		if u'availableServices' in component:
 			# It's a server. It probably uses jabber:iq:browse
 			# Adapt the information
 			# Process items
-			service[u'items'] = []
-			for item in service[u'info'][0]:
-				if in_same_domain(service[u'jid'], item[u'jid']):
-					service[u'items'].append(discover_item(dispatcher, item,
+			component[u'items'] = []
+			for item in component[u'info'][0]:
+				if in_same_domain(component[u'jid'], item[u'jid']):
+					component[u'items'].append(discover_item(dispatcher, item,
 					                                       server))
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			service[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
-			                    service[u'info'][1] )
+			component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+			                    component[u'info'][1] )
 		else:
 			#try:
-				add_service_available(service[u'info'][0],
-				                      server[u'availableServices'])
+			add_component_available(component, server[u'availableServices'])
 			#except:
-				#add_service_unavailable(service[u'jid'],
+				#add_component_unavailable(component[u'jid'],
 				                        #server[u'unavailableServices'])
 	
 	# If it's a server or a branch node, get the child items
 	
 	if needs_to_query_items:
 		try:
-			service[u'items'] = get_items(dispatcher, service)
+			component[u'items'] = get_items(dispatcher, component)
 		except xml.parsers.expat.ExpatError:
-			service[u'items'] = []
+			component[u'items'] = []
 			raise
 		
-		for item in list(service[u'items']):
-			if (service[u'jid'] != item[u'jid']):
+		for item in list(component[u'items']):
+			if (component[u'jid'] != item[u'jid']):
 				item = discover_item(dispatcher, item, server)
-			elif u'node' in service:
-				if (  (service[u'jid'] == item[u'jid']) &
-					  (service[u'node'] != item[u'node'])  ):
+			elif u'node' in component:
+				if (  (component[u'jid'] == item[u'jid']) &
+					  (component[u'node'] != item[u'node'])  ):
 					item = discover_item(dispatcher, item, server)
 	
-	return service
+	return component
 
 
 def show_node(node, indent=0):
@@ -436,13 +447,18 @@ servers = []
 for item in items:
 	if {u'jid': item.getAttr("jid")} not in servers:
 		servers.append({ u'jid': item.getAttr("jid"),
-		                 u'availableServices': Set(), 
-	                     u'unavailableServices': Set() })
+		                 u'availableServices': {}, 
+	                     u'unavailableServices': {} })
 
-#servers=[{u'jid': u'jabberes.org', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'jab.undernet.cz', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'12jabber.com', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'allchitchat.com', u'availableServices': Set(), u'unavailableServices': Set()}]
-#servers=[{u'jid': u'jabber.dk', u'availableServices': Set(), u'unavailableServices': Set()}, {u'jid': u'amessage.be', u'availableServices': Set(), u'unavailableServices': Set()}]
+#servers=[{u'jid': u'jabberes.org', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'jab.undernet.cz', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'12jabber.com', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'allchitchat.com', u'availableServices': {}, u'unavailableServices': {}}]
+#servers=[{u'jid': u'jabber.dk', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'amessage.be', u'availableServices': {}, u'unavailableServices': {}}]
+#servers=[
+    #{u'jid': u'jabberes.org', u'availableServices': {}, u'unavailableServices': {}},
+    #{u'jid': u'jabber.dk', u'availableServices': {}, u'unavailableServices': {}},
+    #{u'jid': u'jabber-hispano.org', u'availableServices': {}, u'unavailableServices': {}}
+#]
 
-
+#servers=[]
 
 # Connect to server
 
@@ -480,20 +496,30 @@ cl.disconnect()
 
 logging.info('Discovery Finished')
 
+
 for server in servers:
 	print
 	print 'Server: ' + server[u'jid']
 	print "Available:",
-	for service in server[u'availableServices']: print " " + service,
+	for service in server[u'availableServices']:
+		print "\n " + service + " provided by:",
+		for jid in server[u'availableServices'][service]:
+			print jid,
+		
 	print "\nUnavailable:",
-	for service in server[u'unavailableServices']: print " " + service
+	for service in server[u'unavailableServices']:
+		print "\n " + service + " provided by:",
+		for jid in server[u'unavailableServices'][service]:
+			print jid,
 	print ''
-	
+
 #f = open('servers.dump', 'wb')
 #pickle.dump(servers, f)
 
 #f = open('servers.dump', 'rb')
 #servers = pickle.load(f)
+
+#f.close()
 
 
 logging.info('Updating Database')
@@ -501,84 +527,93 @@ logging.info('Updating Database')
 db = MySQLdb.Connection( user=DBUSER, passwd=DBPASSWORD, host=DBHOST,
                          db=DBDATABASE )
 
-#f.close()
+db.autocommit(True)
 
-# feature: database field
-dbfields = {
-	'muc':       'has_muc',
-	'irc':       'has_irc',
-	'aim':       'has_aim',
-	'gg':        'has_gg',
-	'http-ws':   'has_httpws',
-	'icq':       'has_icq',
-	'msn':       'has_msn',
-	'qq':        'has_qq',
-	'sms':       'has_sms',
-	'smtp':      'has_smtp',
-	'tlen':      'has_tlen',
-	'yahoo':     'has_yahoo',
-	'jud':       'has_jud',
-	'pubsub':    'has_pubsub',
-	'pep':       'has_pep',
-	'presence':  'has_presence',
-	'newmail':   'has_newmail',
-	'rss':       'has_rss',
-	'weather':   'has_weather',
-	'proxy':     'has_proxy'
-}
+# Check service types
 
-# u'muc', u'irc', u'aim', u'gg', u'http-ws', u'icq', u'msn', u'qq',
-# u'sms', u'smtp', u'tlen', u'yahoo', u'jud', u'pubsub', u'pep', u'presence',
-# u'newmail', u'rss', u'weather', u'proxy'
+
+known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'http-ws', 'icq', 'msn', 'qq',
+                'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pubsub', 'pep',
+                'presence', 'newmail', 'rss', 'weather', 'proxy' ]
+
+
+cursor = db.cursor(MySQLdb.cursors.DictCursor)
+cursor.execute("""SELECT `type` FROM `pybot_service_types`""")
+for row in cursor.fetchall():
+	if row['type'] not in known_types:
+		logging.info('Deleting service type %s', row['type'])
+		cursor.execute("""DELETE FROM pybot_service_types
+		                    WHERE type = %s """, (row['type'],))
+	else:
+		known_types.remove(row['type'])
+
+for t in known_types:
+	logging.debug('Add new service type %s', t)
+	cursor.execute("""INSERT INTO pybot_service_types SET type = %s""", (t,))
+
+
+# Save the servers and services
 
 for server in servers:
-	if server[u'info'] != ([], []):
-		
-		query = "`name` = '" + server[u'jid'] + "', "
-		
-		for service in dbfields.keys():
-			if service in server[u'availableServices']:
-				query += "`" + dbfields[service] + "` = 255, "
-			elif service in server[u'unavailableServices']:
-				query += "`" + dbfields[service] + "` = 1, "
-			else:
-				query += "`" + dbfields[service] + "` = 0, "
-		
-		query += "`times_offline` = 0"
-		
-		query = ( "INSERT " + DBTABLE + " SET " + query +
-		          " ON DUPLICATE KEY UPDATE " + query )
-		
-	else:
-		
-		query = "`name` = '" + server[u'jid'] + "', "
-		for service in dbfields.keys():
-			query += "`" + dbfields[service] + "` = 0, "
-		query += "`times_offline` = `times_offline` + 1"
-		
-		query = ( "INSERT " + DBTABLE+" SET " + query +
-		         " ON DUPLICATE KEY UPDATE " + query )
 	
-	logging.debug('Executing query: %s', query)
-	db.query(query)
+	# Add server
+	
+	if server[u'info'] != ([], []): # Online server
+		logging.debug('Add online server %s', server[u'jid'])
+		cursor.execute("""INSERT INTO pybot_servers 
+		                    SET jid = %s, times_offline = %s
+		                    ON DUPLICATE KEY UPDATE times_offline = %s""",
+		               (server[u'jid'], 0, 0))
+		
+		#Add services
+		
+		logging.debug('Delete components of %s server', server[u'jid'])
+		cursor.execute("""DELETE FROM pybot_components
+		                    WHERE server_jid = %s""", (server[u'jid'],) )
+		
+		for service in server[u'availableServices']:
+			for component in server[u'availableServices'][service]:
+				logging.debug( 'Add available %s component %s of %s server',
+				               service, component, server[u'jid'])
+				cursor.execute("""INSERT INTO  pybot_components
+				                    SET jid = %s, server_jid = %s,
+				                        type = %s, available = %s
+				                    ON DUPLICATE KEY UPDATE available = %s""",
+								(component, server[u'jid'], service, True, True))
+		
+		for service in server[u'unavailableServices']:
+			for component in server[u'unavailableServices'][service]:
+				logging.debug( 'Add unavailable %s component %s of %s server',
+				               service, component, server[u'jid'])
+				cursor.execute("""INSERT INTO pybot_components
+				                    SET jid = %s, server_jid = %s,
+				                        type = %s, available = %s
+				                    ON DUPLICATE KEY UPDATE available = %s""",
+				                (component, server[u'jid'], service, False, False))
+	
+	else:                           # Offline server
+		logging.debug('Add offline server %s', server[u'jid'])
+		cursor.execute("""INSERT INTO pybot_servers
+		                    SET `jid` = %s, times_offline = %s
+		                    ON DUPLICATE KEY UPDATE 
+		                      times_offline = times_offline + %s""",
+		                (server[u'jid'], 1, 1))
 
-# Clean the table
-c = db.cursor(MySQLdb.cursors.DictCursor)
-c.execute("SELECT name FROM " + DBTABLE)
-resulset = c.nextset()
-while resulset is not None:
+
+# Clean the servers table
+cursor.execute("""SELECT jid FROM pybot_servers""")
+for row in cursor.fetchall():
 	exists = False
 	for server in servers:
-		if resulset[u'name'] == server['jid']:
+		if row[u'jid'] == server['jid']:
 			exists = True
 			break
 		
 	if not exists:
-		query = ( "DELETE FROM " + DBTABLE + " WHERE name = '" +
-		          resulset[u'name'] + "'" )
-		logging.debug('Executing query: %s', query)
-		db.execute(query)
+		logging.debug('Delete old server %s', row['jid'])
+		cursor.execute("""DELETE FROM pybot_servers WHERE jid = %s""",
+		                (row['jid'],))
 
-c.close()
+cursor.close()
 
 logging.info('Database updated')
