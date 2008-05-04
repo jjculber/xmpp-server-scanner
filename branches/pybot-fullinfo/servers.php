@@ -1,7 +1,7 @@
 <?php
-	require_once("bot/config.php");
-	require_once("bot/include/class_database.php");
-	define('ROWS_BETWEEN_TITLES',10);
+// 	require_once("bot/config.php");
+require_once("bot/include/class_database.php");
+define('ROWS_BETWEEN_TITLES',10);
 // 	define("MYSQL_SERVER","localhost");
 // 	define("MYSQL_USERNAME","user");
 // 	define("MYSQL_PASSWORD","password");
@@ -9,8 +9,13 @@
 // 	define("MYSQL_TABLE","servers");
 // 	define('TIMES_OFFLINE_ALLOWED',5);
 	
-	$fields = array('name' => 'Name', 'has_muc' => 'MUC', 'has_irc' => 'IRC', 'has_aim' => 'AIM', 'has_gg' => 'GG',/* 'has_httpws' => 'http-ws',*/ 'has_icq' => 'ICQ', 'has_msn' => 'MSN',/* 'has_qq' => 'QQ',*/ 'has_sms' => 'SMS', 'has_smtp' => 'SMTP', 'has_tlen' => 'TLEN', 'has_yahoo' => 'Yahoo', 'has_jud' => 'JUD', 'has_pubsub' => 'PubSub', 'has_pep' => 'PEP', 'has_presence' => 'WebPresence', 'has_newmail' => 'NewMail', 'has_rss' => 'RSS', 'has_weather' => 'Weather', 'has_proxy' => 'Transfer Proxy', 'times_offline' => 'Times Offline');
-	
+// If a server has been offline more, we hide or mark it on the list
+define('TIMES_OFFLINE_ALLOWED',5);
+
+define("MYSQL_SERVER","localhost");
+define("MYSQL_USERNAME","user");
+define("MYSQL_PASSWORD","sql_password");
+define("MYSQL_DB","server_list");
 	
 // 	$db = new mysqli ( MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DB );
 // 	
@@ -119,6 +124,10 @@
 			td.yes{
 				color: #00DA00;/*green;*/
 			}
+			div.components span{
+				display: block;
+				font-size: 60%;
+			}
 		</style>
 	</head>
 	<body>
@@ -130,49 +139,59 @@
 			</div>
 			<?php
 				
-				$query = "SELECT * FROM ".MYSQL_TABLE." ";
-				foreach($_GET as $parameter => $value){
-					if((isset($fields[$parameter])) && (($value === "False") || ($value === "True"))){
-						if($where_condition == ""){
-							$query .= "WHERE ";
-						}else{
-							$query .= "AND ";
-						}
-						$query .= "$parameter=$value ";
-					}
-				}
-				
-				if(isset($fields[$_GET['sort']])){
-					$query .= "ORDER BY ".$_GET['sort']." ";
-					if($_GET['order'] === "desc"){
-						$query .= "DESC ";
-					}else{
-						$query .= "ASC ";
-					}
-					$query .= ", name ASC ";
-				}else{
-					$query .= " ORDER BY name ASC";
-				}
+				/* Query types
+				 * They will be fetched in the order in wich pybot putted them there
+				*/
+				$query = "SELECT type FROM pybot_service_types";
 				
 				$query = $db->real_escape_string($query);
 				if(($result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
 				
+				$types_row = $result->fetch_assoc();
+				
+				$types = array();
+				while(!is_null($types_row)){
+					$types[] = $types_row['type'];
+					$types_row = $result->fetch_assoc();
+				}
+				
+				$result->free_result();
+				
+				//$types=array()
+				
+				
+				
+				
+				
+				$query = "SELECT * FROM pybot_servers ORDER BY jid";
+				
+				$query = $db->real_escape_string($query);
+				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
+				
+				
+				$server_row = $servers_result->fetch_assoc();
+				
 				echo "<table>\n";
-				$row = $result->fetch_assoc();
-				
-				
 				$row_number = 0;
-				while(!is_null($row)){
-// 					if($row['times_offline']<TIMES_OFFLINE_ALLOWED){
+				while(!is_null($server_row)){
+					
+					
+// 					if($servers_row['times_offline']<TIMES_OFFLINE_ALLOWED){
 						if($row_number%ROWS_BETWEEN_TITLES==0){
-							echo "\t<tr class=\"table_header\">\n";
-							foreach($fields as $field => $field_name){
-								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
+							echo "\t<tr class=\"table_header\">";
+							echo "<th class='name'>Name</th>";
+							foreach($types as $type){
+								// TODO: Add if it's sorted in the class attribute
+								// TODO: Add the links to sort the columns
+								echo "<th class='$type'>$type</th>";
+// 								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
 							}
-							echo "\t</tr>\n";
+							echo "<th class='times_offline'>Times Offline</th>";
+							echo "</tr>\n";
 						}
+						
 // 						echo "<tr class='".(($row_number%2)==1?"odd":"even")."'>";
-						if($row['times_offline']>TIMES_OFFLINE_ALLOWED){
+						if($server_row['times_offline']>TIMES_OFFLINE_ALLOWED){
 							$class = "offline";
 						}else{
 							if(($row_number%2)==1){
@@ -182,131 +201,164 @@
 							}
 						}
 						echo "\t<tr class='$class'>\n";
-						foreach($fields as $field => $field_name){
-								switch($field){
-									case 'name':
-										echo "\t\t<td class=\"name\"><a name=\"".htmlspecialchars($row[$field])."\"></a>".htmlspecialchars($row[$field])."</td>\n";
-										break;
-									case 'times_offline':
-										echo "\t\t<td class=\"times_offline\">".htmlspecialchars($row[$field])."</td>\n";
-										break;	
-									default:
-										switch($row[$field]){
-											case 255:  // Available
-												echo "\t\t<td class=\"feature yes ".$field."\">";
-												switch($field){
-													case 'has_muc':
-														echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_irc':
-														echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_aim':
-														echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_gg':
-														echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_icq':
-														echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_msn':
-														echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_sms':
-														echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_yahoo':
-														echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_jud':
-														echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_newmail':
-														echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_rss':
-														echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_weather':
-														echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													default:
-														echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-												}
-												echo "</td>\n";
-												break;
-											
-											case 1:
-												//1 Available but not accesible (i.e. error 404 due a bad DNS configuration)
-												echo "\t\t<td class=\"feature not-accesible ".$field."\">";
-												switch($field){
-													case 'has_muc':
-														echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_irc':
-														echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_aim':
-														echo "<img src=\"images/aim_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_gg':
-														echo "<img src=\"images/gadu_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_icq':
-														echo "<img src=\"images/icq_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_msn':
-														echo "<img src=\"images/msn_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_sms':
-														echo "<img src=\"images/sms-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_yahoo':
-														echo "<img src=\"images/yahoo_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_jud':
-														echo "<img src=\"images/directory-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_newmail':
-														echo "<img src=\"images/email-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_rss':
-														echo "<img src=\"images/feed-icon-16x16-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													case 'has_weather':
-														echo "<img src=\"images/weather-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-													default:
-														echo "<img src=\"images/button_ok-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-														break;
-												}
-												echo "</td>\n";
-												break;
-												
-											case 0: //Uavailable
-											default:
-												echo "\t\t<td class=\"feature no ".$field."\">";
-												echo "</td>\n";
-										}
-								}
-						}
+						
+						
+						echo "\t\t<td class=\"name\"><a name=\"".htmlspecialchars($server_row['jid'])."\"></a>".htmlspecialchars($server_row['jid'])."</td>\n";
+						foreach($types as $type){
+							
+							
+							$query = "SELECT * FROM pybot_components ".
+										"WHERE ".
+											"server_jid='".$db->real_escape_string($server_row['jid'])."' ".
+											"AND type='".$db->real_escape_string($type)."' ".
+										"ORDER BY available DESC, jid ASC";
+							
+							if(($component_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
+							
+							$component_row = $component_result->fetch_assoc();
+							
+							
+							if(is_null($component_row)){
+								// The server doesn't provide this service
+								echo "\t\t<td class=\"feature no ".$type."\">";
+								echo "</td>\n";
+							}else{
+							
+								if($component_row['available']){
+									echo "\t\t<td class=\"feature yes ".$type."\">";
+									switch($type){
+										case 'muc':
+											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'irc':
+											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'aim':
+											echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'gg':
+											echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'icq':
+											echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'msn':
+											echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'sms':
+											echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'yahoo':
+											echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'jud':
+											echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'newmail':
+											echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'rss':
+											echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'weather':
+											echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										default:
+											echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+									}
+									//echo "</td>\n";
+								}else{
+									// Unavailable service
+									// i.e. error 404 due a bad DNS configuration)
+									echo "\t\t<td class=\"feature not-accesible ".$type."\">";
+									switch($type){
+										case 'muc':
+											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'irc':
+											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'aim':
+											echo "<img src=\"images/aim_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'gg':
+											echo "<img src=\"images/gadu_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'icq':
+											echo "<img src=\"images/icq_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'msn':
+											echo "<img src=\"images/msn_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'sms':
+											echo "<img src=\"images/sms-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'yahoo':
+											echo "<img src=\"images/yahoo_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'jud':
+											echo "<img src=\"images/directory-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'newmail':
+											echo "<img src=\"images/email-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'rss':
+											echo "<img src=\"images/feed-icon-16x16-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										case 'weather':
+											echo "<img src=\"images/weather-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+										default:
+											echo "<img src=\"images/button_ok-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+											break;
+									}
+									//echo "</td>\n";
+								} // if service available
+								
+							// Print components
+								echo "\n";
+								echo "\t\t\t<div class='components'>";
+								while(!is_null($component_row)){
+									echo "<span>".$component_row['jid']."</span>";
+									$component_row = $component_result->fetch_assoc();
+	}
+								echo "</div>";
+								echo "</td>\n";
+							} // if service provided
+							
+							
+							$component_result->free_result();
+							
+						} // foreach type
+						echo "\t\t<td class=\"times_offline\">".$server_row['times_offline']."</td>\n";
+						
+						
 						echo "\t</tr>\n";
 						$row_number++;
-// 					}
-						$row = $result->fetch_assoc();
-				}
-				if($row_number%ROWS_BETWEEN_TITLES!=1){
-					echo "\t<tr class=\"table_header\">\n";
-					foreach($fields as $field_name){
-						echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":"")."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))&&($_GET['sort']==$field)?"asc":"desc")."\">".$field_name."</a></th>\n";
-					}
-					echo "\t</tr>\n";
-				}
-				echo "</table>";
-				$result->free_result();
+// 					} // if times_offline < TIMES_OFFLINE_ALLOWED
+					
+					$server_row = $servers_result->fetch_assoc();
+					
+				} // foreach server
 				
+				// The last header
+				if($row_number%ROWS_BETWEEN_TITLES!=1){
+					echo "\t<tr class=\"table_header\">";
+					echo "<th class='name'>Name</th>";
+					foreach($types as $type){
+						// TODO: Add if it's sorted in the class attribute
+						// TODO: Add the links to sort the columns
+						echo "<th class='$type'>$type</th>";
+// 								echo "<th class=\"$field_name".(($_GET['sort']==$field)?" sortedby":((!isset($_GET['sort']) && ('name'==$field))?" sortedby":""))."\"><a href=\"?sort=$field&amp;order=".((($_GET['order']==="desc")&&($_GET['sort']==$field))||(($field=='name')&&(!(($_GET['sort']==$field)&&($_GET['order']=='asc'))))?"asc":"desc")."\">".$field_name."</a></th>\n";
+					}
+					echo "<th class='times_offline'>Times Offline</th>";
+					echo "</tr>\n";
+				}
+				
+				echo "</table>";
+				
+				$servers_result->free_result();
 			?>
 		</div>
 	</body>
