@@ -121,8 +121,11 @@ define("MYSQL_DB","server_list");
 			td.no{
 				color: #E90900;/*firebrick;*/
 			}
-			td.yes{
+			.available{
 				color: #00DA00;/*green;*/
+			}
+			.unavailable{
+				color: #808080;/*grey;*/
 			}
 			div.components span{
 				display: block;
@@ -164,6 +167,7 @@ define("MYSQL_DB","server_list");
 				
 				
 				$query = "SELECT * FROM pybot_servers ORDER BY jid";
+				
 				
 				$query = $db->real_escape_string($query);
 				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
@@ -225,7 +229,7 @@ define("MYSQL_DB","server_list");
 							}else{
 							
 								if($component_row['available']){
-									echo "\t\t<td class=\"feature yes ".$type."\">";
+									echo "\t\t<td class=\"feature yes available".$type."\">";
 									switch($type){
 										case 'muc':
 											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
@@ -271,7 +275,7 @@ define("MYSQL_DB","server_list");
 								}else{
 									// Unavailable service
 									// i.e. error 404 due a bad DNS configuration)
-									echo "\t\t<td class=\"feature not-accesible ".$type."\">";
+									echo "\t\t<td class=\"feature yes unavailable".$type."\">";
 									switch($type){
 										case 'muc':
 											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
@@ -320,9 +324,13 @@ define("MYSQL_DB","server_list");
 								echo "\n";
 								echo "\t\t\t<div class='components'>";
 								while(!is_null($component_row)){
-									echo "<span>".$component_row['jid']."</span>";
+									if($component_row['available']){
+										echo "<span class='available'>".$component_row['jid']."</span>";
+									}else{
+										echo "<span class='unavailable'>".$component_row['jid']."</span>";
+									}
 									$component_row = $component_result->fetch_assoc();
-	}
+								}
 								echo "</div>";
 								echo "</td>\n";
 							} // if service provided
