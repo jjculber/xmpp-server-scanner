@@ -240,19 +240,48 @@ function print_image($type, $available){
 				
 				//$types=array()
 				
-				$query = "SELECT ".
-							"pybot_servers.jid AS server_jid, ".
-							"pybot_servers.times_offline AS server_times_offline, ".
-							"pybot_components.jid AS component_jid, ".
-							"pybot_components.type AS component_type, ".
-							"pybot_components.available AS component_available ".
-						"FROM pybot_servers LEFT JOIN pybot_components ".
-							"ON (pybot_servers.jid = pybot_components.server_jid) ".
-						"ORDER BY ".
-							"server_jid ASC, ".
-							"component_type ASC, ".
-							"component_available DESC, ".
-							"component_jid ASC";
+				if(in_array($_GET['order'], $types)){
+					$type = $db->real_escape_string($_GET['order']);
+					$query = "SELECT ".
+								"pybot_servers.jid AS server_jid, ".
+								"pybot_servers.times_offline AS server_times_offline, ".
+								"pybot_components.jid AS component_jid, ".
+								"pybot_components.type AS component_type, ".
+								"pybot_components.available AS component_available, ".
+								"( SELECT COUNT(*) FROM pybot_components WHERE ".
+									"pybot_components.server_jid=pybot_servers.jid AND ".
+									"type='$type' AND ".
+									"available=True".
+								") as num_available, ".
+								"( SELECT COUNT(*) FROM pybot_components WHERE ".
+									"pybot_components.server_jid=pybot_servers.jid AND ".
+									"type='$type' AND ".
+									"available=False".
+								") as num_unavailable ".
+							"FROM pybot_servers LEFT JOIN pybot_components ".
+								"ON (pybot_servers.jid = pybot_components.server_jid) ".
+							"ORDER BY ".
+								"num_available DESC,".
+								"num_unavailable DESC, ".
+								"server_jid ASC, ".
+								"component_type ASC, ".
+								"component_available DESC, ".
+								"component_jid ASC";
+				}else{
+					$query = "SELECT ".
+								"pybot_servers.jid AS server_jid, ".
+								"pybot_servers.times_offline AS server_times_offline, ".
+								"pybot_components.jid AS component_jid, ".
+								"pybot_components.type AS component_type, ".
+								"pybot_components.available AS component_available ".
+							"FROM pybot_servers LEFT JOIN pybot_components ".
+								"ON (pybot_servers.jid = pybot_components.server_jid) ".
+							"ORDER BY ".
+								"server_jid ASC, ".
+								"component_type ASC, ".
+								"component_available DESC, ".
+								"component_jid ASC";
+				}
 				
 				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
 				
