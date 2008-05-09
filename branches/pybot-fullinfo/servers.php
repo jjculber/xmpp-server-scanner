@@ -34,6 +34,61 @@ function write_table_header($types){
 }
 
 
+function get_image_file($type, $available){
+	$file = "images/";
+	switch($type){
+		case 'muc':
+		case 'irc':
+			$file .= "irc_protocol";
+			break;
+		case 'aim':
+			$file .= "aim_protocol";
+			break;
+		case 'gg':
+			$file .= "gadu_protocol";
+			break;
+		case 'icq':
+			$file .= "icq_protocol";
+			break;
+		case 'msn':
+			$file .= "msn_protocol";
+			break;
+		case 'sms':
+			$file .= "sms";
+			break;
+		case 'yahoo':
+			$file .= "yahoo_protocol";
+			break;
+		case 'jud':
+			$file .= "directory";
+			break;
+		case 'newmail':
+			$file .= "email";
+			break;
+		case 'rss':
+			$file .= "feed-icon-16x16";
+			break;
+		case 'weather':
+			$file .= "weather";
+			break;
+		default:
+			$file .= "button_ok";
+			break;
+	}
+	
+	if(!$available){
+		$file .= "-grey";
+	}
+	
+	$file .= ".png";
+	
+	return $file;
+}
+
+function print_image($type, $available){
+	echo "<img src=\"".get_image_file($type, $available)."\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
+}
+
 // 	$db = new mysqli ( MYSQL_SERVER, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DB );
 // 	
 // 	/* check connection */
@@ -257,97 +312,14 @@ function write_table_header($types){
 							
 								if($server_data['services'][$type][0]['available']){
 									echo "\t\t<td class='feature yes available ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
-									switch($type){
-										case 'muc':
-											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'irc':
-											echo "<img src=\"images/irc_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'aim':
-											echo "<img src=\"images/aim_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'gg':
-											echo "<img src=\"images/gadu_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'icq':
-											echo "<img src=\"images/icq_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'msn':
-											echo "<img src=\"images/msn_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'sms':
-											echo "<img src=\"images/sms.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'yahoo':
-											echo "<img src=\"images/yahoo_protocol.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'jud':
-											echo "<img src=\"images/directory.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'newmail':
-											echo "<img src=\"images/email.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'rss':
-											echo "<img src=\"images/feed-icon-16x16.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'weather':
-											echo "<img src=\"images/weather.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										default:
-											echo "<img src=\"images/button_ok.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-									}
-									//echo "</td>\n";
 								}else{
 									// Unavailable service
 									// i.e. error 404 due a bad DNS configuration)
 									echo "\t\t<td class='feature yes unavailable ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
-									switch($type){
-										case 'muc':
-											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'irc':
-											echo "<img src=\"images/irc_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'aim':
-											echo "<img src=\"images/aim_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'gg':
-											echo "<img src=\"images/gadu_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'icq':
-											echo "<img src=\"images/icq_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'msn':
-											echo "<img src=\"images/msn_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'sms':
-											echo "<img src=\"images/sms-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'yahoo':
-											echo "<img src=\"images/yahoo_protocol-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'jud':
-											echo "<img src=\"images/directory-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'newmail':
-											echo "<img src=\"images/email-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'rss':
-											echo "<img src=\"images/feed-icon-16x16-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										case 'weather':
-											echo "<img src=\"images/weather-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-										default:
-											echo "<img src=\"images/button_ok-grey.png\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />";
-											break;
-									}
-									//echo "</td>\n";
-								} // if service available
+								}
+								print_image($type, $server_data['services'][$type][0]['available']);
 								
-							// Print components
+								// Print components
 								echo "\n";
 								echo "\t\t\t<div class='components'>";
 								foreach($server_data['services'][$type] as $component){
