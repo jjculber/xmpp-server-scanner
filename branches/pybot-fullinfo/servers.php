@@ -199,27 +199,6 @@ function write_table_header($types){
 							"component_available DESC, ".
 							"component_jid ASC";
 				
-				/*if(in_array($_GET['order'], $types)){
-					$query = "SELECT *, (".
-									"SELECT COUNT(jid) FROM pybot_components ".
-									"WHERE pybot_servers.jid=server_jid AND ".
-										"type='".$db->real_escape_string($_GET['order'])."' AND ".
-										"available=True ".
-								") AS num_components_available ,(".
-									"SELECT COUNT(jid) FROM pybot_components ".
-									"WHERE pybot_servers.jid=server_jid AND ".
-										"type='".$db->real_escape_string($_GET['order'])."' AND ".
-										"available=False ".
-								") AS num_components_unavailable ".
-								"FROM pybot_servers ".
-								"ORDER BY ".
-									"num_components_available DESC, ".
-									"num_components_unavailable DESC, ".
-									"jid ASC";
-				}else{
-					$query = "SELECT * FROM pybot_servers ORDER BY jid";
-				}*/
-				
 				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
 				
 				$server_row = $servers_result->fetch_assoc();
@@ -381,8 +360,6 @@ function write_table_header($types){
 								echo "</div>";
 								echo "</td>\n";
 							} // if service provided
-							
-							
 							
 						} // foreach type
 						echo "\t\t<td class=\"times_offline\">".$server_data['times_offline']."</td>\n";
