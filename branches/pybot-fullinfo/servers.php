@@ -44,7 +44,7 @@ function get_image_file($type, $available){
 		case 'aim':
 			$file .= "aim_protocol";
 			break;
-		case 'gg':
+		case 'gadu-gadu':
 			$file .= "gadu_protocol";
 			break;
 		case 'icq':
