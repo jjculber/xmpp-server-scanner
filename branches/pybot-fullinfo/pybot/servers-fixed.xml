@@ -73,7 +73,7 @@
   <item jid='intellijoin.org'/>
   <item jid='jab.undernet.cz'/>
   <item jid='jabber-hispano.org'/>
-  <item jid='jabber-hispano.org'/>
+<!--   <item jid='jabber-hispano.org'/> -->
   <item jid='jabber.3gnt.org'/>
   <item jid='jabber.ambrero.nl'/>
   <item jid='jabber.anywise.com'/>
@@ -87,7 +87,7 @@
   <item jid='jabber.chaotic.de'/>
 <!--   <item jid='jabber.cl'/> -->
   <item jid='jabber.cn'/>
-<!--   <item jid='jabber.cocoacastle.com'/> -->
+<!-- <!--   <item jid='jabber.cocoacastle.com'/> --> -->
   <item jid='jabber.com.ar'/>
   <item jid='jabber.crimea.ua'/>
   <item jid='jabber.cv.ua'/>
@@ -167,7 +167,7 @@
   <item jid='jabbim.cz'/>
   <item jid='jabbim.sk'/>
   <item jid='jabjab.de'/>
-  <item jid='jabjab.de'/>
+<!--   <item jid='jabjab.de'/> -->
   <item jid='jabster.pl'/>
   <item jid='jacquin.eu'/>
   <item jid='jaim.at'/>
@@ -244,12 +244,12 @@
   <item jid='vke.ru'/>
   <item jid='vodka-pomme.net'/>
   <item jid='volgograd.ru'/>
-  <item jid='volgograd.ru'/>
-  <item jid='volgograd.ru'/>
+<!--   <item jid='volgograd.ru'/> -->
+<!--   <item jid='volgograd.ru'/> -->
 <!--   <item jid='wankoo.org'/> -->
 <!--   <item jid='www.wigiwigi.com'/> -->
   <item jid='x23.eu'/>
-  <item jid='x23.eu'/>
+<!--   <item jid='x23.eu'/> -->
   <item jid='xabber.de'/>
   <item jid='xim.ca'/>
 <!--   <item jid='xmpp-im.net'/> -->
