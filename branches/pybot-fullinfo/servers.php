@@ -185,9 +185,21 @@ function write_table_header($types){
 				
 				//$types=array()
 				
+				$query = "SELECT ".
+							"pybot_servers.jid AS server_jid, ".
+							"pybot_servers.times_offline AS server_times_offline, ".
+							"pybot_components.jid AS component_jid, ".
+							"pybot_components.type AS component_type, ".
+							"pybot_components.available AS component_available ".
+						"FROM pybot_servers LEFT JOIN pybot_components ".
+							"ON (pybot_servers.jid = pybot_components.server_jid) ".
+						"ORDER BY ".
+							"server_jid ASC, ".
+							"component_type ASC, ".
+							"component_available DESC, ".
+							"component_jid ASC";
 				
-				
-				if(in_array($_GET['order'], $types)){
+				/*if(in_array($_GET['order'], $types)){
 					$query = "SELECT *, (".
 									"SELECT COUNT(jid) FROM pybot_components ".
 									"WHERE pybot_servers.jid=server_jid AND ".
@@ -206,7 +218,7 @@ function write_table_header($types){
 									"jid ASC";
 				}else{
 					$query = "SELECT * FROM pybot_servers ORDER BY jid";
-				}
+				}*/
 				
 				if(($servers_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
 				
@@ -216,14 +228,31 @@ function write_table_header($types){
 				$row_number = 0;
 				while(!is_null($server_row)){
 					
+					$server_data = array();
+					$server_data['jid'] = $server_row['server_jid'];
+					$server_data['times_offline'] = $server_row['server_times_offline'];
+					$server_data['services'] = array();
 					
-// 					if($servers_row['times_offline']<TIMES_OFFLINE_ALLOWED){
-						if($row_number%ROWS_BETWEEN_TITLES==0){
+					if(!is_null($server_row['component_jid'])){
+						while((!is_null($server_row)) && ($server_data['jid'] == $server_row['server_jid'])){
+							$server_data['services'][$server_row['component_type']][] = array(
+								'jid' => $server_row['component_jid'],
+								'available' => (boolean) $server_row['component_available']
+							);
+							$server_data['components'][$server_row['component_type']][] = $server_row['component_jid'];
+							$server_row = $servers_result->fetch_assoc();
+						}
+					}else{
+						$server_row = $servers_result->fetch_assoc();
+					}
+					
+// 					if($servers_data['times_offline']<TIMES_OFFLINE_ALLOWED){
+						if($row_number%ROWS_BETWEEN_TITLES == 0){
 							write_table_header($types);
 						}
 						
 // 						echo "<tr class='".(($row_number%2)==1?"odd":"even")."'>";
-						if($server_row['times_offline']>TIMES_OFFLINE_ALLOWED){
+						if($server_data['times_offline']>TIMES_OFFLINE_ALLOWED){
 							$class = "offline";
 						}else{
 							if(($row_number%2)==1){
@@ -236,29 +265,18 @@ function write_table_header($types){
 						
 						
 						echo "\t\t<td class='name".(((!$_GET['order'])||($_GET['order']=='name'))?" sortedby":"")."'>";
-						echo "<a name='".htmlspecialchars($server_row['jid'])."'>".htmlspecialchars($server_row['jid'])."</a>";
+						echo "<a name='".htmlspecialchars($server_data['jid'])."'>".htmlspecialchars($server_data['jid'])."</a>";
 						echo "</td>\n";
 						foreach($types as $type){
 							
 							
-							$query = "SELECT * FROM pybot_components ".
-										"WHERE ".
-											"server_jid='".$db->real_escape_string($server_row['jid'])."' ".
-											"AND type='".$db->real_escape_string($type)."' ".
-										"ORDER BY available DESC, jid ASC";
-							
-							if(($component_result = $db->query($query)) === False) die('MySQL Error: '.$db->error());
-							
-							$component_row = $component_result->fetch_assoc();
-							
-							
-							if(is_null($component_row)){
+							if(!array_key_exists($type, $server_data['services'])){
 								// The server doesn't provide this service
 								echo "\t\t<td class='feature no ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
 								echo "</td>\n";
 							}else{
 							
-								if($component_row['available']){
+								if($server_data['services'][$type][0]['available']){
 									echo "\t\t<td class='feature yes available ".$type.(($_GET['order']==$type)?" sortedby":"")."'>";
 									switch($type){
 										case 'muc':
@@ -353,30 +371,26 @@ function write_table_header($types){
 							// Print components
 								echo "\n";
 								echo "\t\t\t<div class='components'>";
-								while(!is_null($component_row)){
-									if($component_row['available']){
-										echo "<span class='available'>".$component_row['jid']."</span>";
+								foreach($server_data['services'][$type] as $component){
+									if($component['available']){
+										echo "<span class='available'>".$component['jid']."</span>";
 									}else{
-										echo "<span class='unavailable'>".$component_row['jid']."</span>";
+										echo "<span class='unavailable'>".$component['jid']."</span>";
 									}
-									$component_row = $component_result->fetch_assoc();
 								}
 								echo "</div>";
 								echo "</td>\n";
 							} // if service provided
 							
 							
-							$component_result->free_result();
 							
 						} // foreach type
-						echo "\t\t<td class=\"times_offline\">".$server_row['times_offline']."</td>\n";
+						echo "\t\t<td class=\"times_offline\">".$server_data['times_offline']."</td>\n";
 						
 						
 						echo "\t</tr>\n";
 						$row_number++;
 // 					} // if times_offline < TIMES_OFFLINE_ALLOWED
-					
-					$server_row = $servers_result->fetch_assoc();
 					
 				} // foreach server
 				
