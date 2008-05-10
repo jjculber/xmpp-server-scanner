@@ -4,24 +4,88 @@
 # TODO: Add sorting support
 
 import logging
+import os.path
 
 ROWS_BETWEEN_TITLES = 10
 
-def _get_table_header(types, sortby=None):
+def _get_filename(directory, filename_prefix, service_type=None, extension='.html'):
+	if service_type is None:
+		return os.path.join(directory,filename_prefix+extension)
+	else:
+		return os.path.join(directory, filename_prefix+'_by_'+service_type+extension)
+
+def _count_components(server, service_type=None, availability='both'):
+	"""Count server components.
+	If the same component provides two or more services, it's counted both times
+	Components can be restricted to be from service_type type only.
+	Components can be restricted using their availability.
+	Availability values: ('available', 'unavailable', 'both')."""
+	
+	if service_type is None:
+		num = 0
+		
+		if availability=='available' or availability=='both':
+			for service_type in server['available_services']:
+				num += len(server['available_services'][service_type])
+		if availability=='unavailable' or availability=='both':
+			for service_type in server['unavailable_services']:
+				num += len(server['unavailable_services'][service_type])
+		return num
+	else:
+		if availability=='available':
+			if service_type in server['available_services']:
+				return len(server['available_services'][service_type])
+			else:
+				return 0
+		if availability=='unavailable':
+			if service_type in server['unavailable_services']:
+				return len(server['unavailable_services'][service_type])
+			else:
+				return 0
+		if availability=='both':
+			num = 0
+			if service_type in server['available_services']:
+				num += len(server['available_services'][service_type])
+			if service_type in server['unavailable_services']:
+				num += len(server['unavailable_services'][service_type])
+			return num
+
+def _get_table_header(types, sort_type=None, sort_links=None):
 	header = "\t<tr class=\"table_header\">"
+	
 	header += "<th class='name"
-	if sortby is None or sortby == 'name':
+	if sort_type is None or sort_type == 'name':
 		header += " sortedby"
-	header += "'><a href='?order=name'>Name</a></th>"
+	header += "'>"
+	if sort_links is None:
+		header += "<a href='"
+		header += _get_filename( sort_links['directory'],
+		                         sort_links['filename_prefix'], 'name' )
+		header += "'>Name</a>"
+	else:
+		header += "Name"
+	header += "</th>"
+	
 	for service_type in types:
 		header += "<th class='"+service_type
-		if sortby == service_type:
+		if sort_type == service_type:
 			header += " sortedby"
-		header += "'><a href='?order="+service_type+"'>"+service_type+"</a></th>"
+		header += "'>"
+		if sort_links is None:
+			header += service_type
+		else:
+			header += "<a href='"
+			header += _get_filename( sort_links['directory'],
+		                             sort_links['filename_prefix'],
+			                         service_type )
+			header += "'>"+service_type+"</a>"
+		header += "</th>"
+	
 	#header += "<th class='times_offline"
-	#if sortby is 'times_offline':
+	#if sort_type is 'times_offline':
 		#header += " sortedby"
 	#header += "'>Times Offline</th>"
+	
 	header += "</tr>"
 	
 	return header
@@ -62,14 +126,45 @@ def _get_image_filename(service_type, available):
 	return filename
 
 
-def generate(filename, servers, types, sortby=None, compress=False):
+def generate( filename, servers, types, sort_type=None, sort_links=None,
+              compress=False ):
 	"""Generate a html file with the servers information.
-	Don't display times_offline, to avoid a database access."""
+	Don't display times_offline, to avoid a database access.
+	If sort_links is not None, it will be a dictionary with the following keys:
+		'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
 	
-	logging.info('Writing HTML file: %s',filename)
+	logging.info('Writing HTML file "%s" ordered by %s', filename, sort_type)
 	
-	if sortby is None:
-		sortby = 'name'
+	if sort_type is None:
+		# Assume that the servers are sorted by name
+		sort_type = 'name'
+	elif sort_type is 'name':
+		# If it's a explicit request, then sort
+		jid = lambda server: server[u'jid']
+		# I prefer to not touch the original list
+		servers = list(servers)
+		servers.sort(key=jid)
+	else:
+		# Sort servers
+		
+		num_available_components = (
+		    lambda server: _count_components( server,
+		                                      service_type=sort_type,
+		                                      availability='available') )
+		num_unavailable_components = (
+		    lambda server: _count_components( server,
+		                                      service_type=sort_type,
+		                                      availability='unavailable') )
+		jid = lambda server: server[u'jid']
+		
+		# I prefer to not touch the original list
+		servers = list(servers)
+		
+		# Stable sort
+		servers.sort(key=jid)
+		servers.sort(key=num_unavailable_components, reverse=True)
+		servers.sort(key=num_available_components, reverse=True)
+	
 	
 	f = open(filename, "w")
 	f.write(
@@ -188,11 +283,12 @@ def generate(filename, servers, types, sortby=None, compress=False):
 	
 	f.write(cols+"\n")
 	
-	table_header = _get_table_header(types, sortby)
+	table_header = _get_table_header(types, sort_type, sort_links)
 	
 	row_number = 0
 	
 	for server in servers:
+		
 		if row_number % ROWS_BETWEEN_TITLES == 0:
 			f.write(table_header+"\n")
 		
@@ -213,7 +309,7 @@ def generate(filename, servers, types, sortby=None, compress=False):
 		f.write(tr+"\n")
 		
 		cell = "\t\t<td class='name"
-		if sortby == 'name':
+		if sort_type == 'name':
 			cell += " sortedby"
 		cell += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
 		f.write(cell+"\n")
@@ -223,7 +319,7 @@ def generate(filename, servers, types, sortby=None, compress=False):
 			if (  service_type not in server['available_services'] and 
 				  service_type not in server['unavailable_services']  ):
 				cell = "\t\t<td class='feature no " + service_type
-				if sortby == service_type:
+				if sort_type == service_type:
 					cell += " sortedby"
 				cell += "'></td>"
 			else:
@@ -238,7 +334,7 @@ def generate(filename, servers, types, sortby=None, compress=False):
 				
 				cell += " " + service_type
 				
-				if sortby == service_type:
+				if sort_type == service_type:
 					cell += " sortedby"
 				
 				cell += "'>"
@@ -261,7 +357,7 @@ def generate(filename, servers, types, sortby=None, compress=False):
 		#FIX: don't display times_offline this way
 		#TODO: display it (needs a access to the DB) or mark the tr as offline?
 		#cell = "\t\t<td class=\"times_offline"
-		#if sortby == 'times_offline':
+		#if sort_type == 'times_offline':
 			#cell += " sortedby"
 		#cell += "\">4</td>"
 		#f.write(cell+"\n")
@@ -280,5 +376,24 @@ def generate(filename, servers, types, sortby=None, compress=False):
 </html>
 """
 	)
-	
+	f.close()
 	logging.info('HTML file Generated')
+
+
+def generate_all(directory, filename_prefix, servers, types, compress=False):
+	'''Generate a set of HTML files sorted by different columns'''
+	
+	sort_links = { 'directory': '.', 'filename_prefix': filename_prefix }
+	
+	# Name
+	generate( _get_filename(directory, filename_prefix),
+	          servers, types, sort_links=sort_links, compress=compress )
+	generate( _get_filename(directory, filename_prefix, service_type='name'),
+	          servers, types, sort_type='name', sort_links=sort_links,
+	          compress=compress )
+	
+	for service_type in types:
+		generate( _get_filename(directory, filename_prefix, service_type=service_type),
+		          servers, types, sort_type=service_type, sort_links=sort_links,
+		          compress=compress )
+

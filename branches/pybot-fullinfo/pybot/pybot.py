@@ -136,4 +136,9 @@ servers = database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
                                           )
 
 #known_types.sort()
-html_file_generator.generate('../servers-pybot.html', servers, known_types)
+#html_file_generator.generate('../servers-pybot.html', servers, known_types)
+html_file_generator.generate_all( directory='..',
+                                  filename_prefix='servers-pybot',
+                                  servers=servers, types=known_types )
+
+
