@@ -14,26 +14,8 @@
 # TODO: Check for SQL injections
 
 
-## Logs
-#LOGFILE        = 'out.log'
-#LOGFILE        = None
-
 import logging
 import MySQLdb
-
-#if LOGFILE is None:
-	#logging.basicConfig(
-##	    level=logging.WARNING,
-	    #level=logging.DEBUG,
-	    #format='%(asctime)s %(levelname)s %(message)s'
-	    #)
-#else:
-	#logging.basicConfig(
-	    #level=logging.DEBUG,
-	    #format='%(asctime)s %(levelname)s %(message)s',
-	    #filename=LOGFILE,
-	    #filemode='w'
-	    #)
 
 
 def update_database(db_user, db_password, db_host, db_database, servers, known_types):
@@ -46,9 +28,6 @@ def update_database(db_user, db_password, db_host, db_database, servers, known_t
 	db.autocommit(True)
 	
 	# Check service types
-	
-	
-	
 	
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
 	cursor.execute("""SELECT `type` FROM `pybot_service_types`""")

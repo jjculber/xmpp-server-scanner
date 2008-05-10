@@ -16,31 +16,12 @@
 # TODO: Simplify _discover_item()
 
 
-
-## Logs
-#LOGFILE        = 'out.log'
-#LOGFILE        = None
-
 import logging
 import re
 import xml
 
 
 from xmpp import Client, features
-
-#if LOGFILE is None:
-	#logging.basicConfig(
-##	    level=logging.WARNING,
-	    #level=logging.DEBUG,
-	    #format='%(asctime)s %(levelname)s %(message)s'
-	    #)
-#else:
-	#logging.basicConfig(
-	    #level=logging.DEBUG,
-	    #format='%(asctime)s %(levelname)s %(message)s',
-	    #filename=LOGFILE,
-	    #filemode='w'
-	    #)
 
 
 
