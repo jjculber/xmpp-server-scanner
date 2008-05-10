@@ -245,7 +245,7 @@ def _get_item_info(dispatcher, component):
 			                exc_info=True)
 			#return ([], [])
 			#add_component_unavailable(component[u'jid'],
-			                        #server[u'unavailableServices'])
+			                        #server[u'unavailable_services'])
 			raise
 			
 	else:
@@ -291,7 +291,7 @@ def _discover_item(dispatcher, component, server):
 		component[u'info'] = _get_item_info(dispatcher, component)
 	except xml.parsers.expat.ExpatError:
 		component[u'info'] = ([], [])
-		_add_component_unavailable(component[u'jid'], server[u'unavailableServices'])
+		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
 		raise
 	
 	# Detect if it's a server or a branch (if it have child items)
@@ -299,7 +299,7 @@ def _discover_item(dispatcher, component, server):
 	if (  (u'http://jabber.org/protocol/disco#info' in component[u'info'][1]) |
 	      (u'http://jabber.org/protocol/disco' in component[u'info'][1])  ):
 		needs_to_query_items = False
-		_add_component_available(component, server[u'availableServices'])
+		_add_component_available(component, server[u'available_services'])
 		for identity in component[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
@@ -328,10 +328,10 @@ def _discover_item(dispatcher, component, server):
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
-		_add_component_unavailable(component[u'jid'], server[u'unavailableServices'])
+		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
 	
 	else:
-		if u'availableServices' in component:
+		if u'available_services' in component:
 			# It's a server. It probably uses jabber:iq:browse
 			# Adapt the information
 			# Process items
@@ -347,10 +347,10 @@ def _discover_item(dispatcher, component, server):
 			                       component[u'info'][1] )
 		else:
 			#try:
-			_add_component_available(component, server[u'availableServices'])
+			_add_component_available(component, server[u'available_services'])
 			#except:
 				#add_component_unavailable(component[u'jid'],
-				                        #server[u'unavailableServices'])
+				                        #server[u'unavailable_services'])
 	
 	# If it's a server or a branch node, get the child items
 	
@@ -400,8 +400,8 @@ def discover_servers(jabber_user, jabber_password, jabber_resource, jabber_serve
 	
 	for jid in server_list:
 		servers.append({ u'jid': jid,
-		                 u'availableServices': {}, 
-		                 u'unavailableServices': {} })
+		                 u'available_services': {}, 
+		                 u'unavailable_services': {} })
 
 
 	# Connect to server

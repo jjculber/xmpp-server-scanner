@@ -48,7 +48,7 @@ import pickle
 import urllib
 from xmpp import simplexml
 
-from include import database_updater, xmpp_discoverer
+from include import database_updater, html_file_generator, xmpp_discoverer
 
 
 if LOGFILE is None:
@@ -88,21 +88,11 @@ for item in items:
 	if item.getAttr("jid") not in server_list:
 		server_list.append(item.getAttr("jid"))
 
-#servers=[{u'jid': u'jabberes.org', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'jab.undernet.cz', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'12jabber.com', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'allchitchat.com', u'availableServices': {}, u'unavailableServices': {}}]
-#servers=[{u'jid': u'jabber.dk', u'availableServices': {}, u'unavailableServices': {}}, {u'jid': u'amessage.be', u'availableServices': {}, u'unavailableServices': {}}]
-#servers=[
-    #{u'jid': u'jabberes.org', u'availableServices': {}, u'unavailableServices': {}},
-    #{u'jid': u'jabber.dk', u'availableServices': {}, u'unavailableServices': {}},
-    #{u'jid': u'jabber-hispano.org', u'availableServices': {}, u'unavailableServices': {}}
-#]
+#servers=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org']
 
-#servers=[]
-servers = xmpp_discoverer.discover_servers(
-                                           jabber_user=JABBERUSER,
-                                           jabber_password=JABBERPASSWORD,
-                                           jabber_resource=JABBERRESOURCE,
-                                           jabber_server=JABBERSERVER,
-                                           server_list=server_list
+servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
+                                            JABBERRESOURCE, JABBERSERVER,
+                                            server_list
                                           )
 
 #f = open('servers.dump', 'wb')
@@ -113,28 +103,37 @@ servers = xmpp_discoverer.discover_servers(
 
 #f.close()
 
-for server in servers:
-	print
-	print 'Server: ' + server[u'jid']
-	print "Available:",
-	for service in server[u'availableServices']:
-		print "\n " + service + " provided by:",
-		for jid in server[u'availableServices'][service]:
-			print jid,
+## TODO: delete this
+#for server in servers:
+	#server[u'available_services'] = server[u'availableServices']
+	#del(server[u'availableServices'])
+	#server[u'unavailable_services'] = server[u'unavailableServices']
+	#del(server[u'unavailableServices'])
+
+#for server in servers:
+	#print
+	#print 'Server: ' + server[u'jid']
+	#print "Available:",
+	#for service in server[u'available_services']:
+		#print "\n " + service + " provided by:",
+		#for jid in server[u'available_services'][service]:
+			#print jid,
 		
-	print "\nUnavailable:",
-	for service in server[u'unavailableServices']:
-		print "\n " + service + " provided by:",
-		for jid in server[u'unavailableServices'][service]:
-			print jid,
-	print ''
+	#print "\nUnavailable:",
+	#for service in server[u'unavailable_services']:
+		#print "\n " + service + " provided by:",
+		#for jid in server[u'unavailable_services'][service]:
+			#print jid,
+	#print ''
 
 
-servers = database_updater.update_database(
-                                           db_user=DBUSER,
-                                           db_password=DBPASSWORD,
-                                           db_host=DBHOST,
-                                           db_database=DBDATABASE,
-                                           servers=servers
+known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'http-ws', 'icq', 'msn', 'qq',
+                'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pubsub', 'pep',
+                'presence', 'newmail', 'rss', 'weather', 'proxy' ]
+
+servers = database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
+                                            DBDATABASE, servers, known_types
                                           )
 
+#known_types.sort()
+html_file_generator.generate('../servers-pybot.html', servers, known_types)

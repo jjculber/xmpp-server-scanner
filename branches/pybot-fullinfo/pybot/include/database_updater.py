@@ -36,7 +36,7 @@ import MySQLdb
 	    #)
 
 
-def update_database(db_user, db_password, db_host, db_database, servers):
+def update_database(db_user, db_password, db_host, db_database, servers, known_types):
 	
 	logging.info('Updating Database')
 	
@@ -48,9 +48,6 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	# Check service types
 	
 	
-	known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'http-ws', 'icq', 'msn', 'qq',
-					'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pubsub', 'pep',
-					'presence', 'newmail', 'rss', 'weather', 'proxy' ]
 	
 	
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
@@ -87,8 +84,8 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 			cursor.execute("""DELETE FROM pybot_components
 								WHERE server_jid = %s""", (server[u'jid'],) )
 			
-			for service in server[u'availableServices']:
-				for component in server[u'availableServices'][service]:
+			for service in server[u'available_services']:
+				for component in server[u'available_services'][service]:
 					logging.debug( 'Add available %s component %s of %s server',
 								service, component, server[u'jid'])
 					cursor.execute("""INSERT INTO  pybot_components
@@ -97,8 +94,8 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 										ON DUPLICATE KEY UPDATE available = %s""",
 									(component, server[u'jid'], service, True, True))
 			
-			for service in server[u'unavailableServices']:
-				for component in server[u'unavailableServices'][service]:
+			for service in server[u'unavailable_services']:
+				for component in server[u'unavailable_services'][service]:
 					logging.debug( 'Add unavailable %s component %s of %s server',
 								service, component, server[u'jid'])
 					cursor.execute("""INSERT INTO pybot_components
