@@ -25,7 +25,7 @@
 JABBERUSER     = "xxxxxxx"
 JABBERPASSWORD = "xxxxxxx"
 JABBERRESOURCE = "pybot"
-JABBERSERVER   = "xmpp.example.net"
+JABBERSERVER   = "jabber.example.com"
 
 # Database
 DBUSER         = "user"
