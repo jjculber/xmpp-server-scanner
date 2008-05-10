@@ -181,6 +181,13 @@ def generate(filename, servers, types, sortby=None, compress=False):
 """
 	)
 	
+	cols = "\t\t\t<col class=\"name\" />"
+	for service_type in types:
+		cols += "<col class=\"" + service_type + "\" />"
+	#cols += "<col class=\"times_offline\" />"
+	
+	f.write(cols+"\n")
+	
 	table_header = _get_table_header(types, sortby)
 	
 	row_number = 0
