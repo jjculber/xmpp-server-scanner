@@ -88,12 +88,14 @@ for item in items:
 	if item.getAttr("jid") not in server_list:
 		server_list.append(item.getAttr("jid"))
 
-#servers=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org']
+#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org']
+#server_list=['jabberes.org']
 
 servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
                                             JABBERRESOURCE, JABBERSERVER,
                                             server_list
                                           )
+#print servers
 
 #f = open('servers.dump', 'wb')
 #pickle.dump(servers, f)
@@ -103,12 +105,6 @@ servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
 
 #f.close()
 
-## TODO: delete this
-#for server in servers:
-	#server[u'available_services'] = server[u'availableServices']
-	#del(server[u'availableServices'])
-	#server[u'unavailable_services'] = server[u'unavailableServices']
-	#del(server[u'unavailableServices'])
 
 #for server in servers:
 	#print
@@ -131,9 +127,9 @@ known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'http-ws', 'icq', 'msn', 'qq',
                 'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pubsub', 'pep',
                 'presence', 'newmail', 'rss', 'weather', 'proxy' ]
 
-servers = database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
-                                            DBDATABASE, servers, known_types
-                                          )
+database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
+                                  DBDATABASE, servers, known_types
+                                )
 
 #known_types.sort()
 #html_file_generator.generate('../servers-pybot.html', servers, known_types)
