@@ -197,7 +197,10 @@ def generate(filename, servers, types, sortby=None, compress=False):
 			f.write(table_header+"\n")
 		
 		tr = "\t<tr class='"
-		if server == {u'info': ([], []), u'unavailable_services': {}, u'jid': server[u'jid'], u'available_services': {}}:
+		if (  len(server['available_services']) == 0 and
+		      len(server['unavailable_services']) == 0 and
+		      len(server[u'info'][0]) == 0 and
+		      len(server[u'info'][1]) == 0  ):
 			tr += 'offline'
 		elif row_number % 2 == 1:
 			tr += 'odd'
