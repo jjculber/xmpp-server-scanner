@@ -29,19 +29,22 @@ def update_database(db_user, db_password, db_host, db_database, servers, known_t
 	
 	# Check service types
 	
+	types = list(known_types)
+	
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
 	cursor.execute("""SELECT `type` FROM `pybot_service_types`""")
 	for row in cursor.fetchall():
-		if row['type'] not in known_types:
+		if row['type'] not in types:
 			logging.info('Deleting service type %s', row['type'])
-			cursor.execute("""DELETE FROM pybot_service_types
-								WHERE type = %s """, (row['type'],))
+			cursor.execute( """DELETE FROM pybot_service_types
+			                     WHERE type = %s """, (row['type'],) )
 		else:
-			known_types.remove(row['type'])
+			types.remove(row['type'])
 	
-	for t in known_types:
-		logging.debug('Add new service type %s', t)
-		cursor.execute("""INSERT INTO pybot_service_types SET type = %s""", (t,))
+	for service_type in types:
+		logging.debug('Add new service type %s', service_type)
+		cursor.execute( """INSERT INTO pybot_service_types SET type = %s""",
+		                (service_type,) )
 	
 	
 	# Save the servers and services
