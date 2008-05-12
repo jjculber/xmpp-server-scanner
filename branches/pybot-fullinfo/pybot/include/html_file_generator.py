@@ -3,6 +3,62 @@
 
 # TODO: Add sorting support
 
+"""This module generates html files from the data gathered by the xmpp_discoverer
+	There are two functions generate() and generate_all()
+	
+	generate_all() just generates several html files sorted by columns
+	
+	The files are static and can be very verbose so, you might want
+	to cache and compress them.
+	
+	You can use dynamic compression or static compression, the dynamic
+	compression compreses the page on every request, the static one compress
+	the page on the first request and stores it to serve it from that moment.
+	
+	Since the webpage content doesn't change, you might prefer static
+	compression to lower the CPU load.
+	
+	Just in case your webserver doesn't support static compression, I have
+	added the compress option. This option, generates gzipped files, so you can
+	serve them specifing the enconding as gzip.
+	
+	Then you have to configure your server.
+	
+	
+	
+	On Apache, static compresion can be achieved combining mod_deflate and
+	mod_cache. Or, if they aren't available, generating the gzipped page and
+	configuring Apache like:
+	
+	AddEncoding x-gzip .gz
+	<IfModule mod_rewrite.c>
+		RewriteEngine On
+		RewriteCond %{HTTP:Accept-Encoding} gzip
+		RewriteCond %{REQUEST_FILENAME}.gz -f
+		RewriteRule ^(.+).html$ $1.$2.gz [L]
+	</IfModule>
+	
+	
+	
+	On lighttpd, static compression can be achieved using mod_compress or
+	generating the gzipped page and configuring lighttpd like:
+	
+	# Assuming that the pages are on /servers/ and that the index is servers.html.gz
+	url.rewrite-once = (
+		"^/servers/$" => "/servers/servers.html.gz",
+		"^/servers/([a-zA-Z\-_]+)\.html?$" => "/servers/$1.html.gz"
+	)
+	
+	$HTTP["url"] =~ "^/servers/([a-zA-Z_\-]+)\.html(\.gz)?$" {
+		compress.filetype          = () # Disable static compression of the already compressed pages
+		setenv.add-response-header = ( "Content-Encoding" => "gzip" )
+		mimetype.assign = ( ".html.gz" => "text/html" )
+	}
+	
+	
+	"""
+
+
 import gzip
 import logging
 import os.path
@@ -132,7 +188,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	"""Generate a html file with the servers information.
 	Don't display times_offline, to avoid a database access.
 	If sort_links is not None, it will be a dictionary with the following keys:
-		'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
+	'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
 	
 	if compress:
 		logging.info('Writing Gzipped HTML file "%s" ordered by %s', filename, sort_type)
