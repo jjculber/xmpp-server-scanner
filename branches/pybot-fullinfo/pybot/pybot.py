@@ -42,13 +42,17 @@ SERVERS_FILE   = "servers-fixed.xml"
 LOGFILE        = 'out.log'
 LOGFILE        = None
 
-#from xmpp import *
+
 import logging
+import os.path
 import pickle
 import urllib
+
 from xmpp import simplexml
 
-from include import database_updater, html_file_generator, xmpp_discoverer
+from include import xmpp_discoverer
+from include import database_updater
+from include import html_file_generator, xml_file_generator
 
 
 if LOGFILE is None:
@@ -135,6 +139,7 @@ database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
 #html_file_generator.generate('../servers-pybot.html', servers, known_types)
 html_file_generator.generate_all( directory='..',
                                   filename_prefix='servers-pybot',
-                                  servers=servers, types=known_types )
+                                  servers=servers, types=known_types,
+                                  compress=True )
 
-
+xml_file_generator.generate(os.path.join('..', 'servers-fullinfo.xml'), servers)
