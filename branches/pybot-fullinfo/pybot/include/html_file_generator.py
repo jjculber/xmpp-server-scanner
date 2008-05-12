@@ -115,12 +115,12 @@ def _get_table_header(types, sort_type=None, sort_links=None):
 		header += " sortedby"
 	header += "'>"
 	if sort_links is None:
+		header += "Name"
+	else:
 		header += "<a href='"
 		header += _get_filename( sort_links['directory'],
 		                         sort_links['filename_prefix'], 'name' )
 		header += "'>Name</a>"
-	else:
-		header += "Name"
 	header += "</th>"
 	
 	for service_type in types:
