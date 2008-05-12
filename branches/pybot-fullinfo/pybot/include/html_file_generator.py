@@ -1,7 +1,7 @@
 
 # $id$
 
-# TODO: Add sorting support
+# TODO: Make the HTML and the CSS less verbose
 
 """This module generates html files from the data gathered by the xmpp_discoverer
 	There are two functions generate() and generate_all()
@@ -324,6 +324,12 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			div.components span{
 				display: block;
 				font-size: 60%;
+			}
+			td div.components{
+				display: none;
+			}
+			td:hover div.components{
+				display: block;
 			}
 		</style>
 	</head>
