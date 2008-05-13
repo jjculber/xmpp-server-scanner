@@ -73,8 +73,13 @@ def _add_component_available(component, services_list):
 	
 	for identity in component[u'info'][0]:
 		if identity[u'category'] == u'conference':
+			# Try to detect IRC transports advertised as MUC
 			if identity[u'type'] == u'text':
-				if u'http://jabber.org/protocol/muc' in component[u'info'][1]:
+				if (  ( 'name' in component and 'IRC' in component['name'] ) or
+				      '.irc.' in component['jid'] or
+				      component['jid'].startswith('irc.') ):
+					_add_to_services_list(services_list, 'irc', component['jid'])
+				elif u'http://jabber.org/protocol/muc' in component[u'info'][1]:
 					_add_to_services_list(services_list, 'muc', component['jid'])
 			elif identity[u'type'] == u'irc':
 				_add_to_services_list(services_list, 'irc', component['jid'])
@@ -148,7 +153,7 @@ def _add_component_unavailable(jid, services_list):
 	
 	# Conference
 	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
-	     and not ( jid.startswith((u'chat.yahoo.', u'rooms.yahoo.')) ) ):
+	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		_add_to_services_list(services_list, 'muc', jid)
 	elif jid.startswith(u'irc.'):
 		_add_to_services_list(services_list, 'irc', jid)
