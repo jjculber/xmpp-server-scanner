@@ -129,7 +129,7 @@ servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
 
 known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'http-ws', 'icq', 'msn', 'qq',
                 'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pubsub', 'pep',
-                'presence', 'newmail', 'rss', 'weather', 'proxy' ]
+                'presence', 'file', 'newmail', 'rss', 'weather', 'proxy' ]
 
 database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
                                   DBDATABASE, servers, known_types

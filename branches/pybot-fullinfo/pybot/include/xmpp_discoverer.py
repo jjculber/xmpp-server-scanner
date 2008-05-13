@@ -84,7 +84,7 @@ def _add_component_available(component, services_list):
 			elif identity[u'type'] == u'irc':
 				_add_to_services_list(services_list, 'irc', component['jid'])
 			
-		if identity[u'category'] == u'gateway':
+		elif identity[u'category'] == u'gateway':
 			if identity[u'type'] == u'aim':
 				_add_to_services_list(services_list, 'aim', component['jid'])
 			elif identity[u'type'] == u'gadu-gadu':
@@ -103,14 +103,16 @@ def _add_component_available(component, services_list):
 				_add_to_services_list(services_list, 'smtp', component['jid'])
 			elif identity[u'type'] == u'tlen':
 				_add_to_services_list(services_list, 'tlen', component['jid'])
+			elif identity[u'type'] == u'xfire':
+				_add_to_services_list(services_list, 'xfire', component['jid'])
 			elif identity[u'type'] == u'yahoo':
 				_add_to_services_list(services_list, 'yahoo', component['jid'])
 			
-		if identity[u'category'] == u'directory':
+		elif identity[u'category'] == u'directory':
 			if identity[u'type'] == u'user':
 				_add_to_services_list(services_list, 'jud', component['jid'])
 			
-		if identity[u'category'] == u'pubsub':
+		elif identity[u'category'] == u'pubsub':
 			if identity[u'type'] == u'service': # XEP
 				_add_to_services_list(services_list, 'pubsub', component['jid'])
 			elif identity[u'type'] == u'generic': # ejabberd 1.1.3
@@ -118,11 +120,11 @@ def _add_component_available(component, services_list):
 			elif identity[u'type'] == u'pep':
 				_add_to_services_list(services_list, 'pep', component['jid'])
 			
-		if identity[u'category'] == u'component':
+		elif identity[u'category'] == u'component':
 			if identity[u'type'] == u'presence':
 				_add_to_services_list(services_list, 'presence', component['jid'])
 			
-		if identity[u'category'] == u'headline':
+		elif identity[u'category'] == u'headline':
 			if identity[u'type'] == u'newmail':
 				_add_to_services_list(services_list, 'newmail', component['jid'])
 			elif identity[u'type'] == u'rss':
@@ -130,17 +132,21 @@ def _add_component_available(component, services_list):
 			elif identity[u'type'] == u'weather':
 				_add_to_services_list(services_list, 'weather', component['jid'])
 			
-		if identity[u'category'] == u'proxy':
+		elif identity[u'category'] == u'proxy':
 			if identity[u'type'] == u'bytestreams':
 				_add_to_services_list(services_list, 'proxy', component['jid'])
 			
-		# Non standard services_list
+		elif identity[u'category'] == u'store':
+			if identity[u'type'] == u'file':
+				_add_to_services_list(services_list, 'file', component['jid'])
+			
+		# Non standard services
 		
-		if identity[u'category'] == u'agent': 
+		elif identity[u'category'] == u'agent': 
 			if identity[u'type'] == u'weather':
 				_add_to_services_list(services_list, 'weather', component['jid'])
 			
-		if identity[u'category'] == u'x-service':
+		elif identity[u'category'] == u'x-service':
 			if identity[u'type'] == u'x-rss': # PyRSS
 				_add_to_services_list(services_list, 'rss', component['jid'])
 
@@ -180,6 +186,8 @@ def _add_component_unavailable(jid, services_list):
 		_add_to_services_list(services_list, 'smtp', jid)
 	elif jid.startswith(u'tlen.'):
 		_add_to_services_list(services_list, 'tlen', jid)
+	elif jid.startswith(u'xfire.'):
+		_add_to_services_list(services_list, 'xfire', jid)
 	elif jid.startswith(u'yahoo.'):
 		_add_to_services_list(services_list, 'yahoo', jid)
 	
@@ -206,8 +214,12 @@ def _add_component_unavailable(jid, services_list):
 		_add_to_services_list(services_list, 'weather', jid)
 	
 	# Proxy
-	elif jid.startswith((u'proxy.', u'proxy65')):
+	elif jid.startswith((u'proxy.', u'proxy65.')):
 		_add_to_services_list(services_list, 'proxy', jid)
+		
+	# Store
+	elif jid.startswith((u'file.', u'disk.', u'jdisk.')):
+		_add_to_services_list(services_list, 'file', jid)
 
 
 
