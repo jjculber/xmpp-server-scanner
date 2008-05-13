@@ -135,6 +135,11 @@ database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
                                   DBDATABASE, servers, known_types
                                 )
 
+
+known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'icq', 'msn',
+                'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pep',
+                'presence', 'file', 'newmail', 'rss', 'weather', 'proxy' ]
+
 #known_types.sort()
 #html_file_generator.generate('../servers-pybot.html', servers, known_types)
 html_file_generator.generate_all( directory='..',

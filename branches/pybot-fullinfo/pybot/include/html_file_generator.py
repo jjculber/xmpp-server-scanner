@@ -65,6 +65,32 @@ import os.path
 
 ROWS_BETWEEN_TITLES = 10
 
+
+SERVICE_TYPE_DESCRIPTION = {
+  'muc': 'MultiUser Chat',
+  'irc': 'IRC',
+  'aim': 'AIM',
+  'gadu-gadu': 'Gadu Gadu',
+  'http-ws': 'HTTP Web Services',
+  'icq': 'ICQ',
+  'msn': 'MSN',
+  'qq': 'QQ',
+  'sms': 'SMS',
+  'smtp': 'e-mail',
+  'tlen': 'TLEN',
+  'yahoo': 'Yahoo!',
+  'jud': 'User Directory',
+  'pubsub': 'Publish-Subscribe',
+  'pep': 'Personal Eventong Protocol',
+  'presence': 'Web Presence',
+  'file': 'File Storage',
+  'newmail': 'New Mail Notifications',
+  'rss': 'RSS',
+  'weather': 'Weather',
+  'proxy': 'Proxy for file transfers'
+}
+
+
 def _get_filename(directory, filename_prefix, service_type=None, extension='.html'):
 	if service_type is None:
 		return os.path.join(directory,filename_prefix+extension)
@@ -129,13 +155,24 @@ def _get_table_header(types, sort_type=None, sort_links=None):
 			header += " sortedby"
 		header += "'>"
 		if sort_links is None:
-			header += service_type
+			if service_type in SERVICE_TYPE_DESCRIPTION:
+				header += SERVICE_TYPE_DESCRIPTION[service_type]
+			else:
+				header += service_type
 		else:
 			header += "<a href='"
 			header += _get_filename( sort_links['directory'],
 		                             sort_links['filename_prefix'],
 			                         service_type )
-			header += "'>"+service_type+"</a>"
+			header += "'>"
+			
+			if service_type in SERVICE_TYPE_DESCRIPTION:
+				header += SERVICE_TYPE_DESCRIPTION[service_type]
+			else:
+				header += service_type
+			
+			header += "</a>"
+		
 		header += "</th>"
 	
 	#header += "<th class='times_offline"
