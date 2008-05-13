@@ -136,17 +136,19 @@ def _count_components(server, service_type=None, availability='both'):
 def _get_table_header(types, sort_type=None, sort_links=None):
 	header = "\t<tr class=\"table_header\">"
 	
-	header += "<th class='name"
-	if sort_type is None or sort_type == 'name':
+	header += "<th class='server"
+	if sort_type is None or sort_type == 'server':
 		header += " sortedby"
 	header += "'>"
 	if sort_links is None:
-		header += "Name"
+		header += "Server"
 	else:
 		header += "<a href='"
+		#header += _get_filename( sort_links['directory'],
+		                         #sort_links['filename_prefix'], 'server' )
 		header += _get_filename( sort_links['directory'],
-		                         sort_links['filename_prefix'], 'name' )
-		header += "'>Name</a>"
+		                         sort_links['filename_prefix'] )
+		header += "'>Server</a>"
 	header += "</th>"
 	
 	for service_type in types:
@@ -234,8 +236,8 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	
 	if sort_type is None:
 		# Assume that the servers are sorted by name
-		sort_type = 'name'
-	elif sort_type is 'name':
+		sort_type = 'server'
+	elif sort_type is 'server':
 		# If it's a explicit request, then sort
 		jid = lambda server: server[u'jid']
 		# I prefer to not touch the original list
@@ -324,7 +326,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				font-style: italic;
 				background:#FFD4D4;
 				}
-			tr.table_header th.name, td.name{
+			tr.table_header th.server, td.server{
 				text-align: left;
 				padding: 6px 4px;
 				}
@@ -381,7 +383,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 """
 	)
 	
-	cols = "\t\t\t<col class=\"name\" />"
+	cols = "\t\t\t<col class=\"server\" />"
 	for service_type in types:
 		cols += "<col class=\"" + service_type + "\" />"
 	#cols += "<col class=\"times_offline\" />"
@@ -413,8 +415,8 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		
 		f.write(tr+"\n")
 		
-		cell = "\t\t<td class='name"
-		if sort_type == 'name':
+		cell = "\t\t<td class='server"
+		if sort_type == 'server':
 			cell += " sortedby"
 		cell += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
 		f.write(cell+"\n")
@@ -498,10 +500,10 @@ def generate_all(directory, filename_prefix, servers, types, compress=False):
 	# Name
 	generate( _get_filename( directory, filename_prefix, extension=extension ),
 	          servers, types, sort_links=sort_links, compress=compress )
-	generate( _get_filename( directory, filename_prefix, service_type='name',
-	                         extension=extension ),
-	          servers, types, sort_type='name', sort_links=sort_links,
-	          compress=compress )
+	#generate( _get_filename( directory, filename_prefix, service_type='server',
+	                         #extension=extension ),
+	          #servers, types, sort_type='server', sort_links=sort_links,
+	          #compress=compress )
 	
 	for service_type in types:
 		generate( _get_filename( directory, filename_prefix,
