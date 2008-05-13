@@ -147,7 +147,8 @@ def _add_component_unavailable(jid, services_list):
 	logging.debug('Guessing type of %s', jid)
 	
 	# Conference
-	if jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.')):
+	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
+	     and not ( jid.startswith((u'chat.yahoo.', u'rooms.yahoo.')) ) ):
 		_add_to_services_list(services_list, 'muc', jid)
 	elif jid.startswith(u'irc.'):
 		_add_to_services_list(services_list, 'irc', jid)
