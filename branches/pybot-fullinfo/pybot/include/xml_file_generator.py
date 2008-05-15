@@ -7,8 +7,8 @@ from xml.dom.minidom import getDOMImplementation
 def generate(filename, servers):
 	"""Generate a XML file with the information stored in servers"""
 	
-	
-	logging.info('Generating XML file "%s"', filename)
+	tmpfilename = filename + '.tmp'
+	logging.info('Generating XML file "%s"', tmpfilename)
 	impl = getDOMImplementation()
 	doc = impl.createDocument(None, 'servers', None)
 	servers_element = doc.documentElement
@@ -45,9 +45,11 @@ def generate(filename, servers):
 						server_element.appendChild(component_element)
 		
 		servers_element.appendChild(server_element)
-		
-	f = open(filename, 'w')
+	
+	f = open(tmpfilename, 'w')
 	doc.writexml(f)
 	f.close()
 	
-	logging.info('XML file "%s" generated', filename)
+	logging.info('XML file "%s" generated, moving to %s', tmpfilename, filename)
+	
+	shutil.move(tmpfilename, filename)

@@ -62,6 +62,7 @@
 import gzip
 import logging
 import os.path
+import shutil
 
 ROWS_BETWEEN_TITLES = 10
 
@@ -229,10 +230,12 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	If sort_links is not None, it will be a dictionary with the following keys:
 	'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
 	
+	tmpfilename = filename + '.tmp'
+	
 	if compress:
-		logging.info('Writing Gzipped HTML file "%s" ordered by %s', filename, sort_type)
+		logging.info('Writing Gzipped HTML temporary file "%s" ordered by %s', tmpfilename, sort_type)
 	else:
-		logging.info('Writing HTML file "%s" ordered by %s', filename, sort_type)
+		logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_type)
 	
 	if sort_type is None:
 		# Assume that the servers are sorted by name
@@ -265,9 +268,9 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		servers.sort(key=num_available_components, reverse=True)
 	
 	if compress:
-		f = gzip.open(filename, "w")
+		f = gzip.open(tmpfilename, "w")
 	else:
-		f = open(filename, "w")
+		f = open(tmpfilename, "w")
 	f.write(
 """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -484,7 +487,9 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 """
 	)
 	f.close()
-	logging.info('File %s written', filename)
+	logging.info('File %s written, moving it to %s', tmpfilename, filename)
+	
+	shutil.move(tmpfilename, filename)
 
 
 def generate_all(directory, filename_prefix, servers, types, compress=False):
