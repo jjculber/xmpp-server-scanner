@@ -488,7 +488,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
 		f.seek(0)
 		gzf = gzip.open(tmpgzfilename, "w")
-		gzf.writelines(f.readlines)
+		gzf.writelines(f.readlines())
 		gzf.close()
 		shutil.move(tmpgzfilename, filename+'.gz')
 		
