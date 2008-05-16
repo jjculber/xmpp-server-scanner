@@ -14,6 +14,20 @@
 
 # TODO: Make the code prettier, pylint
 
+import logging
+from os.path import abspath, dirname, join
+import pickle
+import sys
+import urllib
+
+from include.xmpp import simplexml
+
+from include import xmpp_discoverer
+from include import database_updater
+from include import html_file_generator, xml_file_generator
+
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
+
 
 
 #jabberuser="my_user"
@@ -36,23 +50,16 @@ DBDATABASE     = "server_list"
 # Server list
 USEURL         = False
 SERVERS_URL    = "http://www.jabber.org/basicservers.xml"
-SERVERS_FILE   = "servers-fixed.xml"
+#SERVERS_FILE   = "servers-fixed.xml"
+SERVERS_FILE   = join(SCRIPT_DIR, 'servers-fixed.xml')
 
 # Logs
-LOGFILE        = 'out.log'
-LOGFILE        = None
+#LOGFILE        = 'out.log'
+LOGFILE        = join(SCRIPT_DIR, 'out.log')
+#LOGFILE        = None
 
 
-import logging
-import os.path
-import pickle
-import urllib
 
-from xmpp import simplexml
-
-from include import xmpp_discoverer
-from include import database_updater
-from include import html_file_generator, xml_file_generator
 
 
 if LOGFILE is None:
@@ -147,4 +154,4 @@ html_file_generator.generate_all( directory='..',
                                   servers=servers, types=known_types,
                                   compress=True )
 
-xml_file_generator.generate(os.path.join('..', 'servers-fullinfo.xml'), servers)
+xml_file_generator.generate(join('..', 'servers-fullinfo.xml'), servers)
