@@ -232,10 +232,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	
 	tmpfilename = filename + '.tmp'
 	
-	if compress:
-		logging.info('Writing Gzipped HTML temporary file "%s" ordered by %s', tmpfilename, sort_type)
-	else:
-		logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_type)
+	logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_type)
 	
 	if sort_type is None:
 		# Assume that the servers are sorted by name
@@ -267,10 +264,8 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		servers.sort(key=num_unavailable_components, reverse=True)
 		servers.sort(key=num_available_components, reverse=True)
 	
-	if compress:
-		f = gzip.open(tmpfilename, "w")
-	else:
-		f = open(tmpfilename, "w")
+	f = open(tmpfilename, "w")
+	
 	f.write(
 """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -486,10 +481,26 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 </html>
 """
 	)
+	
+	
+	if compress:
+		tmpgzfilename = filename + '.gz.tmp'
+		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
+		f.seek(0)
+		gzf = gzip.open(tmpgzfilename, "w")
+		gzf.writelines(f.readlines)
+		gzf.close()
+		shutil.move(tmpgzfilename, filename+'.gz')
+		
+	
 	f.close()
-	logging.info('File %s written, moving it to %s', tmpfilename, filename)
 	
 	shutil.move(tmpfilename, filename)
+	
+	if compress:
+		logging.info('%s generated and compresed as %s', filename, filename+'.gz')
+	else:
+		logging.info('%s generated', filename)
 
 
 def generate_all(directory, filename_prefix, servers, types, compress=False):
