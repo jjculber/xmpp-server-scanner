@@ -139,15 +139,15 @@ database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
                                   DBDATABASE, servers )
 
 
-known_types = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'icq', 'msn',
-                'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pep',
-                'presence', 'file', 'newmail', 'rss', 'weather', 'proxy' ]
+columns = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'icq', 'msn',
+            'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pep',
+            'presence', 'file', 'newmail', 'rss', 'weather', 'proxy' ]
 
 #known_types.sort()
 #html_file_generator.generate('../servers-pybot.html', servers, known_types)
 html_file_generator.generate_all( directory='..',
                                   filename_prefix='servers-pybot',
-                                  servers=servers, types=known_types,
+                                  servers=servers, types=columns,
                                   compress=True )
 
 xml_file_generator.generate(join('..', 'servers-fullinfo.xml'), servers)
