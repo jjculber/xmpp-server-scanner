@@ -25,7 +25,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	db = MySQLdb.Connection( user=db_user, passwd=db_password, host=db_host,
 	                         db=db_database )
 	
-	db.autocommit(True)
+	#db.autocommit(True)
 	
 	# Check service types
 	
@@ -38,7 +38,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	cursor.execute("""SELECT `type` FROM `pybot_service_types`""")
 	for row in cursor.fetchall():
 		if row['type'] not in service_types:
-			logging.info('Deleting service type %s', row['type'])
+			logging.debug('Deleting service type %s', row['type'])
 			cursor.execute( """DELETE FROM pybot_service_types
 			                     WHERE type = %s """, (row['type'],) )
 		else:
@@ -113,5 +113,8 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 			                (row['jid'],))
 	
 	cursor.close()
+	
+	logging.debug('Commit changes to database')
+	db.commit()
 	
 	logging.info('Database updated')
