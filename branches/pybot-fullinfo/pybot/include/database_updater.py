@@ -18,7 +18,7 @@ import logging
 import MySQLdb
 
 
-def update_database(db_user, db_password, db_host, db_database, servers, known_types):
+def update_database(db_user, db_password, db_host, db_database, servers):
 	
 	logging.info('Updating Database')
 	
@@ -29,19 +29,22 @@ def update_database(db_user, db_password, db_host, db_database, servers, known_t
 	
 	# Check service types
 	
-	types = list(known_types)
+	service_types = set()
+	for server in servers:
+		service_types.update(server['available_services'].keys())
+		service_types.update(server['unavailable_services'].keys())
 	
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
 	cursor.execute("""SELECT `type` FROM `pybot_service_types`""")
 	for row in cursor.fetchall():
-		if row['type'] not in types:
+		if row['type'] not in service_types:
 			logging.info('Deleting service type %s', row['type'])
 			cursor.execute( """DELETE FROM pybot_service_types
 			                     WHERE type = %s """, (row['type'],) )
 		else:
-			types.remove(row['type'])
+			service_types.remove(row['type'])
 	
-	for service_type in types:
+	for service_type in service_types:
 		logging.debug('Add new service type %s', service_type)
 		cursor.execute( """INSERT INTO pybot_service_types SET type = %s""",
 		                (service_type,) )
