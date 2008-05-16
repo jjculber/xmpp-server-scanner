@@ -264,7 +264,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		servers.sort(key=num_unavailable_components, reverse=True)
 		servers.sort(key=num_available_components, reverse=True)
 	
-	f = open(tmpfilename, "w")
+	f = open(tmpfilename, "w+")
 	
 	f.write(
 """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -487,7 +487,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		tmpgzfilename = filename + '.gz.tmp'
 		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
 		f.seek(0)
-		gzf = gzip.open(tmpgzfilename, "w")
+		gzf = gzip.open(tmpgzfilename, "wb")
 		gzf.writelines(f.readlines())
 		gzf.close()
 		shutil.move(tmpgzfilename, filename+'.gz')
@@ -506,10 +506,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 def generate_all(directory, filename_prefix, servers, types, compress=False):
 	'''Generate a set of HTML files sorted by different columns'''
 	
-	if compress:
-		extension = '.html.gz'
-	else:
-		extension = '.html'
+	extension = '.html'
 	
 	sort_links = { 'directory': '.', 'filename_prefix': filename_prefix }
 	
