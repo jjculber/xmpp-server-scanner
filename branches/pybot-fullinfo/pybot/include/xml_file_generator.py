@@ -2,6 +2,7 @@
 #$Id$
 
 import logging
+import shutil
 from xml.dom.minidom import getDOMImplementation
 
 def generate(filename, servers):
