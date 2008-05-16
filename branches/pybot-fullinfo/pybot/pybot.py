@@ -102,19 +102,19 @@ for item in items:
 #server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org']
 #server_list=['jabberes.org']
 
-#servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
-                                            #JABBERRESOURCE, JABBERSERVER,
-                                            #server_list
-                                          #)
+servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
+                                            JABBERRESOURCE, JABBERSERVER,
+                                            server_list
+                                          )
 #print servers
 
 #f = open('servers.dump', 'wb')
 #pickle.dump(servers, f)
 
-f = open('servers.dump', 'rb')
-servers = pickle.load(f)
+#f = open('servers.dump', 'rb')
+#servers = pickle.load(f)
 
-f.close()
+#f.close()
 
 
 #for server in servers:
