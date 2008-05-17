@@ -82,7 +82,7 @@ SERVICE_TYPE_DESCRIPTION = {
   'yahoo': 'Yahoo!',
   'jud': 'User Directory',
   'pubsub': 'Publish-Subscribe',
-  'pep': 'Personal Eventong Protocol',
+  'pep': 'Personal Eventing Protocol',
   'presence': 'Web Presence',
   'file': 'File Storage',
   'newmail': 'New Mail Notifications',
