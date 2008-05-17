@@ -281,6 +281,9 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				padding: 5px;
 				margin:2px auto;
 				}
+			h1, h2, h3{
+				text-shadow: 0.1em 0.1em grey;
+			}
 			.note{
 				padding: 5px;
 				margin:2px auto;
