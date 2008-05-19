@@ -414,14 +414,13 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		</style>
 	</head>
 	<body>
-		<div id="container">
-			<div id="header">
-				<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
-				<h4>Notes:</h4>
-				<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored.</div>
-				<div class="note">Greyed icons mean that those services aren't accessible from external servers. Most times that indicates that they are only available for users of that server.</div>
-			</div>
-			<table>
+		<div id="header">
+			<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
+			<h4>Notes:</h4>
+			<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored.</div>
+			<div class="note">Greyed icons mean that those services aren't accessible from external servers. Most times that indicates that they are only available for users of that server.</div>
+		</div>
+		<table>
 """
 	)
 	
@@ -519,8 +518,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		f.write(table_header+"\n")
 	
 	f.write(
-"""			</table>
-		</div>
+"""		</table>
 	</body>
 </html>
 """
