@@ -380,16 +380,17 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			td div.components{
 				display: none;
 				background: #FFC;
+				z-index: 1;
 			}
 			td:hover div.components{
 				display: block;
+				margin: 0px auto;
 				position: absolute;
-				top: 1em;
-				left: 1em;
+				top: 15px;
+				left: 15px;
 				padding: 3px;
 			}
 			div.components span{
-				z-index: 1;
 			}
 		</style>
 	</head>
@@ -467,11 +468,11 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				
 				cell += "'>"
 				
-				cell += "<img src=\""
+				cell += "<div class='container'><img src=\""
 				cell += _get_image_filename(service_type, service_available)
-				cell += "\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />" + "\n"
+				cell += "\" width=\"16\" height=\"16\" alt=\"Yes\" />" + "\n"
 				
-				cell += "\t\t\t<div class='container'><div class='components'>"
+				cell += "\t\t\t<div class='components'>"
 				if service_type in server['available_services']:
 					for component in sorted(server['available_services'][service_type]):
 						cell += "<span class='available'>"+component+"</span>"
