@@ -290,6 +290,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				background: #FFC;
 				}
 			table{
+				border-collapse: collapse;
 				border-spacing: 0px;
 				/*background: #C4DCFF;*/
 				background: #EEE;
@@ -350,7 +351,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				color: #E90900;/*firebrick;*/
 			}
 			.available{
-				color: #00DA00;/*green;*/
+				color: #0A0;/*green;*/
 			}
 			.unavailable{
 				color: #808080;/*grey;*/
@@ -363,7 +364,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			}
 			div.components span{
 				display: block;
-				font-size: 60%;
+				font-size: 0.7em;;
 			}
 			td div.components{
 				display: none;
