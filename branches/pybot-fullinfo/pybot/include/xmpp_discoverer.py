@@ -23,6 +23,8 @@ import xml
 
 from xmpp import Client, features
 
+# Times to retry if a query fails
+RETRIES = 2
 
 
 URLREGEXP = re.compile(
@@ -223,7 +225,7 @@ def _add_component_unavailable(jid, services_list):
 
 
 
-def _get_item_info(dispatcher, component):
+def _get_item_info(dispatcher, component, retries=0):
 	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
@@ -234,11 +236,11 @@ def _get_item_info(dispatcher, component):
 			if u'node' in component:
 				logging.debug('Discovering component %s (node %s)',
 				              component[u'jid'], component[u'node'])
-				return features.discoverInfo(dispatcher, component[u'jid'],
+				result = features.discoverInfo(dispatcher, component[u'jid'],
 				                             component[u'node'])
 			else:
 				logging.debug('Discovering component %s', component[u'jid'])
-				return features.discoverInfo(dispatcher, component[u'jid'])
+				result = features.discoverInfo(dispatcher, component[u'jid'])
 		except xml.parsers.expat.ExpatError:
 			logging.warning('%s sent malformed XMPP', component[u'jid'],
 			                exc_info=True)
@@ -246,13 +248,23 @@ def _get_item_info(dispatcher, component):
 			#add_component_unavailable(component[u'jid'],
 			                        #server[u'unavailable_services'])
 			raise
-			
+		
+		if (len(result[0]) == 0 and len(result[1]) == 0):
+			if retries > 0:
+				logging.debug('Retrying component %s', component[u'jid'])
+				return _get_item_info(dispatcher, component, retries-1)
+			else:
+				logging.debug( 'Discarding query to component %s: Not accesible',
+				               component[u'jid'] )
+				return  ([], [])
+		else:
+			return result
 	else:
 		logging.debug('Ignoring %s', component[u'jid'])
 		return  ([], [])
 
 
-def _get_items(dispatcher, component):
+def _get_items(dispatcher, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
@@ -269,13 +281,21 @@ def _get_items(dispatcher, component):
 		#items = []
 		raise
 	
-	# Process items
-	
-	for item in list(items):
-		if not _in_same_domain(component[u'jid'], item[u'jid']):
-			items.remove(item)
-	
-	return items
+	if len(items) == 0:
+		if retries > 0:
+			return _get_items(dispatcher, component, retries-1)
+		else:
+			logging.debug( 'Discarding query to component %s: Not accesible',
+				           component[u'jid'] )
+			return []
+	else:
+		# Process items
+		
+		for item in list(items):
+			if not _in_same_domain(component[u'jid'], item[u'jid']):
+				items.remove(item)
+		
+		return items
 
 
 def _discover_item(dispatcher, component, server):
@@ -287,7 +307,7 @@ def _discover_item(dispatcher, component, server):
 	#cl.Process(1)
 	
 	try:
-		component[u'info'] = _get_item_info(dispatcher, component)
+		component[u'info'] = _get_item_info(dispatcher, component, RETRIES)
 	except xml.parsers.expat.ExpatError:
 		component[u'info'] = ([], [])
 		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
@@ -323,7 +343,7 @@ def _discover_item(dispatcher, component, server):
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
-		                     component[u'info'][1] )
+		                       component[u'info'][1] )
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
@@ -355,7 +375,7 @@ def _discover_item(dispatcher, component, server):
 	
 	if needs_to_query_items:
 		try:
-			component[u'items'] = _get_items(dispatcher, component)
+			component[u'items'] = _get_items(dispatcher, component, RETRIES)
 		except xml.parsers.expat.ExpatError:
 			component[u'items'] = []
 			raise
