@@ -282,7 +282,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				margin:2px auto;
 				}
 			h1, h2, h3{
-				text-shadow: 0.1em 0.1em grey;
+				text-shadow: 0.1em 0.1em #AAA;
 			}
 			.note{
 				padding: 5px;
