@@ -77,7 +77,7 @@ SERVICE_TYPE_DESCRIPTION = {
   'msn': 'MSN',
   'qq': 'QQ',
   'sms': 'SMS',
-  'smtp': 'e-mail',
+  'smtp': 'eMail',
   'tlen': 'TLEN',
   'yahoo': 'Yahoo!',
   'jud': 'User Directory',
@@ -364,7 +364,8 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			}
 			div.components span{
 				display: block;
-				font-size: 0.7em;;
+				font-size: 0.7em;
+				white-space: nowrap;
 			}
 			/*td div.components{
 				display: none;
