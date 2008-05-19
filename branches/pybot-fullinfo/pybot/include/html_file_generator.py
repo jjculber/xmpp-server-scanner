@@ -283,7 +283,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				}
 			h1, h2, h3, h4, h5{
 				text-shadow: 0.1em 0.1em #AAA;
-				font-weigth: bold;
+				font-weight: bold;
 			}
 			h1{
 				font-size: 3em;
@@ -295,9 +295,12 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				font-size: 2em;
 			}
 			h4{
-				font-size: 1.5em;
+				font-size: 1.6em;
 			}
 			h5{
+				font-size: 1.4em;
+			}
+			h6{
 				font-size: 1.2em;
 			}
 			.note{
