@@ -274,7 +274,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		<title>Jabber/XMPP Server List</title>
 		<style type="text/css">
 			body{
-				font-family: sans-serif;
+				font-family: verdana, tahoma, sans-serif;
 				font-size: 0.8em;
 				}
 			div#header{
