@@ -366,11 +366,29 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				display: block;
 				font-size: 0.7em;;
 			}
-			td div.components{
+			/*td div.components{
 				display: none;
 			}
 			td:hover div.components{
 				display: block;
+			}*/
+			td div.container{
+				position: relative;
+				display: inline;
+			}
+			td div.components{
+				display: none;
+				background: #FFC;
+			}
+			td:hover div.components{
+				display: block;
+				position: absolute;
+				top: 1em;
+				left: 1em;
+				padding: 3px;
+			}
+			div.components span{
+				z-index: 1;
 			}
 		</style>
 	</head>
@@ -452,14 +470,14 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				cell += _get_image_filename(service_type, service_available)
 				cell += "\" width=\"16\" height=\"16\" title=\"Yes\" alt=\"Yes\" />" + "\n"
 				
-				cell += "\t\t\t<div class='components'>"
+				cell += "\t\t\t<div class='container'><div class='components'>"
 				if service_type in server['available_services']:
 					for component in sorted(server['available_services'][service_type]):
 						cell += "<span class='available'>"+component+"</span>"
 				if service_type in server['unavailable_services']:
 					for component in sorted(server['unavailable_services'][service_type]):
 						cell += "<span class='unavailable'>"+component+"</span>"
-				cell += "</div></td>"
+				cell += "</div></div></td>"
 				
 			f.write(cell+"\n")
 		
