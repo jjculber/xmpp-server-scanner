@@ -281,8 +281,24 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				padding: 5px;
 				margin:2px auto;
 				}
-			h1, h2, h3{
+			h1, h2, h3, h4, h5{
 				text-shadow: 0.1em 0.1em #AAA;
+				font-weigth: bold;
+			}
+			h1{
+				font-size: 3em;
+			}
+			h2{
+				font-size: 2.5em;
+			}
+			h3{
+				font-size: 2em;
+			}
+			h4{
+				font-size: 1.5em;
+			}
+			h5{
+				font-size: 1.2em;
 			}
 			.note{
 				padding: 5px;
@@ -398,6 +414,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		<div id="container">
 			<div id="header">
 				<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
+				<h4>Notes:</h4>
 				<div class="note">If the service Jabber ID is from a domain different that the server, it will be ignored.</div>
 				<div class="note">Greyed icons mean that those services aren't accessible from external servers. Most times that indicates that they are only available for users of that server.</div>
 			</div>
