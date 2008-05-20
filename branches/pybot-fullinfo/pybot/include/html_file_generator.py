@@ -63,6 +63,7 @@ import gzip
 import logging
 import os.path
 import shutil
+import time
 
 ROWS_BETWEEN_TITLES = 10
 
@@ -276,6 +277,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			body{
 				font-family: verdana, tahoma, sans-serif;
 				font-size: 0.8em;
+				background: #FFF;
 				}
 			div#header{
 				padding: 5px;
@@ -307,6 +309,12 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				padding: 5px;
 				margin:2px auto;
 				background: #FFC;
+				}
+			.footer{
+				color: gray;
+				font-size: 0.8em;
+				text-align: center;
+				margin: 5px;
 				}
 			table{
 				border-collapse: collapse;
@@ -373,7 +381,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 				color: #0A0;/*green;*/
 			}
 			.unavailable{
-				color: #808080;/*grey;*/
+				color: #808080;/*gray;*/
 			}
 			tr.odd td.sortedby{
 				background: #DCE5EF;
@@ -517,9 +525,11 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header+"\n")
 	
+	f.write("\t\t\t</table>")
+	f.write( '<div class="footer">Page generated on '+
+			time.strftime('%d-%B-%Y %H:%M', time.gmtime())+' UTC</div>' )
 	f.write(
-"""		</table>
-	</body>
+"""</body>
 </html>
 """
 	)
