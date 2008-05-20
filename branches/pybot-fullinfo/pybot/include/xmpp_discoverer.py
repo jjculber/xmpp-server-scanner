@@ -23,7 +23,9 @@ import xml
 from xmpp import Client, features
 
 # Times to retry if a query fails
-RETRIES = 2
+ONLY_RETRY_SERVERS = True
+INFO_QUERY_RETRIES = 2
+ITEM_QUERY_RETRIES = 0
 
 
 URLREGEXP = re.compile(
@@ -232,16 +234,17 @@ def _get_item_info(dispatcher, component, retries=0):
 	# Then, we don't need to waste resources querying them
 	
 	if not component[u'jid'].endswith('.localhost'):
-		while retries >= 0:
+		retry = retries
+		while retry >= 0:
 			try:
 				if u'node' in component:
-					logging.debug( 'Trying to discover component %s (node %s): %d retries left',
-					               component[u'jid'], component[u'node'], retries)
+					logging.debug( 'Trying to discover component %s (node %s): %d/%d retries left',
+					               component[u'jid'], component[u'node'], retry, retries)
 					info = features.discoverInfo( dispatcher, component[u'jid'],
 					                              component[u'node'])
 				else:
-					logging.debug( 'Trying to discover component %s: %d retries left',
-					               component[u'jid'], retries)
+					logging.debug( 'Trying to discover component %s: %d/%d retries left',
+					               component[u'jid'], retry, retries)
 					info = features.discoverInfo(dispatcher, component[u'jid'])
 			except xml.parsers.expat.ExpatError:
 				logging.warning( '%s sent malformed XMPP', component[u'jid'],
@@ -254,7 +257,7 @@ def _get_item_info(dispatcher, component, retries=0):
 			if len(info[0]) != 0 or len(info[1]) != 0:
 				return info
 			
-			retries -= 1
+			retry -= 1
 			
 		else:
 			logging.debug( 'Discarding query to component %s: Not accesible',
@@ -270,16 +273,18 @@ def _get_items(dispatcher, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
-	while retries >= 0:
+	retry = retries
+	
+	while retry >= 0:
 		try:
 			if u'node' in component:
-				logging.debug( 'Trying to discover components of %s (node %s): %d retries left',
-				               component[u'jid'], component[u'node'], retries)
+				logging.debug( 'Trying to discover components of %s (node %s): %d/%d retries left',
+				               component[u'jid'], component[u'node'], retry, retries)
 				items = features.discoverItems( dispatcher, component[u'jid'],
 				                                component[u'node'] )
 			else:
-				logging.debug( 'Trying to discover components of %s: %d retries left',
-				               component[u'jid'], retries)
+				logging.debug( 'Trying to discover components of %s: %d/%d retries left',
+				               component[u'jid'], retry, retries)
 				items = features.discoverItems(dispatcher, component[u'jid'])
 		except xml.parsers.expat.ExpatError:
 			logging.warning( '%s sent malformed XMPP', component[u'jid'],
@@ -294,7 +299,7 @@ def _get_items(dispatcher, component, retries=0):
 					items.remove(item)
 			return items
 		
-		retries -= 1
+		retry -= 1
 		
 	else:
 		logging.debug( 'Discarding query to component %s: Not accesible',
@@ -310,8 +315,21 @@ def _discover_item(dispatcher, component, server):
 	needs_to_query_items = False
 	#cl.Process(1)
 	
+	#Only retry for servers (to avoid wasting time)
+	if ONLY_RETRY_SERVERS:
+		if component[u'jid'] == server[u'jid']:
+			retries = INFO_QUERY_RETRIES
+			item_retries = ITEM_QUERY_RETRIES
+		else:
+			retries = 0
+			item_retries = 0
+	else:
+		retries = INFO_QUERY_RETRIES
+		item_retries = ITEM_QUERY_RETRIES
+	
+	
 	try:
-		component[u'info'] = _get_item_info(dispatcher, component, RETRIES)
+		component[u'info'] = _get_item_info(dispatcher, component, retries)
 	except xml.parsers.expat.ExpatError:
 		component[u'info'] = ([], [])
 		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
@@ -379,7 +397,7 @@ def _discover_item(dispatcher, component, server):
 	
 	if needs_to_query_items:
 		try:
-			component[u'items'] = _get_items(dispatcher, component, RETRIES)
+			component[u'items'] = _get_items(dispatcher, component, item_retries)
 		except xml.parsers.expat.ExpatError:
 			component[u'items'] = []
 			raise
