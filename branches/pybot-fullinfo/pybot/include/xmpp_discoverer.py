@@ -273,12 +273,12 @@ def _get_items(dispatcher, component, retries=0):
 	while retries >= 0:
 		try:
 			if u'node' in component:
-				logging.debug( 'Trying to discover component %s (node %s): %d retries left',
+				logging.debug( 'Trying to discover components of %s (node %s): %d retries left',
 				               component[u'jid'], component[u'node'], retries)
 				items = features.discoverItems( dispatcher, component[u'jid'],
 				                                component[u'node'] )
 			else:
-				logging.debug( 'Trying to discover component %s: %d retries left',
+				logging.debug( 'Trying to discover components of %s: %d retries left',
 				               component[u'jid'], retries)
 				items = features.discoverItems(dispatcher, component[u'jid'])
 		except xml.parsers.expat.ExpatError:
