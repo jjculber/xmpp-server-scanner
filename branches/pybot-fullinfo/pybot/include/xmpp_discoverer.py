@@ -10,7 +10,6 @@
 #
 
 
-# TODO: Si falla un query, reintentar?
 # TODO: Multithread
 # TODO: Testing
 # TODO: Simplify _discover_item()
@@ -231,71 +230,74 @@ def _get_item_info(dispatcher, component, retries=0):
 	# Some components adresses ends in .localhost so the querys
 	# will end on a 404 error
 	# Then, we don't need to waste resources querying them
+	
 	if not component[u'jid'].endswith('.localhost'):
-		try:
-			if u'node' in component:
-				logging.debug('Discovering component %s (node %s)',
-				              component[u'jid'], component[u'node'])
-				result = features.discoverInfo(dispatcher, component[u'jid'],
-				                             component[u'node'])
-			else:
-				logging.debug('Discovering component %s', component[u'jid'])
-				result = features.discoverInfo(dispatcher, component[u'jid'])
-		except xml.parsers.expat.ExpatError:
-			logging.warning('%s sent malformed XMPP', component[u'jid'],
-			                exc_info=True)
-			#return ([], [])
-			#add_component_unavailable(component[u'jid'],
-			                        #server[u'unavailable_services'])
-			raise
-		
-		if (len(result[0]) == 0 and len(result[1]) == 0):
-			if retries > 0:
-				logging.debug('Retrying component %s', component[u'jid'])
-				return _get_item_info(dispatcher, component, retries-1)
-			else:
-				logging.debug( 'Discarding query to component %s: Not accesible',
-				               component[u'jid'] )
-				return  ([], [])
+		while retries >= 0:
+			try:
+				if u'node' in component:
+					logging.debug( 'Trying to discover component %s (node %s): %d retries left',
+					               component[u'jid'], component[u'node'], retries)
+					info = features.discoverInfo( dispatcher, component[u'jid'],
+					                              component[u'node'])
+				else:
+					logging.debug( 'Trying to discover component %s: %d retries left',
+					               component[u'jid'], retries)
+					info = features.discoverInfo(dispatcher, component[u'jid'])
+			except xml.parsers.expat.ExpatError:
+				logging.warning( '%s sent malformed XMPP', component[u'jid'],
+				                 exc_info=True)
+				#return ([], [])
+				#add_component_unavailable( component[u'jid'],
+				                            #server[u'unavailable_services'] )
+				raise
+			
+			if len(info[0]) != 0 or len(info[1]) != 0:
+				return info
+			
+			retries -= 1
+			
 		else:
-			return result
+			logging.debug( 'Discarding query to component %s: Not accesible',
+			               component[u'jid'] )
+			return info
+		
 	else:
 		logging.debug('Ignoring %s', component[u'jid'])
-		return  ([], [])
+		return ([], [])
 
 
 def _get_items(dispatcher, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
-	try:
-		if u'node' in component:
-			items = features.discoverItems(dispatcher,
-				                           component[u'jid'], component[u'node'])
-		else:
-			items = features.discoverItems(dispatcher,
-			                               component[u'jid'])
-	except xml.parsers.expat.ExpatError:
-		logging.warning('%s sent malformed XMPP', component[u'jid'],
-		                exc_info=True)
-		#items = []
-		raise
-	
-	if len(items) == 0:
-		if retries > 0:
-			return _get_items(dispatcher, component, retries-1)
-		else:
-			logging.debug( 'Discarding query to component %s: Not accesible',
-				           component[u'jid'] )
-			return []
+	while retries >= 0:
+		try:
+			if u'node' in component:
+				logging.debug( 'Trying to discover component %s (node %s): %d retries left',
+				               component[u'jid'], component[u'node'], retries)
+				items = features.discoverItems( dispatcher, component[u'jid'],
+				                                component[u'node'] )
+			else:
+				logging.debug( 'Trying to discover component %s: %d retries left',
+				               component[u'jid'], retries)
+				items = features.discoverItems(dispatcher, component[u'jid'])
+		except xml.parsers.expat.ExpatError:
+			logging.warning( '%s sent malformed XMPP', component[u'jid'],
+			                 exc_info=True)
+			#items = []
+			raise
+			
+		if len(items) > 0:
+			# Process items
+			for item in list(items):
+				if not _in_same_domain(component[u'jid'], item[u'jid']):
+					items.remove(item)
+			return items
+		
 	else:
-		# Process items
-		
-		for item in list(items):
-			if not _in_same_domain(component[u'jid'], item[u'jid']):
-				items.remove(item)
-		
-		return items
+		logging.debug( 'Discarding query to component %s: Not accesible',
+		               component[u'jid'] )
+		return []
 
 
 def _discover_item(dispatcher, component, server):
@@ -413,7 +415,8 @@ def _show_node(node, indent=0):
 			_show_node(item, indent+4)
 	
 
-def discover_servers(jabber_user, jabber_password, jabber_resource, jabber_server, server_list):
+def discover_servers( jabber_user, jabber_password, jabber_resource,
+                      jabber_server, server_list ):
 
 	servers = []
 	
