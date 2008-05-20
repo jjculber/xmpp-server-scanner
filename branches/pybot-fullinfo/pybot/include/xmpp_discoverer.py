@@ -294,6 +294,8 @@ def _get_items(dispatcher, component, retries=0):
 					items.remove(item)
 			return items
 		
+		retries -= 1
+		
 	else:
 		logging.debug( 'Discarding query to component %s: Not accesible',
 		               component[u'jid'] )
