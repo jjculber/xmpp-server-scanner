@@ -135,6 +135,7 @@ def _count_components(server, service_type=None, availability='both'):
 				num += len(server['unavailable_services'][service_type])
 			return num
 
+
 def _get_table_header(types, sort_type=None, sort_links=None):
 	header = "\t<tr class=\"table_header\">"
 	
@@ -184,7 +185,7 @@ def _get_table_header(types, sort_type=None, sort_links=None):
 		#header += " sortedby"
 	#header += "'>Times Offline</th>"
 	
-	header += "</tr>"
+	header += "</tr>\n"
 	
 	return header
 
@@ -224,6 +225,107 @@ def _get_image_filename(service_type, available):
 	return filename
 
 
+ROWS = None
+
+def get_rows(servers, types):
+	"""Generate the table rows. Singleton to generate them only once"""
+	
+	global ROWS
+	
+	if ROWS is not None:
+		return ROWS
+	
+	ROWS = {}
+	
+	for server in servers:
+		
+		#row = "\t<tr class='"
+		#if (  len(server['available_services']) == 0 and
+		      #len(server['unavailable_services']) == 0 and
+		      #len(server[u'info'][0]) == 0 and
+		      #len(server[u'info'][1]) == 0  ):
+			#row += 'offline'
+		#elif row_number % 2 == 1:
+			#row += 'odd'
+		#else:
+			#row += 'even'
+		
+		#row += "'>\n"
+		
+		row = "<td class='server"
+		#if sort_type == 'server':
+			#row += " sortedby"
+		row += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
+		
+		row = ( """<td class='server'><a name='%s'>%s</a></td>""" %
+		                                    (server[u'jid'], server[u'jid']) )
+		
+		for service_type in types:
+			
+			if (  service_type not in server['available_services'] and 
+				  service_type not in server['unavailable_services']  ):
+				row += """<td class='feature no %s'></td>""" % service_type
+				#if sort_type == service_type:
+					#row += " sortedby"
+			else:
+				
+				#row += "<td class='feature yes"
+				
+				if service_type in server['available_services']:
+					#row += " available"
+					service_available = True
+				else:
+					#row += " unavailable"
+					service_available = False
+				
+				
+				#row += " " + service_type
+				
+				
+				#if sort_type == service_type:
+					#row += " sortedby"
+				
+				#row += "'>"
+				
+				row += """<td class='feature yes %s %s'>""" % (
+				           'available' if service_available else 'unavailable',
+				           service_type )
+				
+				#row += "<div class='container'><img src=\""
+				#row += _get_image_filename(service_type, service_available)
+				#row += "\" width=\"16\" height=\"16\" alt=\"Yes\" />"
+				
+				row += "<div class='container'>"
+				row += ("""<img src="%s" width="16" height="16" alt="Yes" />""" %
+				           _get_image_filename(service_type, service_available))
+				
+				row += "<div class='components'>"
+				if service_type in server['available_services']:
+					for component in sorted(server['available_services'][service_type]):
+						row += """<span class='available'>%s</span>""" % component
+				if service_type in server['unavailable_services']:
+					for component in sorted(server['unavailable_services'][service_type]):
+						row += """<span class='unavailable'>%s</span>""" % component
+				row += "</div></div></td>"
+				
+			
+		
+		#FIX: don't display times_offline this way
+		#TODO: display it (needs a access to the DB) or mark the tr as offline?
+		#cell = "\t\t<td class=\"times_offline"
+		#if sort_type == 'times_offline':
+			#cell += " sortedby"
+		#cell += "\">4</td>"
+		#f.write(cell+"\n")
+		
+		#row += "</tr>\n"
+		
+		ROWS[server[u'jid']] = row
+	
+	return ROWS
+	
+
+
 def generate( filename, servers, types, sort_type=None, sort_links=None,
               compress=False ):
 	"""Generate a html file with the servers information.
@@ -231,9 +333,11 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	If sort_links is not None, it will be a dictionary with the following keys:
 	'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
 	
-	tmpfilename = filename + '.tmp'
+	tmpfilename = """%s.tmp""" % filename
 	
 	logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_type)
+	
+	rows = get_rows(servers, types)
 	
 	if sort_type is None:
 		# Assume that the servers are sorted by name
@@ -436,107 +540,56 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	for service_type in types:
 		cols += "<col class=\"" + service_type + "\" />"
 	#cols += "<col class=\"times_offline\" />"
+	cols += "\n"
 	
-	f.write(cols+"\n")
+	f.write(cols)
 	
 	table_header = _get_table_header(types, sort_type, sort_links)
 	
-	row_number = 0
-	
-	for server in servers:
+	for row_number, server in enumerate(servers):
 		
 		if row_number % ROWS_BETWEEN_TITLES == 0:
-			f.write(table_header+"\n")
+			f.write(table_header)
 		
-		tr = "\t<tr class='"
-		if (  len(server['available_services']) == 0 and
-		      len(server['unavailable_services']) == 0 and
-		      len(server[u'info'][0]) == 0 and
-		      len(server[u'info'][1]) == 0  ):
-			tr += 'offline'
-		elif row_number % 2 == 1:
-			tr += 'odd'
-		else:
-			tr += 'even'
+		offline = ( len(server[u'info'][0]) == 0 and
+		            len(server[u'info'][1]) == 0  )
 		
-		tr += "'>"
+		#row = 'odd' if row_number % 2 == 1 else 'even'
 		
+		f.write( ("""<tr class='%s%s'>%s</tr>\n""" %
+		                     ( 'offline ' if offline else '',
+		                       'odd' if row_number % 2 == 1 else 'even',
+		                       rows[server[u'jid']] )) )
 		
-		f.write(tr+"\n")
+		#if (  len(server['available_services']) == 0 and
+		      #len(server['unavailable_services']) == 0 and
+		      #len(server[u'info'][0]) == 0 and
+		      #len(server[u'info'][1]) == 0  ):
+			#if row_number % 2 == 1:
+				#f.write("\t<tr class='offline odd'>")
+			#else:
+				#f.write("\t<tr class='offline even'>")
+		#else:
+			#if row_number % 2 == 1:
+				#f.write("\t<tr class='odd'>")
+			#else:
+				#f.write("\t<tr class='even'>")
 		
-		cell = "\t\t<td class='server"
-		if sort_type == 'server':
-			cell += " sortedby"
-		cell += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
-		f.write(cell+"\n")
+		#f.write(rows[server[u'jid']])
+		#f.write("</tr>")
 		
-		for service_type in types:
-			
-			if (  service_type not in server['available_services'] and 
-				  service_type not in server['unavailable_services']  ):
-				cell = "\t\t<td class='feature no " + service_type
-				if sort_type == service_type:
-					cell += " sortedby"
-				cell += "'></td>"
-			else:
-				cell = "\t\t<td class='feature yes"
-				
-				if service_type in server['available_services']:
-					service_available = True
-					cell += " available"
-				else:
-					service_available = False
-					cell += " unavailable"
-				
-				cell += " " + service_type
-				
-				if sort_type == service_type:
-					cell += " sortedby"
-				
-				cell += "'>"
-				
-				cell += "<div class='container'><img src=\""
-				cell += _get_image_filename(service_type, service_available)
-				cell += "\" width=\"16\" height=\"16\" alt=\"Yes\" />" + "\n"
-				
-				cell += "\t\t\t<div class='components'>"
-				if service_type in server['available_services']:
-					for component in sorted(server['available_services'][service_type]):
-						cell += "<span class='available'>"+component+"</span>"
-				if service_type in server['unavailable_services']:
-					for component in sorted(server['unavailable_services'][service_type]):
-						cell += "<span class='unavailable'>"+component+"</span>"
-				cell += "</div></div></td>"
-				
-			f.write(cell+"\n")
-		
-		#FIX: don't display times_offline this way
-		#TODO: display it (needs a access to the DB) or mark the tr as offline?
-		#cell = "\t\t<td class=\"times_offline"
-		#if sort_type == 'times_offline':
-			#cell += " sortedby"
-		#cell += "\">4</td>"
-		#f.write(cell+"\n")
-		
-		f.write("</tr>"+"\n")
-		
-		row_number += 1
 	
 	if row_number % ROWS_BETWEEN_TITLES != 1:
-		f.write(table_header+"\n")
+		f.write(table_header)
 	
-	f.write("\t\t\t</table>")
-	f.write( '<div class="footer">Page generated on '+
-			time.strftime('%d-%B-%Y %H:%M', time.gmtime())+' UTC</div>' )
-	f.write(
-"""</body>
-</html>
-"""
-	)
+	f.write("</table>")
+	f.write( '<div class="footer">Page generated on %s UTC</div>' %
+	                    time.strftime('%d-%B-%Y %H:%M', time.gmtime()) )
+	f.write("</body></html>")
 	
 	
 	if compress:
-		tmpgzfilename = filename + '.gz.tmp'
+		tmpgzfilename = """%s.gz.tmp""" % filename
 		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
 		f.seek(0)
 		gzf = gzip.open(tmpgzfilename, "wb")
@@ -550,7 +603,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	shutil.move(tmpfilename, filename)
 	
 	if compress:
-		logging.info('%s generated and compresed as %s', filename, filename+'.gz')
+		logging.info('%s generated and compresed as %s.gz', filename, filename)
 	else:
 		logging.info('%s generated', filename)
 
