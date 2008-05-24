@@ -252,10 +252,10 @@ def get_rows(servers, types):
 		
 		#row += "'>\n"
 		
-		row = "<td class='server"
-		#if sort_type == 'server':
-			#row += " sortedby"
-		row += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
+		#row = "<td class='server"
+		##if sort_type == 'server':
+			##row += " sortedby"
+		#row += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
 		
 		row = ( """<td class='server'><a name='%s'>%s</a></td>""" %
 		                                    (server[u'jid'], server[u'jid']) )
