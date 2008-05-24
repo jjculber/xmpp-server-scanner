@@ -137,42 +137,49 @@ def _count_components(server, service_type=None, availability='both'):
 
 
 def _get_table_header(types, sort_type=None, sort_links=None):
-	header = "\t<tr class=\"table_header\">"
+	header = "\t<tr class='table_header'>"
 	
-	header += "<th class='server'>"
-	if sort_links is None:
-		header += "Server"
-	else:
-		header += "<a href='"
-		#header += _get_filename( sort_links['directory'],
-		                         #sort_links['filename_prefix'], 'server' )
-		header += _get_filename( sort_links['directory'],
-		                         sort_links['filename_prefix'] )
-		header += "'>Server</a>"
-	header += "</th>"
+	#header += "<th class='server'>"
+	#if sort_links is None:
+		#header += "Server"
+	#else:
+		#header += "<a href='%s'>Server</a>" % _get_filename(
+		                                          #sort_links['directory'],
+		                                          #sort_links['filename_prefix'])
+	#header += "</th>"
+	
+	
+	link = "<a href='%s'>Server</a>" % _get_filename( sort_links['directory'],
+	                                              sort_links['filename_prefix'])
+	header += ( "<th class='server'>%s</th>" % 
+	                 link if sort_links is not None else 'Server' )
 	
 	for service_type in types:
-		header += "<th class='%s'>" % service_type
-		if sort_links is None:
-			if service_type in SERVICE_TYPE_DESCRIPTION:
-				header += SERVICE_TYPE_DESCRIPTION[service_type]
-			else:
-				header += service_type
-		else:
-			header += "<a href='"
-			header += _get_filename( sort_links['directory'],
-		                             sort_links['filename_prefix'],
-			                         service_type )
-			header += "'>"
-			
-			if service_type in SERVICE_TYPE_DESCRIPTION:
-				header += SERVICE_TYPE_DESCRIPTION[service_type]
-			else:
-				header += service_type
-			
-			header += "</a>"
 		
-		header += "</th>"
+		text = SERVICE_TYPE_DESCRIPTION[service_type] if service_type in SERVICE_TYPE_DESCRIPTION else service_type
+		
+		link = "<a href='%s'>%s</a>" % (
+			        _get_filename( sort_links['directory'], sort_links['filename_prefix'], service_type ),
+			        text )
+		header += "<th class='%s'>%s</th>" % ( service_type,
+		                        link if sort_links is not None else text )
+		#if service_type in SERVICE_TYPE_DESCRIPTION:
+			#text = SERVICE_TYPE_DESCRIPTION[service_type]
+		#else:
+			#text = service_type
+			
+		#header += "<th class='%s'>" % service_type
+		#if sort_links is None:
+			#header += text
+		#else:
+			#header += link
+			
+			##header += "<a href='%s'>%s</a>" % ( _get_filename(
+			                                       ##sort_links['directory'],
+			                                       ##sort_links['filename_prefix'],
+			                                       ##service_type ),
+			                                     ##text )
+		#header += "</th>"
 	
 	#header += "<th class='times_offline'>Times Offline</th>"
 	
@@ -299,8 +306,8 @@ def get_rows(servers, types):
 		
 		#FIX: don't display times_offline this way
 		#TODO: display it (needs a access to the DB) or mark the tr as offline?
-		#cell = "\t\t<td class=\"times_offline"
-		#cell += "\">4</td>"
+		#cell = "\t\t<td class='times_offline"
+		#cell += "'>4</td>"
 		#f.write(cell+"\n")
 		
 		#row += "</tr>\n"
@@ -524,20 +531,20 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		</style>
 	</head>
 	<body>
-		<div id="header">
-			<div id="title"><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
+		<div id='header'>
+			<div id='title'><h2>Jabber/<abbr title="eXtensible Messaging and Presence Protocol">XMPP</abbr> Server List</h2></div>
 			<h4>Notes:</h4>
-			<div class="note">If the service Jabber ID is from a different domain than the server, it will be ignored.</div>
-			<div class="note">Greyed icons mean that those services aren't accesible from external servers. Most times that indicates that they are only available for users of that server.</div>
+			<div class='note'>If the service Jabber ID is from a different domain than the server, it will be ignored.</div>
+			<div class='note'>Greyed icons mean that those services aren't accesible from external servers. Most times that indicates that they are only available for users of that server.</div>
 		</div>
 		<table>
 """
 	)
 	
-	cols = "\t\t\t<col class=\"server\" />"
+	cols = "\t\t\t<col class='server' />"
 	for service_type in types:
-		cols += "<col class=\"" + service_type + "\" />"
-	#cols += "<col class=\"times_offline\" />"
+		cols += "<col class='%s' />" % service_type
+	#cols += "<col class='times_offline' />"
 	cols += "\n"
 	
 	f.write(cols)
@@ -554,7 +561,7 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 		
 		#row = 'odd' if row_number % 2 == 1 else 'even'
 		
-		f.write( ("""<tr class='%s%s'>%s</tr>\n""" %
+		f.write( ("<tr class='%s%s'>%s</tr>\n" %
 		                     ( 'offline ' if offline else '',
 		                       'odd' if row_number % 2 == 1 else 'even',
 		                       rows[server[u'jid']] )) )
@@ -580,14 +587,12 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header)
 	
-	f.write("</table>")
-	f.write( '<div class="footer">Page generated on %s UTC</div>' %
+	f.write("</table><div class='footer'>Page generated on %s UTC</div></body></html>\n" %
 	                    time.strftime('%d-%B-%Y %H:%M', time.gmtime()) )
-	f.write("</body></html>")
 	
 	
 	if compress:
-		tmpgzfilename = """%s.gz.tmp""" % filename
+		tmpgzfilename = "%s.gz.tmp" % filename
 		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
 		f.seek(0)
 		gzf = gzip.open(tmpgzfilename, "wb")
