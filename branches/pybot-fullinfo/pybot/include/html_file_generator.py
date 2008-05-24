@@ -139,10 +139,7 @@ def _count_components(server, service_type=None, availability='both'):
 def _get_table_header(types, sort_type=None, sort_links=None):
 	header = "\t<tr class=\"table_header\">"
 	
-	header += "<th class='server"
-	if sort_type is None or sort_type == 'server':
-		header += " sortedby"
-	header += "'>"
+	header += "<th class='server'>"
 	if sort_links is None:
 		header += "Server"
 	else:
@@ -155,10 +152,7 @@ def _get_table_header(types, sort_type=None, sort_links=None):
 	header += "</th>"
 	
 	for service_type in types:
-		header += "<th class='"+service_type
-		if sort_type == service_type:
-			header += " sortedby"
-		header += "'>"
+		header += "<th class='%s'>" % service_type
 		if sort_links is None:
 			if service_type in SERVICE_TYPE_DESCRIPTION:
 				header += SERVICE_TYPE_DESCRIPTION[service_type]
@@ -180,10 +174,7 @@ def _get_table_header(types, sort_type=None, sort_links=None):
 		
 		header += "</th>"
 	
-	#header += "<th class='times_offline"
-	#if sort_type is 'times_offline':
-		#header += " sortedby"
-	#header += "'>Times Offline</th>"
+	#header += "<th class='times_offline'>Times Offline</th>"
 	
 	header += "</tr>\n"
 	
@@ -265,8 +256,6 @@ def get_rows(servers, types):
 			if (  service_type not in server['available_services'] and 
 				  service_type not in server['unavailable_services']  ):
 				row += """<td class='feature no %s'></td>""" % service_type
-				#if sort_type == service_type:
-					#row += " sortedby"
 			else:
 				
 				#row += "<td class='feature yes"
@@ -282,8 +271,6 @@ def get_rows(servers, types):
 				#row += " " + service_type
 				
 				
-				#if sort_type == service_type:
-					#row += " sortedby"
 				
 				#row += "'>"
 				
@@ -313,8 +300,6 @@ def get_rows(servers, types):
 		#FIX: don't display times_offline this way
 		#TODO: display it (needs a access to the DB) or mark the tr as offline?
 		#cell = "\t\t<td class=\"times_offline"
-		#if sort_type == 'times_offline':
-			#cell += " sortedby"
 		#cell += "\">4</td>"
 		#f.write(cell+"\n")
 		
@@ -449,28 +434,19 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			tr.table_header th a:hover{
 				text-decoration: underline;
 				}
-			tr.odd/* td*/{
+			tr.odd{
 				background:#EBF4FF;
 				}
-			tr.even/* td*/{
+			tr.even{
 				background:#FFF;
 				}
-			tr.offline/* td*/{
+			tr.offline{
 				font-style: italic;
 				background:#FFD4D4;
 				}
 			tr.table_header th.server, td.server{
 				text-align: left;
 				padding: 6px 4px;
-				}
-			tr.table_header th.sortedby{
-				background: #CFCFCF;
-				}
-			tr.table_header th.sortedby a{
-				font-weight: bolder;
-				font-size: 1em;
-/* 				background: #FAFAFA; */
-				color: #0000FF;
 				}
 			th.times_offline,td.times_offline{
 				/*display: none;*/
@@ -486,13 +462,35 @@ def generate( filename, servers, types, sort_type=None, sort_links=None,
 			}
 			.unavailable{
 				color: #808080;/*gray;*/
-			}
-			tr.odd td.sortedby{
+			}"""
+	)
+	
+	# Apply a different style to sorted columns
+	f.write(
+"""
+			tr.table_header th.%s{
+				background: #CFCFCF;
+				}
+			tr.table_header th.%s a{
+				font-weight: bolder;
+				font-size: 1em;
+/* 				background: #FAFAFA; */
+				color: #0000FF;
+				}
+			tr.odd td.%s{
 				background: #DCE5EF;
 			}
-			tr.even td.sortedby{
+			tr.even td.%s{
 				background: #EFEFEF;
 			}
+			tr.offline td.%s{
+				font-style: italic;
+				background:#FFD4D4;
+				}""" % (sort_type, sort_type, sort_type, sort_type, sort_type)
+	)
+	
+	f.write(
+"""
 			div.components span{
 				display: block;
 				font-size: 0.7em;
