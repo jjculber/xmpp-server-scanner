@@ -98,7 +98,7 @@ COLUMNS_DESCRIPTION = {
 
 def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 	if by is None:
-		return os.path.join(directory,filename_prefix+extension)
+		return os.path.join(directory, filename_prefix+extension)
 	else:
 		return os.path.join(directory, filename_prefix+'_by_'+by+extension)
 
@@ -112,25 +112,25 @@ def _count_components(server, service_type=None, availability='both'):
 	if service_type is None:
 		num = 0
 		
-		if availability=='available' or availability=='both':
+		if availability == 'available' or availability == 'both':
 			for service_type in server['available_services']:
 				num += len(server['available_services'][service_type])
-		if availability=='unavailable' or availability=='both':
+		if availability == 'unavailable' or availability == 'both':
 			for service_type in server['unavailable_services']:
 				num += len(server['unavailable_services'][service_type])
 		return num
 	else:
-		if availability=='available':
+		if availability == 'available':
 			if service_type in server['available_services']:
 				return len(server['available_services'][service_type])
 			else:
 				return 0
-		if availability=='unavailable':
+		if availability == 'unavailable':
 			if service_type in server['unavailable_services']:
 				return len(server['unavailable_services'][service_type])
 			else:
 				return 0
-		if availability=='both':
+		if availability == 'both':
 			num = 0
 			if service_type in server['available_services']:
 				num += len(server['available_services'][service_type])
