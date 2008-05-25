@@ -70,7 +70,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 		                  server['times_queried'] ) )
 		
 		# If it's offline the information will remain correct
-		if server['offline_since'] is not None: # Online server
+		if server['offline_since'] is None: # Online server
 			#logging.debug('Add online server %s', server[u'jid'])
 			#cursor.execute("""INSERT INTO pybot_servers 
 			                    #SET jid = %s, times_offline = %s
