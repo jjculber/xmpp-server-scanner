@@ -126,7 +126,7 @@ for item in items:
 	if item.getAttr("jid") not in server_list:
 		server_list.append(item.getAttr("jid"))
 
-server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
+#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 #server_list=['jabberes.org']
 
 servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
