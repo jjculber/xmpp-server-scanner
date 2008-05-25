@@ -438,12 +438,11 @@ def _show_node(node, indent=0):
 def discover_servers( jabber_user, jabber_password, jabber_resource,
                       jabber_server, server_list ):
 
-	servers = []
+	servers = {}
 	
 	for jid in server_list:
-		servers.append({ u'jid': jid,
-		                 u'available_services': {}, 
-		                 u'unavailable_services': {} })
+		servers[jid] = { u'jid': jid, u'available_services': {}, 
+		                 u'unavailable_services': {} }
 
 
 	# Connect to server
@@ -459,7 +458,9 @@ def discover_servers( jabber_user, jabber_password, jabber_resource,
 	
 	logging.info('Begin discovery')
 	
-	for server in servers:
+	for jid in sorted(servers.keys()):
+		server = servers[jid]
+		
 		try:
 			_discover_item(cl.Dispatcher, server, server)
 		

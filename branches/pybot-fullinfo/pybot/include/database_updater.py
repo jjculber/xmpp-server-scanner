@@ -16,6 +16,7 @@
 
 import logging
 import MySQLdb
+import time
 
 
 def update_database(db_user, db_password, db_host, db_database, servers):
@@ -30,7 +31,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	# Check service types
 	
 	service_types = set()
-	for server in servers:
+	for server in servers.itervalues():
 		service_types.update(server['available_services'].keys())
 		service_types.update(server['unavailable_services'].keys())
 	
@@ -52,16 +53,29 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	
 	# Save the servers and services
 	
-	for server in servers:
+	for server in servers.itervalues():
+		
+		offline_since = None if server['offline_since'] is None else time.strftime('%Y-%m-%d %H:%M:%S', server['offline_since'])
 		
 		# Add server
+		logging.debug('Add server %s', server[u'jid'])
+		cursor.execute( """INSERT INTO pybot_servers 
+		                    SET jid = %s, offline_since = %s,
+		                    times_queried_online = %s, times_queried = %s
+		                    ON DUPLICATE KEY UPDATE offline_since = %s,
+		                    times_queried_online = %s, times_queried = %s""",
+		                ( server[u'jid'], offline_since, 
+		                  server['times_queried_online'], server['times_queried'],
+		                  offline_since, server['times_queried_online'],
+		                  server['times_queried'] ) )
 		
-		if server[u'info'] != ([], []): # Online server
-			logging.debug('Add online server %s', server[u'jid'])
-			cursor.execute("""INSERT INTO pybot_servers 
-								SET jid = %s, times_offline = %s
-								ON DUPLICATE KEY UPDATE times_offline = %s""",
-						(server[u'jid'], 0, 0))
+		# If it's offline the information will remain correct
+		if server['offline_since'] is not None: # Online server
+			#logging.debug('Add online server %s', server[u'jid'])
+			#cursor.execute("""INSERT INTO pybot_servers 
+			                    #SET jid = %s, times_offline = %s
+			                    #ON DUPLICATE KEY UPDATE times_offline = %s""",
+			               #(server[u'jid'], 0, 0))
 			
 			#Add services
 			
@@ -89,23 +103,27 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 										ON DUPLICATE KEY UPDATE available = %s""",
 									(component, server[u'jid'], service, False, False))
 		
-		else:                           # Offline server
-			logging.debug('Add offline server %s', server[u'jid'])
-			cursor.execute("""INSERT INTO pybot_servers
-			                    SET `jid` = %s, times_offline = %s
-			                    ON DUPLICATE KEY UPDATE 
-			                      times_offline = times_offline + %s""",
-			                (server[u'jid'], 1, 1))
+		#else:                           # Offline server
+			#logging.debug('Add offline server %s', server[u'jid'])
+			#cursor.execute("""INSERT INTO pybot_servers
+			                    #SET `jid` = %s, times_offline = %s
+			                    #ON DUPLICATE KEY UPDATE 
+			                      #times_offline = times_offline + %s""",
+			                #(server[u'jid'], 1, 1))
 	
 	
 	# Clean the servers table
 	cursor.execute("""SELECT jid FROM pybot_servers""")
 	for row in cursor.fetchall():
 		exists = False
-		for server in servers:
-			if row[u'jid'] == server['jid']:
-				exists = True
-				break
+		#for server in servers:
+			#if row[u'jid'] == server['jid']:
+				#exists = True
+				#break
+		# Servers are indexed by JID
+		if row[u'jid'] in servers:
+			exists = True
+			break
 			
 		if not exists:
 			logging.debug('Delete old server %s', row['jid'])

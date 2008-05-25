@@ -4,8 +4,9 @@
 
 CREATE TABLE pybot_servers (
 	jid VARCHAR(255) NOT NULL UNIQUE,
-	-- Executions in wich this server were unavailable
-	times_offline INT UNSIGNED NOT NULL DEFAULT 0,
+	offline_since DATETIME DEFAULT NULL,
+	times_queried_online INT UNSIGNED NOT NULL,
+	times_queried INT UNSIGNED NOT NULL,
 	PRIMARY KEY (jid)
 ) ENGINE=InnoDB;
 
