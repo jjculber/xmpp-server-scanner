@@ -365,7 +365,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	elif sort_by is 'offline_since':
 		
 		# None is earlier than any date, so use current date
-		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else time.gmtime()
+		now = time.gmtime()
+		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
 		#server_keys.sort(key=jid)
 		server_keys.sort()
 		server_keys.sort(key=date)
