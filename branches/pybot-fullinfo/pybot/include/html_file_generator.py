@@ -152,11 +152,13 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	#header += "</th>"
 	
 	
+	text = COLUMNS_DESCRIPTION[service_type] if 'server' in COLUMNS_DESCRIPTION else 'Server'
+	
 	link = "<a href='%s'>%s</a>" % (
 	         _get_filename( sort_links['directory'], sort_links['filename_prefix']),
-	         COLUMNS_DESCRIPTION['server'])
+	         text)
 	header += ( "<th class='server'>%s</th>" % 
-	                 link if sort_links is not None else COLUMNS_DESCRIPTION['server'] )
+	                 link if sort_links is not None else text )
 	
 	for service_type in types:
 		
@@ -187,17 +189,21 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	
 	#header += "<th class='times_offline'>Times Offline</th>"
 	
+	text = COLUMNS_DESCRIPTION[service_type] if 'offline_since' in COLUMNS_DESCRIPTION else 'Offline Since'
+	
 	link = "<a href='%s'>%s</a>" % (
 	         _get_filename( sort_links['directory'], sort_links['filename_prefix'], 'offline_since'),
-	         COLUMNS_DESCRIPTION['offline_since'])
+	         text)
 	header += ( "<th class='offline_since'>%s</th>" % 
-	                 link if sort_links is not None else COLUMNS_DESCRIPTION['offline_since'] )
+	                 link if sort_links is not None else text )
+	
+	text = COLUMNS_DESCRIPTION[service_type] if 'times_online' in COLUMNS_DESCRIPTION else 'Times Online'
 	
 	link = "<a href='%s'>%s</a>" % (
 	         _get_filename( sort_links['directory'], sort_links['filename_prefix'], 'times_online'),
-	         COLUMNS_DESCRIPTION['times_online'])
+	         text)
 	header += ( "<th class='times_online'>%s</th>" % 
-	                 link if sort_links is not None else COLUMNS_DESCRIPTION['times_online'] )
+	                 link if sort_links is not None else text )
 	
 	header += "</tr>\n"
 	
