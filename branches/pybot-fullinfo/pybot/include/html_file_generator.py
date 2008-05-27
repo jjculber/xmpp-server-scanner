@@ -457,17 +457,15 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 				/*background: #C4DCFF;*/
 				background: #EEE;
 				width: 100%;
+				font-size: 0.85em;
 				}
 			td, th{
 				vertical-align: middle;
 				text-align: center;
-				padding: 0px 4px;
+				padding: 1px 4px;
 				}
 			tr.table_header{
 				background: #DFDFDF;
-				}
-			tr.table_header th{
-				padding: 2px 4px;
 				}
 			tr.table_header th:hover{
 				background: #EFEFEF;
@@ -490,9 +488,9 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 				font-style: italic;
 				background:#FFD4D4;
 				}
-			tr.table_header th.server, td.server{
+			th.server, td.server{
 				text-align: left;
-				padding: 6px 4px;
+				padding: 2px 4px;
 				}
 			th.times_offline,td.times_offline{
 				/*display: none;*/
@@ -508,7 +506,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			}
 			.unavailable{
 				color: #808080;/*gray;*/
-			}"""
+			}
+"""
 	)
 	
 	# Apply a different style to sorted columns
