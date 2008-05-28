@@ -462,7 +462,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			td, th{
 				vertical-align: middle;
 				text-align: center;
-				padding: 1px 4px;
+				padding: 2px 2px;
 				}
 			tr.table_header{
 				background: #DFDFDF;
@@ -490,7 +490,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 				}
 			th.server, td.server{
 				text-align: left;
-				padding: 2px 4px;
+				padding: 2px;
 				}
 			th.times_offline,td.times_offline{
 				/*display: none;*/
@@ -538,7 +538,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 """
 			div.components span{
 				display: block;
-				font-size: 0.7em;
+				/*font-size: 0.7em;*/
 				white-space: nowrap;
 			}
 			/*td div.components{
