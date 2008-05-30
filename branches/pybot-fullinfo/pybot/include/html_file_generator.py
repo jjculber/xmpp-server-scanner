@@ -79,7 +79,7 @@ COLUMNS_DESCRIPTION = {
   'msn': 'MSN',
   'qq': 'QQ',
   'sms': 'SMS',
-  'smtp': 'eMail',
+  'smtp': 'email',
   'tlen': 'TLEN',
   'yahoo': 'Yahoo!',
   'jud': 'User Directory',
@@ -90,9 +90,9 @@ COLUMNS_DESCRIPTION = {
   'newmail': 'New Mail Notifications',
   'rss': 'RSS',
   'weather': 'Weather',
-  'proxy': 'Proxy for file transfers',
+  'proxy': 'File transfer proxy',
   'offline_since': 'Offline since',
-  'times_online': 'Online Times'
+  'times_online': 'Times Online'
 }
 
 
