@@ -109,6 +109,7 @@ class Jabber_services_Browser extends Jabber {
 		
 		$this->roster = array();
 		$this->services = array();
+		$this->rooms = array();
 		
 		$this->_is_win32 = (substr(strtolower(php_uname()),0,3)=="win");
 		$this->_sleep_func = $this->_is_win32 ? "win32_sleep" : "posix_sleep";
@@ -138,7 +139,7 @@ class Jabber_services_Browser extends Jabber {
 		// did we get a result?  if so, process it, and remember the service list	
 		if ($packet_type=="result") {
 			
-// 			$this->services = array();
+			$this->services = array();
 
 			//$this->_log("SERVICES: ".print_r($packet,true));
 			
@@ -169,14 +170,12 @@ class Jabber_services_Browser extends Jabber {
 			$number_of_services = count($packet['iq']['#'][$servicekey][0]['#'][$itemkey]);
 
 			$services_updated = false;
-			$services = array();
 			for ($a = 0; $a < $number_of_services; $a++)
 			{
 				$svc = &$packet['iq']['#'][$servicekey][0]['#'][$itemkey][$a];
 
 				$jid = strtolower($svc['@']['jid']);
 				
-/* @annotation: should be done in the bot? *//*
 				//skip nodes from other servers
 				preg_match('/([^.]+\.)?(([^.]+)\.[^.]+$)/',$server,$server_match);
 				preg_match('/([^.]+\.)?(([^.]+)\.[^.]+$)/',$jid,$service_match);
@@ -193,17 +192,9 @@ class Jabber_services_Browser extends Jabber {
 				if($server_domain != $service_domain) {
 					//$this->_log("[SERVICES] Skipped".$service_jid." child of ".$jid);
 					continue;
-				}*/
-				
-				$is_new = !isset($this->services[$jid]);
-				$services[] = $jid;
-				
-				if(!$is_new){
-					//skip already discovered nodes
-					//$this->_log("[SERVICES] Skipped already discovered ".$jid." child of ".$server);
-					continue;
 				}
 				
+				$is_new = !isset($this->services[$jid]);
 				$this->services[$jid] = array(	
 					"type"			=> strtolower($svc['@']['type']),
 // 					"category"			=> strtolower($svc['@']['category']),
@@ -229,7 +220,7 @@ class Jabber_services_Browser extends Jabber {
 			}
 			
 			$this->_log("Received service list");
-			$this->_call_handler("browseresult",$server,$services);
+			$this->_call_handler("browseresult",$server);
 			//$this->_log("Received service list: ".print_r($this->services,true));
 		// choke on error
 		} elseif ($packet_type=="error") {
@@ -265,53 +256,20 @@ class Jabber_services_Browser extends Jabber {
 					
 			$jid = $packet['iq']['@']['from'];
 			
-			if(isset($packet['iq']['#']['query'][0]['@']['node'])){
-				$node = $packet['iq']['#']['query'][0]['@']['node'];
-			}
-			
 			$number_of_identities = count($packet['iq']['#']['query'][0]['#']['identity']);
 			
 			for ($a = 0; $a < $number_of_identities; $a++)
 			{
-				$identity = &$packet['iq']['#']['query'][0]['#']['identity'][$a];
+				$svc = &$packet['iq']['#']['query'][0]['#']['identity'][$a];
 				
-				if(isset($node)){
-					$this->services[$jid]['nodes'][$node]["identities"][$a] = array(	
-						"type"			=> $identity['@']['type'],
-						"category"			=> $identity['@']['category']
-						);
-					if($identity['@']['name']){
-						$this->services[$jid]['nodes'][$node]["identities"][$a]["name"] = $identity['@']['name'];
-					}
-						
-				}else{
-					$this->services[$jid]["identities"][$a] = array(	
-						"type"			=> $identity['@']['type'],
-						"category"			=> $identity['@']['category']
-						);
-					if($identity['@']['name']){
-						$this->services[$jid]["identities"][$a]["name"] = $identity['@']['name'];
-					}
+				$this->services[$jid]["identities"][$a] = array(	
+					"type"			=> $svc['@']['type'],
+					"category"			=> $svc['@']['category']
+					);
+				if($svc['@']['name']){
+					$this->services[$jid]["identities"][$a]["name"] = $svc['@']['name'];
 				}
-				if ($this->service_single_update) {
-					$services_updated = true;
-				} else {
-					$this->_call_handler("serviceupdate",$jid,$is_new);
-				}
-			}
-			
-			$number_of_features = count($packet['iq']['#']['query'][0]['#']['feature']);
-			
-			for ($a = 0; $a < $number_of_features; $a++)
-			{
-				$feature = &$packet['iq']['#']['query'][0]['#']['feature'][$a];
-				
-				if(isset($node)){
-					$this->services[$jid]['nodes'][$node]['features'][$a] = $feature['@']['var'];
-						
-				}else{
-					$this->services[$jid]['features'][$a] = $feature['@']['var'];
-				}
+					
 				if ($this->service_single_update) {
 					$services_updated = true;
 				} else {
@@ -323,7 +281,7 @@ class Jabber_services_Browser extends Jabber {
 				$this->_call_handler("serviceupdate",NULL,$is_new);
 			}
 
-			$this->_call_handler("service_got_info",$jid,$node);
+			$this->_call_handler("service_got_info",$jid);
 			$this->_log("Received info of ".$jid);
 			//$this->_log("Received service list: ".print_r($this->services,true));
 			// choke on error
@@ -365,12 +323,6 @@ class Jabber_services_Browser extends Jabber {
 			
 			$jid = &$packet['iq']['@']['from'];
 			
-			if(isset($packet['iq']['#']['query'][0]['@']['node'])){
-				$jid_node = &$packet['iq']['#']['query'][0]['@']['node'];
-			}else{
-				$jid_node = NULL;
-			}
-			
 			//$number_of_services = count($packet['iq']['#'][$servicekey][0]['#'][$itemkey]);
 			if(isset($packet['iq']['#']['query'][0]['#']['item'])){
 				$number_of_services = count($packet['iq']['#']['query'][0]['#']['item']);
@@ -384,8 +336,7 @@ class Jabber_services_Browser extends Jabber {
 				
 				$service_jid = strtolower($svc['@']['jid']);
 				
-/* @annotation: should be done in the bot? *//*
-			//skip nodes from other servers
+				//skip nodes from other servers
 				preg_match('/([^.]+\.)?(([^.]+)\.[^.]+$)/',$jid,$server_match);
 				preg_match('/([^.]+\.)?(([^.]+)\.[^.]+$)/',$service_jid,$service_match);
 				
@@ -401,53 +352,27 @@ class Jabber_services_Browser extends Jabber {
 				if($server_domain != $service_domain) {
 					//$this->_log("[SERVICES] Skipped".$service_jid." child of ".$jid);
 					continue;
-				}*/
+				}
 				
 				if($svc['@']['node']){
 					//It's a hierarchy node, not a service
-// 					$is_new = False; //Don't add nodes to roster
-					$node = $svc['@']['node'];
-					$is_new = !isset($this->services[$service_jid]['nodes'][$node]); //Don't add nodes to roster
-					$childs_nodes[$node] = $service_jid;
-					
-					if(!$is_new){
-						//skip already discovered nodes
-						//$this->_log("[SERVICES] Skipped already discovered ".$service_jid." child of ".$jid);
-						continue;
-					}
-					
-					$this->services[$service_jid]['nodes'][$node] = array(	
-							"identities"			=> array(), //strtolower($svc['@']['type']),
-							"features"			=> array(), //strtolower($svc['@']['type']),
-							"status"		=> "Offline",
-							"show"			=> "off",
-							"name"			=> ($svc['@']['name']?$svc['@']['name']:$svc['@']['jid'])
-						);
-					
-					if ($this->service_single_update) {
-						$services_updated = true;
-					} else {
-						$this->_call_handler("serviceupdate",$service_jid,$is_new);
-					}
+					$is_new = False; //Don't add nodes to roster
+					$childs_nodes[$svc['@']['node']] = $svc['@']['jid'];
 					
 				}else{
 					//It's a service
 					$is_new = !isset($this->services[$service_jid]);
 					
-					$childs[] = $service_jid;
-					
-// 				echo "preprocesar $service_jid $jid\n";
-// 				if($service_jid=="aspsms.swissjabber.ch") print_r($this->services[$service_jid]);
 					if(!$is_new){
 						//skip already discovered nodes
 						//$this->_log("[SERVICES] Skipped already discovered ".$service_jid." child of ".$jid);
 						continue;
 					}
-// 					echo "procesar $service_jid $jid\n";
-// 				if($service_jid=="aspsms.swissjabber.ch") print_r($this->services[$service_jid]);
+					
+					$childs[] = $service_jid;
+					
 					$this->services[$service_jid] = array(	
 						"identities"			=> array(), //strtolower($svc['@']['type']),
-						"features"			=> array(), //strtolower($svc['@']['type']),
 						"status"		=> "Offline",
 						"show"			=> "off",
 						"name"			=> ($svc['@']['name']?$svc['@']['name']:$svc['@']['jid'])
@@ -458,9 +383,6 @@ class Jabber_services_Browser extends Jabber {
 					} else {
 						$this->_call_handler("serviceupdate",$service_jid,$is_new);
 					}
-// 					echo "procesado $service_jid $jid\n";
-// 				if($service_jid=="aspsms.swissjabber.ch") print_r($this->services[$service_jid]);
-// 					echo "----------------------\n";
 				}
 			}
 				
@@ -468,7 +390,7 @@ class Jabber_services_Browser extends Jabber {
 				$this->_call_handler("serviceupdate",NULL,$is_new);
 			}
 			
-			$this->_call_handler("services_discovered",$childs,$childs_nodes,$jid,$jid_node);
+			$this->_call_handler("services_discovered",$childs,$childs_nodes,$jid);
 			$this->_log("Received service list");
 			//$this->_log("Received service list: ".print_r($this->services,true));
 			

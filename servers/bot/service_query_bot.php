@@ -39,7 +39,6 @@ define("JABBER_PASSWORD","pass");
 
 define("RUN_TIME",7200);	// set a maximum run time of 30 seconds
 define("CBK_FREQ",10);	// fire a callback event every second
-define("MAX_SIMULTANEOUS_QUERYS",10);
  */
 if(!defined('XML_SERVER_LIST')) define('XML_SERVER_LIST','http://www.jabber.org/servers.xml');
 
@@ -48,7 +47,7 @@ require_once("include/class_service_query_bot.php");
 
 // include the Jabber class
 require_once("include/class_Jabber_services_Browser.php");
- 
+
 
 $servers = array();
 
@@ -68,7 +67,7 @@ function getServers($xml_file){
 	xml_set_element_handler($parser, "handleStartElement", False);
 	if (!xml_parse($parser,$xml_data,True)) die("Can't parse the server list");
 	xml_parser_free($parser);
-	return array_merge(array_unique($servers));
+	return array_unique($servers);
 }
 
 // create an instance of the Jabber class
