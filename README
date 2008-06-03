@@ -15,18 +15,6 @@ The information gathering is done with a bot that can be executed via cron.
 This bot explores the servers and saves the information on a database (MySQL)
 
 
-PHP Bot
-
-This bot is based on Jabberclass 0.8, this version was done thinking on php4 but
-it should work on php5 woth some compatibility options activated.
-
-The library original didn't support Service Discovery, so I had to write it. I
-also wrote code to detect when a server or a service isn't accesible ant to
-paralellize querys.
-
-Unafortunately, the code is complex and caotic. So I thought on do a rewrite
-using Python
-
 
 Python Bot
 
@@ -68,18 +56,6 @@ servidores y guarda la informacion en una base de datos (MySQL) para poderla
 consultar desde la página web.
 
 
-PHP Bot
-
-Este bot esta basado en Jabberclass 0.8, esta versión se hizo pensando en php4
-aunque funciona en php5 si se activan algunas opciones de compatibilidad.
-
-La biblioteca original no soportaba service discovery asi que tuve que
-implementarlo, con mas o menos exito. Tambien hay codigo para controlar cuando
-un servidor o un componente no esta accesible y para paralelizar las consultas.
-
-Lamentablemente, el código es complejo y algo caotico. Por esta razón, (y
-porque queria aprender python), me plantee reescribirlo en Python.
-
 
 Python Bot
 
@@ -109,11 +85,6 @@ como opcion por defecto.
 
 
 
-
-
-Jabberclass
-http://code.blitzaffe.com/pages/phpclasses/files/php_jabber_client_52-11
-http://code.blitzaffe.com/data/files/jabberclass-0.8.tar.gz
 
 
 xmpppy
