@@ -29,6 +29,7 @@
  * JABBER is a registered trademark of Jabber Inc.
  */
 
+
 //
 // define('XML_SERVER_LIST','http://www.jabber.org/servers.xml');
 //define('TIMES_OFFLINE_ALLOWED',5);
@@ -45,33 +46,42 @@ class update_mysql_service_list_bot extends service_query_bot {
 		
 		$this->jab = &$jab;
 		$this->servers = &$servers;
+// 		$this->servers = array("im.drazzib.com");
+// 		print_r($this->servers);
 	}
 	
 	function processServers() {
 		
+		
+// 		echo "\n\n\n------------------------PARENTS-------------\n\n\n";
+// 		print_r($this->parents);
+// 		echo "\n\n\n----------------------services---------------\n\n\n";
+// 		print_r($this->jab->services);
+// 		echo "\n\n\n------------------------servers_services-------------\n\n\n";
+// 		print_r($this->servers_services);
 		foreach($this->servers_services as $server => $services) {
 			
-			$has_muc = 0;
-			$has_irc = 0;
-			$has_aim = 0;
-			$has_gg = 0;
-			$has_httpws = 0;
-			$has_icq = 0;
-			$has_msn = 0;
-			$has_qq = 0;
-			$has_sms = 0;
-			$has_smtp = 0;
-			$has_tlen = 0;
-			$has_yahoo = 0;
-			$has_jud = 0;
-			$has_pubsub = 0;
-			$has_pep = 0;
-			$has_presence = 0;
-			$has_newmail = 0;
-			$has_rss = 0;
-			$has_weather = 0;
-			$has_proxy = 0;
-			$is_offline  = 0;
+			$has_muc = False;
+			$has_irc = False;
+			$has_aim = False;
+			$has_gg = False;
+			$has_httpws = False;
+			$has_icq = False;
+			$has_msn = False;
+			$has_qq = False;
+			$has_sms = False;
+			$has_smtp = False;
+			$has_tlen = False;
+			$has_yahoo = False;
+			$has_jud = False;
+			$has_pubsub = False;
+			$has_pep = False;
+			$has_presence = False;
+			$has_newmail = False;
+			$has_rss = False;
+			$has_weather = False;
+			$has_proxy = False;
+			$is_offline  = False;
 			
 			if(!(is_array($services))){
 				$is_offline = True;
@@ -79,26 +89,26 @@ class update_mysql_service_list_bot extends service_query_bot {
 				//Insert or update the server
 				$query = "INSERT ".MYSQL_TABLE." SET ".
 					"name = '".$this->db->real_escape_string($server)."', ".
-					"has_muc = $has_muc, ".
-					"has_irc = $has_irc, ".
-					"has_aim = $has_aim, ".
-					"has_gg = $has_gg, ".
-					"has_httpws = $has_httpws, ".
-					"has_icq = $has_icq, ".
-					"has_msn = $has_msn, ".
-					"has_qq = $has_qq, ".
-					"has_sms = $has_sms, ".
-					"has_smtp = $has_smtp, ".
-					"has_tlen = $has_tlen, ".
-					"has_yahoo = $has_yahoo, ".
-					"has_jud = $has_jud, ".
-					"has_pubsub = $has_pubsub, ".
-					"has_pep = $has_pep, ".
-					"has_presence = $has_presence, ".
-					"has_newmail = $has_newmail, ".
-					"has_rss = $has_rss, ".
-					"has_weather = $has_weather, ".
-					"has_proxy = $has_proxy, ".
+					"has_muc = ".($has_muc?"True":"False").", ".
+					"has_irc = ".($has_irc?"True":"False").", ".
+					"has_aim = ".($has_aim?"True":"False").", ".
+					"has_gg = ".($has_gg?"True":"False").", ".
+					"has_httpws = ".($has_httpws?"True":"False").", ".
+					"has_icq = ".($has_icq?"True":"False").", ".
+					"has_msn = ".($has_msn?"True":"False").", ".
+					"has_qq = ".($has_qq?"True":"False").", ".
+					"has_sms = ".($has_sms?"True":"False").", ".
+					"has_smtp = ".($has_smtp?"True":"False").", ".
+					"has_tlen = ".($has_tlen?"True":"False").", ".
+					"has_yahoo = ".($has_yahoo?"True":"False").", ".
+					"has_jud = ".($has_jud?"True":"False").", ".
+					"has_pubsub = ".($has_pubsub?"True":"False").", ".
+					"has_pep = ".($has_pep?"True":"False").", ".
+					"has_presence = ".($has_presence?"True":"False").", ".
+					"has_newmail = ".($has_newmail?"True":"False").", ".
+					"has_rss = ".($has_rss?"True":"False").", ".
+					"has_weather = ".($has_weather?"True":"False").", ".
+					"has_proxy = ".($has_proxy?"True":"False").", ".
 					"times_offline = ".($is_offline?"1":"0").
 					" ON DUPLICATE KEY UPDATE ".
 					"times_offline = ".($is_offline?"times_offline + 1":"0")." ";
@@ -131,11 +141,11 @@ class update_mysql_service_list_bot extends service_query_bot {
 										case 'text': 
 											//This don't neccesary mean that it's a MUC, some transports also use it, maybe we should add feature dettection
 											if(in_array('http://jabber.org/protocol/muc',$features)){
-												$has_muc = 255;
+												$has_muc = True;
 											}
 											break;
 										case 'irc': 
-											$has_irc = 255;
+											$has_irc = True;
 											break;
 									}
 									break;
@@ -143,34 +153,34 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'gateway':
 									switch($identity['type']){
 										case 'aim': 
-											$has_aim = 255;
+											$has_aim = True;
 											break;
 										case 'gadu-gadu': 
-											$has_gg = 255;
+											$has_gg = True;
 											break;
 										case 'http-ws': 
-											$has_httpws = 255;
+											$has_httpws = True;
 											break;
 										case 'icq': 
-											$has_icq = 255;
+											$has_icq = True;
 											break;
 										case 'msn': 
-											$has_msn = 255;
+											$has_msn = True;
 											break;
 										case 'qq': 
-											$has_qq = 255;
+											$has_qq = True;
 											break;
 										case 'sms': 
-											$has_sms = 255;
+											$has_sms = True;
 											break;
 										case 'smtp': 
-											$has_smtp = 255;
+											$has_smtp = True;
 											break;
 										case 'tlen': 
-											$has_tlen = 255;
+											$has_tlen = True;
 											break;
 										case 'yahoo': 
-											$has_yahoo = 255;
+											$has_yahoo = True;
 											break;
 									}
 									
@@ -179,7 +189,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'directory':
 									switch($identity['type']){
 										case 'user': 
-											$has_jud = 255;
+											$has_jud = True;
 											break;
 									}
 									
@@ -189,10 +199,10 @@ class update_mysql_service_list_bot extends service_query_bot {
 									switch($identity['type']){
 										case 'service': //XEP
 										case 'generic': //ejabberd 1.1.3
-											$has_pubsub = 255;
+											$has_pubsub = True;
 											break;
 										case 'pep': 
-											$has_pep = 255;
+											$has_pep = True;
 											break;
 									}
 									
@@ -201,7 +211,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'component':
 									switch($identity['type']){
 										case 'presence': 
-											$has_presence = 255;
+											$has_presence = True;
 											break;
 									}
 									
@@ -210,13 +220,13 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'headline':
 									switch($identity['type']){
 										case 'newmail': 
-											$has_newmail = 255;
+											$has_newmail = True;
 											break;
 										case 'rss': 
-											$has_rss = 255;
+											$has_rss = True;
 											break;
 										case 'weather': 
-											$has_weather = 255;
+											$has_weather = True;
 											break;
 									}
 									
@@ -225,7 +235,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'proxy':
 									switch($identity['type']){
 										case 'bytestreams': 
-											$has_proxy = 255;
+											$has_proxy = True;
 											break;
 									}
 									
@@ -236,7 +246,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'agent':
 									switch($identity['type']){
 										case 'weather': 
-											$has_weather = 255;
+											$has_weather = True;
 											break;
 									}
 									
@@ -246,7 +256,7 @@ class update_mysql_service_list_bot extends service_query_bot {
 								case 'x-service':
 									switch($identity['type']){
 										case 'x-rss': //PyRSS
-											$has_rss = 255;
+											$has_rss = True;
 											break;
 									}
 									
@@ -256,7 +266,6 @@ class update_mysql_service_list_bot extends service_query_bot {
 						} //foreach identity
 					}else{
 						//There is no finfo about the service (maybe a 404 error while exploring) so we try to guess using the JID
-						// TODO: use regular expresions instead cases
 						preg_match('/^[^.]+/',$jid,$match);
 						switch($match[0]){
 							case 'conference':
@@ -264,81 +273,78 @@ class update_mysql_service_list_bot extends service_query_bot {
 							case 'muc':
 							case 'chat':
 							case 'rooms':
-								$has_muc = 1;
+								$has_muc = True;
 								break;
 							case 'irc':
-								$has_irc = 1;
+								$has_irc = True;
 								break;
 							case 'aim':
 							case 'aim-icq':
-							case 'aim-jab':
-								$has_aim = 1;
+								$has_aim = True;
 								break;
 							case 'gg':
 							case 'gadugadu':
 							case 'gadu-gadu':
-								$has_gg = 1;
+								$has_gg = True;
 								break;
 							case 'http-ws':
-								$has_httpws = 1;
+								$has_httpws = True;
 							case 'icq':
 							case 'icqt':
 							case 'aim-icq':
 							case 'jit-icq':
-							case 'icq-jab':
-							case 'icq2':
-								$has_icq = 1;
+								$has_icq = True;
 								break;
 							case 'msn':
 							case 'msnt':
 							case 'pymsnt':
-								$has_msn = 1;
+								$has_msn = True;
 								break;
 							case 'qq':
-								$has_qq = 1;
+								$has_qq = True;
 								break;
 							case 'sms':
-								$has_sms = 1;
+								$has_sms = True;
 								break;
 							case 'smtp':
-								$has_smtp = 1;
+								$has_smtp = True;
 								break;
 							case 'tlen':
-								$has_tlen = 1;
+								$has_tlen = True;
 								break;
 							case 'yahoo':
-								$has_yahoo = 1;
+								$has_yahoo = True;
 								break;
 							case 'jud':
 							case 'vjud':
 							case 'search':
 							case 'users':
-								$has_jud = 1;
+								$has_jud = True;
 								break;
 							case 'pubsub':
-								$has_pubsub = 1;
+								$has_pubsub = True;
 								break;
 							case 'pep':
-								$has_pep = 1;
+								$has_pep = True;
 								break;
 							case 'presence':
 							case 'webpresence':
-								$has_presence = 1;
+								$has_presence = True;
 								break;
 							case 'newmail':
 							case 'mail':
 							case 'jmc': //JabberMailComponent
-								$has_newmail = 1;
+								$has_newmail = True;
 								break;
 							case 'rss':
-								$has_rss = 1;
+								$has_rss = True;
 								break;
 							case 'weather':
-								$has_weather = 1;
+								$has_weather = True;
 								break;
 							case 'proxy':
 							case 'proxy65':
-								$has_proxy = 1;
+								$has_proxy = True;
 								break;
 							default:
 								//Try to guess using the name
@@ -353,49 +359,49 @@ class update_mysql_service_list_bot extends service_query_bot {
 				//Insert or update the server
 				$query = "INSERT ".MYSQL_TABLE." SET ".
 					"name = '".$this->db->real_escape_string($server)."', ".
-					"has_muc = $has_muc, ".
-					"has_irc = $has_irc, ".
-					"has_aim = $has_aim, ".
-					"has_gg = $has_gg, ".
-					"has_httpws = $has_httpws, ".
-					"has_icq = $has_icq, ".
-					"has_msn = $has_msn, ".
-					"has_qq = $has_qq, ".
-					"has_sms = $has_sms, ".
-					"has_smtp = $has_smtp, ".
-					"has_tlen = $has_tlen, ".
-					"has_yahoo = $has_yahoo, ".
-					"has_jud = $has_jud, ".
-					"has_pubsub = $has_pubsub, ".
-					"has_pep = $has_pep, ".
-					"has_presence = $has_presence, ".
-					"has_newmail = $has_newmail, ".
-					"has_rss = $has_rss, ".
-					"has_weather = $has_weather, ".
-					"has_proxy = $has_proxy, ".
+					"has_muc = ".($has_muc?"True":"False").", ".
+					"has_irc = ".($has_irc?"True":"False").", ".
+					"has_aim = ".($has_aim?"True":"False").", ".
+					"has_gg = ".($has_gg?"True":"False").", ".
+					"has_httpws = ".($has_httpws?"True":"False").", ".
+					"has_icq = ".($has_icq?"True":"False").", ".
+					"has_msn = ".($has_msn?"True":"False").", ".
+					"has_qq = ".($has_qq?"True":"False").", ".
+					"has_sms = ".($has_sms?"True":"False").", ".
+					"has_smtp = ".($has_smtp?"True":"False").", ".
+					"has_tlen = ".($has_tlen?"True":"False").", ".
+					"has_yahoo = ".($has_yahoo?"True":"False").", ".
+					"has_jud = ".($has_jud?"True":"False").", ".
+					"has_pubsub = ".($has_pubsub?"True":"False").", ".
+					"has_pep = ".($has_pep?"True":"False").", ".
+					"has_presence = ".($has_presence?"True":"False").", ".
+					"has_newmail = ".($has_newmail?"True":"False").", ".
+					"has_rss = ".($has_rss?"True":"False").", ".
+					"has_weather = ".($has_weather?"True":"False").", ".
+					"has_proxy = ".($has_proxy?"True":"False").", ".
 					"times_offline = ".($is_offline?"1":"0").
 					" ON DUPLICATE KEY UPDATE ".
 					"name = '".$this->db->real_escape_string($server)."', ".
-					"has_muc = $has_muc, ".
-					"has_irc = $has_irc, ".
-					"has_aim = $has_aim, ".
-					"has_gg = $has_gg, ".
-					"has_httpws = $has_httpws, ".
-					"has_icq = $has_icq, ".
-					"has_msn = $has_msn, ".
-					"has_qq = $has_qq, ".
-					"has_sms = $has_sms, ".
-					"has_smtp = $has_smtp, ".
-					"has_tlen = $has_tlen, ".
-					"has_yahoo = $has_yahoo, ".
-					"has_jud = $has_jud, ".
-					"has_pubsub = $has_pubsub, ".
-					"has_pep = $has_pep, ".
-					"has_presence = $has_presence, ".
-					"has_newmail = $has_newmail, ".
-					"has_rss = $has_rss, ".
-					"has_weather = $has_weather, ".
-					"has_proxy = $has_proxy, ".
+					"has_muc = ".($has_muc?"True":"False").", ".
+					"has_irc = ".($has_irc?"True":"False").", ".
+					"has_aim = ".($has_aim?"True":"False").", ".
+					"has_gg = ".($has_gg?"True":"False").", ".
+					"has_httpws = ".($has_httpws?"True":"False").", ".
+					"has_icq = ".($has_icq?"True":"False").", ".
+					"has_msn = ".($has_msn?"True":"False").", ".
+					"has_qq = ".($has_qq?"True":"False").", ".
+					"has_sms = ".($has_sms?"True":"False").", ".
+					"has_smtp = ".($has_smtp?"True":"False").", ".
+					"has_tlen = ".($has_tlen?"True":"False").", ".
+					"has_yahoo = ".($has_yahoo?"True":"False").", ".
+					"has_jud = ".($has_jud?"True":"False").", ".
+					"has_pubsub = ".($has_pubsub?"True":"False").", ".
+					"has_pep = ".($has_pep?"True":"False").", ".
+					"has_presence = ".($has_presence?"True":"False").", ".
+					"has_newmail = ".($has_newmail?"True":"False").", ".
+					"has_rss = ".($has_rss?"True":"False").", ".
+					"has_weather = ".($has_weather?"True":"False").", ".
+					"has_proxy = ".($has_proxy?"True":"False").", ".
 					"times_offline = ".($is_offline?"times_offline + 1":"0")." ";
 				
 // 				echo "$query\n\n";
