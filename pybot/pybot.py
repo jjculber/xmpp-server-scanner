@@ -81,10 +81,11 @@ if not isabs(OUTPUT_DIRECTORY):
 	OUTPUT_DIRECTORY = join(SCRIPT_DIR, OUTPUT_DIRECTORY)
 
 HTML_FILES_PREFIX = 'servers-pybot'
-XML_FILE = join(OUTPUT_DIRECTORY, 'servers-fullinfo.xml')
+XML_FILES_PREFIX = 'servers-pybot'
+#XML_FILE = join(OUTPUT_DIRECTORY, 'servers-fullinfo.xml')
 
-if not isabs(XML_FILE):
-	SERVERS_FILE = join(SCRIPT_DIR, XML_FILE)
+#if not isabs(XML_FILE):
+	#SERVERS_FILE = join(SCRIPT_DIR, XML_FILE)
 	
 SERVERS_DUMP_FILE = join(SCRIPT_DIR, 'servers.dump')
 
@@ -129,10 +130,10 @@ for item in items:
 #server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 #server_list=['jabberes.org']
 
-servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
-                                            JABBERRESOURCE, JABBERSERVER,
-                                            server_list
-                                          )
+#servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
+                                            #JABBERRESOURCE, JABBERSERVER,
+                                            #server_list
+                                          #)
 
 
 # Manage offline servers and stability information
@@ -228,4 +229,8 @@ html_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
                                   servers=servers, types=columns,
                                   compress=True )
 
-xml_file_generator.generate(XML_FILE, servers)
+xml_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
+                                 filename_prefix=XML_FILES_PREFIX,
+                                 servers=servers, service_types=columns,
+                                 only_available_components=True,
+                                 minimun_uptime=0.5 )
