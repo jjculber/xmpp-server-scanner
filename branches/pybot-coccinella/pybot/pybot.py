@@ -54,6 +54,9 @@ DBDATABASE     = "server_list"
 # OUTPUT CONFIGURATION
 OUTPUT_DIRECTORY = '..'
 
+# If you want to ouptup only servers with 75% uptime, use 0.75
+XML_UPTIME_FILTER = 0.75
+
 # Server list
 USEURL         = False
 SERVERS_URL    = "http://www.jabber.org/basicservers.xml"
@@ -130,10 +133,10 @@ for item in items:
 #server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 #server_list=['jabberes.org']
 
-#servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
-                                            #JABBERRESOURCE, JABBERSERVER,
-                                            #server_list
-                                          #)
+servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
+                                            JABBERRESOURCE, JABBERSERVER,
+                                            server_list
+                                          )
 
 
 # Manage offline servers and stability information
@@ -233,4 +236,4 @@ xml_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
                                  filename_prefix=XML_FILES_PREFIX,
                                  servers=servers, service_types=columns,
                                  only_available_components=True,
-                                 minimun_uptime=0.5 )
+                                 minimun_uptime=XML_UPTIME_FILTER )
