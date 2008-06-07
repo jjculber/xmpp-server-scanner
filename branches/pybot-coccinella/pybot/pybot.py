@@ -34,7 +34,7 @@ try:
 except ImportError:
 	CAN_UPDATE_DATABASE = False
 	
-from include import html_file_generator, xml_file_generator
+from include import html_file_generator, cc_xml_file_generator
 
 
 
@@ -82,7 +82,7 @@ LOGFILE             = 'out.log'
 # Debug
 # If false, load the discovery results from servers.dump file,
 # instead waiting while doing the real discovery
-DO_DISCOVERY        = False
+DO_DISCOVERY        = True
 
 # Configuration end
 
@@ -260,8 +260,6 @@ if GENERATE_HTML_FILES:
 
 
 if GENERATE_XML_FILES:
-	xml_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
-	                                 filename_prefix=XML_FILES_PREFIX,
-	                                 servers=servers, service_types=columns,
-	                                 only_available_components=True,
-	                                 minimun_uptime=XML_UPTIME_FILTER, compress=True )
+	cc_xml_file_generator.generate( directory=OUTPUT_DIRECTORY,
+	                                servers=servers, service_types=columns,
+	                                minimun_uptime=XML_UPTIME_FILTER, compress=True )
