@@ -203,7 +203,7 @@ def generate(directory, servers, service_types, minimun_uptime=None, compress=Fa
 		try:
 			f = open(tmpfilename, 'w+')
 			#doc.writexml(f)
-			f.write(doc.toprettyxml().encode("utf-8"))
+			f.write(docs[service_type].toprettyxml().encode("utf-8"))
 			f.close()
 			shutil.move(tmpfilename, filename)
 		except IOError:
@@ -215,7 +215,7 @@ def generate(directory, servers, service_types, minimun_uptime=None, compress=Fa
 			tmpgzfilename = "%s.gz.tmp" % filename
 			try:
 				gzf = gzip.open(tmpgzfilename, "wb")
-				gzf.write(doc.toprettyxml().encode("utf-8"))
+				gzf.write(docs[service_type].toprettyxml().encode("utf-8"))
 				gzf.close()
 				shutil.move(tmpgzfilename, filename+'.gz')
 			except IOError:
