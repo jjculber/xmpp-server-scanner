@@ -79,7 +79,7 @@ LOGFILE             = 'out.log'
 # Debug
 # If false, load the discovery results from servers.dump file,
 # instead waiting while doing the real discovery
-DO_DISCOVERY        = False
+DO_DISCOVERY        = True
 
 # Configuration end
 
@@ -119,32 +119,31 @@ else:
 	    )
 
 
-
-# Get server list
-
-if USEURL:
-	f = urllib.urlopen(SERVERS_URL)
-else:
-	f = open(SERVERS_FILE, 'r')
-
-xmldata = f.read()
-f.close()
-
-node = simplexml.XML2Node(xmldata)
-
-#items = node.getChildren()
-items = node.getTags(name="item")
-
-server_list = []
-
-for item in items:
-	if item.getAttr("jid") not in server_list:
-		server_list.append(item.getAttr("jid"))
-
-#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
-#server_list=['jabberes.org']
-
 if DO_DISCOVERY:
+	# Get server list
+	
+	if USEURL:
+		f = urllib.urlopen(SERVERS_URL)
+	else:
+		f = open(SERVERS_FILE, 'r')
+	
+	xmldata = f.read()
+	f.close()
+	
+	node = simplexml.XML2Node(xmldata)
+	
+	#items = node.getChildren()
+	items = node.getTags(name="item")
+	
+	server_list = []
+	
+	for item in items:
+		if item.getAttr("jid") not in server_list:
+			server_list.append(item.getAttr("jid"))
+	
+	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
+	#server_list=['jabberes.org']
+
 	servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
 	                                            JABBERRESOURCE, JABBERSERVER,
 	                                            server_list
