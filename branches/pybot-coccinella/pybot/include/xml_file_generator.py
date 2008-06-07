@@ -1,6 +1,16 @@
 
 #$Id$
 
+"""XML generator in the coccinella requested format
+
+<?xml version="1.0" ?>
+<servers>
+<iq from='icq.jabber.cd.chalmers.se'><query><identity category='gateway' type='icq' name='ICQ Transport'/></query></iq>
+<iq from='icq.jaim.at'><query><identity category='gateway' type='icq' name='ICQ Transport'/></query></iq>
+...
+</servers>
+"""
+
 import gzip
 import logging
 import os.path
@@ -8,8 +18,8 @@ import shutil
 from xml.dom.minidom import getDOMImplementation
 
 
-def _add_identities_and_features(doc, element, server_component):
-	"""Add XEP-0030-like identities and features to the element"""
+def _add_identities(doc, element, server_component):
+	"""Add XEP-0030-like identities to the element"""
 	for identity in server_component[u'info'][0]:
 		identity_element = doc.createElement("identity")
 		identity_element.setAttribute("category", identity[u'category'])
@@ -17,11 +27,20 @@ def _add_identities_and_features(doc, element, server_component):
 		if u'name' in identity:
 			identity_element.setAttribute("name", identity[u'name'])
 		element.appendChild(identity_element)
-	
+
+
+def _add_features(doc, element, server_component):
+	"""Add XEP-0030-like features to the element"""
 	for feature in server_component[u'info'][1]:
 		feature_element = doc.createElement("feature")
 		feature_element.setAttribute("var", feature)
 		element.appendChild(feature_element)
+
+
+def _add_identities_and_features(doc, element, server_component):
+	"""Add XEP-0030-like identities and features to the element"""
+	_add_identities(doc, element, server_component)
+	_add_features(doc, element, server_component)
 
 
 def _guess_and_add_identity(doc, element, service_type):
