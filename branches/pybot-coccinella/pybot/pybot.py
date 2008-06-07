@@ -236,4 +236,4 @@ xml_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
                                  filename_prefix=XML_FILES_PREFIX,
                                  servers=servers, service_types=columns,
                                  only_available_components=True,
-                                 minimun_uptime=XML_UPTIME_FILTER )
+                                 minimun_uptime=XML_UPTIME_FILTER, compress=True )
