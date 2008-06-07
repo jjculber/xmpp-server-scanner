@@ -98,8 +98,8 @@ if not isabs(SERVERS_FILE):
 if not isabs(OUTPUT_DIRECTORY):
 	OUTPUT_DIRECTORY = join(SCRIPT_DIR, OUTPUT_DIRECTORY)
 
-HTML_FILES_PREFIX = 'servers-pybot'
-XML_FILES_PREFIX = 'servers-pybot'
+HTML_FILES_PREFIX = 'servers'
+#XML_FILES_PREFIX = 'servers-pybot'
 #XML_FILE = join(OUTPUT_DIRECTORY, 'servers-fullinfo.xml')
 
 #if not isabs(XML_FILE):
