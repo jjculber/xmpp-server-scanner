@@ -14,6 +14,7 @@
 
 # TODO: Make the code prettier, pylint
 
+from ConfigParser import SafeConfigParser
 import logging
 from os.path import abspath, dirname, isabs, join
 try:
@@ -37,51 +38,56 @@ except ImportError:
 from include import html_file_generator, xml_file_generator
 
 
-
-# Configuration
-
-#jabberuser="my_user"
-#jabberpassword="password"
-#jabberresource="pybot"
-#jabberserver="jabberes.org"
+# Load the configuration
+cfg = SafeConfigParser()
+cfg.readfp(open('config.cfg'))
 
 # Jabber account
-JABBERUSER          = "xxxxxxx"
-JABBERPASSWORD      = "xxxxxxx"
-JABBERRESOURCE      = "pybot"
-JABBERSERVER        = "jabber.example.com"
+JABBERUSER          = cfg.get("Jabber account", "JABBERUSER")
+JABBERPASSWORD      = cfg.get("Jabber account", "JABBERUSER")
+JABBERRESOURCE      = cfg.get("Jabber account", "JABBERRESOURCE")
+JABBERSERVER        = cfg.get("Jabber account", "JABBERSERVER")
 
 # Database
-DBUSER              = "user"
-DBPASSWORD          = "sql_password"
-DBHOST              = "localhost"
-DBDATABASE          = "server_list"
+DBUSER              = cfg.get("Database", "DBUSER")
+DBPASSWORD          = cfg.get("Database", "DBPASSWORD")
+DBHOST              = cfg.get("Database", "DBHOST")
+DBDATABASE          = cfg.get("Database", "DBDATABASE")
 
-UPDATE_DATABASE     = True
-GENERATE_HTML_FILES = True
-GENERATE_XML_FILES  = True
+UPDATE_DATABASE     = cfg.getboolean("Database", "UPDATE_DATABASE")
 
+# Output configuration
+OUTPUT_DIRECTORY    = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
 
-# OUTPUT CONFIGURATION
-OUTPUT_DIRECTORY    = '..'
+GENERATE_HTML_FILES = cfg.getboolean("Output configuration", "GENERATE_HTML_FILES")
+GENERATE_XML_FILES  = cfg.getboolean("Output configuration", "GENERATE_XML_FILES")
+COMPRESS_FILES      = cfg.getboolean("Output configuration", "COMPRESS_FILES")
+
+HTML_FILES_PREFIX   = cfg.get("Output configuration", "HTML_FILES_PREFIX")
+XML_FILENAME        = cfg.get("Output configuration", "XML_FILENAME")
+
 
 # Server list
-USEURL              = False
-SERVERS_URL         = "http://www.jabber.org/basicservers.xml"
+USEURL              = cfg.getboolean("Server list", "USEURL")
+SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
 #SERVERS_FILE       = "servers-fixed.xml"
-SERVERS_FILE        = 'servers-fixed.xml'
+SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
 
 # Logs
 #LOGFILE            = 'out.log'
-LOGFILE             = 'out.log'
+try:
+	LOGFILE         = cfg.get("Logs", "LOGFILE")
+except NoOptionError:
+	LOGFILE         = None
 #LOGFILE            = None
 
 # Debug
 # If false, load the discovery results from servers.dump file,
 # instead waiting while doing the real discovery
-DO_DISCOVERY        = True
+DO_DISCOVERY        = cfg.getboolean("Debug", "DO_DISCOVERY")
 
-# Configuration end
+del(cfg)
+# Configuration loaded
 
 
 SCRIPT_DIR = abspath(dirname(sys.argv[0]))
@@ -95,12 +101,8 @@ if not isabs(SERVERS_FILE):
 if not isabs(OUTPUT_DIRECTORY):
 	OUTPUT_DIRECTORY = join(SCRIPT_DIR, OUTPUT_DIRECTORY)
 
-HTML_FILES_PREFIX = 'servers-pybot'
-XML_FILE = join(OUTPUT_DIRECTORY, 'servers-fullinfo.xml')
+XML_FILE = join(OUTPUT_DIRECTORY, XML_FILENAME)
 
-if not isabs(XML_FILE):
-	SERVERS_FILE = join(SCRIPT_DIR, XML_FILE)
-	
 SERVERS_DUMP_FILE = join(SCRIPT_DIR, 'servers.dump')
 
 
@@ -252,7 +254,7 @@ if GENERATE_HTML_FILES:
 	html_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
 	                                  filename_prefix=HTML_FILES_PREFIX,
 	                                  servers=servers, types=columns,
-	                                  compress=True )
+	                                  compress=COMPRESS_FILES )
 
 if GENERATE_XML_FILES:
 	xml_file_generator.generate(XML_FILE, servers)
