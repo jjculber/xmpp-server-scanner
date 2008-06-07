@@ -1,15 +1,7 @@
 
 #$Id$
 
-"""XML generator in the coccinella requested format
-
-<?xml version="1.0" ?>
-<servers>
-<iq from='icq.jabber.cd.chalmers.se'><query><identity category='gateway' type='icq' name='ICQ Transport'/></query></iq>
-<iq from='icq.jaim.at'><query><identity category='gateway' type='icq' name='ICQ Transport'/></query></iq>
-...
-</servers>
-"""
+"""XML generator"""
 
 import gzip
 import logging
