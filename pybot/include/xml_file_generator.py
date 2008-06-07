@@ -1,7 +1,7 @@
 
 #$Id$
 
-import codecs
+import gzip
 import logging
 import os.path
 import shutil
@@ -73,7 +73,8 @@ def _guess_and_add_identity(doc, element, service_type):
 	element.appendChild(identity_element)
 
 
-def generate(filename, servers, service_types=None, full_info=False, only_available_components=False, minimun_uptime=None):
+def generate(filename, servers, service_types=None, full_info=False,
+    only_available_components=False, minimun_uptime=None, compress=False):
 	"""Generate a XML file with the information stored in servers.
 	If service_types is True, service_types will be ignored"""
 	
@@ -162,9 +163,19 @@ def generate(filename, servers, service_types=None, full_info=False, only_availa
 		
 		servers_element.appendChild(server_element)
 	
-	f = codecs.open(tmpfilename, 'w', 'utf_8')
+	f = open(tmpfilename, 'w+')
 	#doc.writexml(f)
-	f.write(doc.toprettyxml())
+	f.write(doc.toprettyxml().encode("utf-8"))
+	
+	
+	if compress:
+		tmpgzfilename = "%s.gz.tmp" % filename
+		logging.info( 'Creating a compressed version of file "%s"', tmpfilename )
+		gzf = gzip.open(tmpgzfilename, "wb")
+		gzf.write(doc.toprettyxml().encode("utf-8"))
+		gzf.close()
+		shutil.move(tmpgzfilename, filename+'.gz')
+	
 	f.close()
 	
 	logging.info('XML file "%s" generated, moving to %s', tmpfilename, filename)
@@ -173,17 +184,20 @@ def generate(filename, servers, service_types=None, full_info=False, only_availa
 
 
 
-def generate_all(directory, filename_prefix, servers, service_types=None, only_available_components=False, minimun_uptime=None):
+def generate_all(directory, filename_prefix, servers, service_types=None,
+                 only_available_components=False, minimun_uptime=None, compress=False):
 	
 	extension = '.xml'
 	
 	# The unfiltered xml file with disco#info information
 	generate( os.path.join(directory, filename_prefix+'_disco'+extension), servers,
-	          full_info=True, only_available_components=False, minimun_uptime=None )
+	          full_info=True, only_available_components=only_available_components,
+	          minimun_uptime=minimun_uptime, compress=compress )
 	
 	# The unfiltered simplified xml file
 	generate( os.path.join(directory, filename_prefix+extension), servers,
-	          full_info=False, only_available_components=False, minimun_uptime=None )
+	          full_info=False, only_available_components=only_available_components,
+	          minimun_uptime=minimun_uptime, compress=compress)
 	
 	
 	# Generate individual filtered files by type
@@ -191,5 +205,5 @@ def generate_all(directory, filename_prefix, servers, service_types=None, only_a
 		generate( os.path.join(directory, filename_prefix+'-'+service_type+extension),
 		          servers, full_info=False, service_types=(service_type,),
 		          only_available_components=only_available_components,
-		          minimun_uptime=minimun_uptime )
+		          minimun_uptime=minimun_uptime, compress=compress)
 	
