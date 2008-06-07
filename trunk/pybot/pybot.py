@@ -29,7 +29,7 @@ from include.xmpp import simplexml
 from include import xmpp_discoverer
 
 try:
-	from include import database_update
+	from include import database_updater
 	CAN_UPDATE_DATABASE = True
 except ImportError:
 	CAN_UPDATE_DATABASE = False
