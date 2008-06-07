@@ -38,9 +38,13 @@ def _add_identities_and_features(doc, element, server_component):
 def _guess_and_add_identity(doc, element, service_type):
 	"""Guess the identity and add it"""
 	
-	# MUC rooms uses the non-standard type 'muc' in this script
+	# Convert the non standard types used by the script
 	if service_type == 'muc':
 		service_type = 'text'
+	if service_type == 'jud':
+		service_type = 'user'
+	if service_type == 'proxy':
+		service_type = 'bytestreams'
 	
 	identity_element = doc.createElement("identity")
 	
