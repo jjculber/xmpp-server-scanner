@@ -31,9 +31,10 @@ from include import xmpp_discoverer
 
 try:
 	from include import database_updater
-	CAN_UPDATE_DATABASE = True
 except ImportError:
 	CAN_UPDATE_DATABASE = False
+else:
+	CAN_UPDATE_DATABASE = True
 	
 from include import html_file_generator, xml_file_generator
 
