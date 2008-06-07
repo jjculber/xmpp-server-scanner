@@ -95,7 +95,7 @@ def _guess_and_add_identity(doc, element, service_type):
 def generate(filename, servers, service_types=None, full_info=False,
     only_available_components=False, minimun_uptime=None, compress=False):
 	"""Generate a XML file with the information stored in servers.
-	If service_types is True, service_types will be ignored"""
+	If full_info is True, service_types will be ignored"""
 	
 	if service_types is not None:
 		#Filter by service type
