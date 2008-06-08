@@ -539,35 +539,40 @@ def discover_servers(accounts, server_list):
 	
 	logging.info('Begin discovery')
 	
-	for jid in sorted(servers.keys()):
-		server = servers[jid]
-		_keep_alive_clients(clients)
-		
-		try:
-			_discover_item(dispatchers, server, server)
-		
-		except xml.parsers.expat.ExpatError: # Restart the clients
-			#cl.disconnect()
-			logging.warning('Aborting discovery of %s server. Restarting clients.', server[u'jid'])
+	try:
+		for jid in sorted(servers.keys()):
+			server = servers[jid]
+			_keep_alive_clients(clients)
 			
-			_disconnect_clients(clients)
-			clients = _get_clients(accounts)
-			dispatchers = _get_dispatchers(clients)
+			try:
+				_discover_item(dispatchers, server, server)
 			
-			#cl = Client(jabber_server, debug=[])
-			#if not cl.connect(secure=0):
-				#raise IOError('Can not connect to server.')
-			#if not cl.auth(jabber_user, jabber_password, jabber_resource):
-				#raise IOError('Can not auth with server.')
-			#cl.sendInitPresence()
-			#cl.Process(1)
+			except xml.parsers.expat.ExpatError: # Restart the clients
+				#cl.disconnect()
+				logging.warning('Aborting discovery of %s server. Restart clients and continue' % server[u'jid'], exc_info=sys.exc_info())
+				
+				_disconnect_clients(clients)
+				clients = _get_clients(accounts)
+				dispatchers = _get_dispatchers(clients)
+				
+				#cl = Client(jabber_server, debug=[])
+				#if not cl.connect(secure=0):
+					#raise IOError('Can not connect to server.')
+				#if not cl.auth(jabber_user, jabber_password, jabber_resource):
+					#raise IOError('Can not auth with server.')
+				#cl.sendInitPresence()
+				#cl.Process(1)
+	except:
+		logging.critical('Aborting discovery on %s server.' % server[u'jid'], exc_info=sys.exc_info())
+		raise
+	else:
+		logging.info('Discovery Finished Succesfully')
+	finally:
+		_disconnect_clients(clients)
+		#cl.Process(10)
+		#for server in servers:
+		#	show_node(server)
+		#cl.disconnect()
 	
-	_disconnect_clients(clients)
-	#cl.Process(10)
-	#for server in servers:
-	#	show_node(server)
-	#cl.disconnect()
-	
-	logging.info('Discovery Finished')
 	
 	return servers
