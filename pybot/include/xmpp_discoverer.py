@@ -251,7 +251,7 @@ def _get_item_info(dispatcher, component, retries=0):
 					                              component[u'node'])
 				else:
 					# TODO: Don't use _owner to get the client
-					logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+					logging.debug( 'Trying to discover component %s using %s@%s/%s: %d/%d retries left',
 					               component[u'jid'], dispatcher._owner.User,
 					               dispatcher._owner.Server, dispatcher._owner.Resource,
 					               retry, retries)
@@ -317,7 +317,7 @@ def _get_items(dispatcher, component, retries=0):
 		retry -= 1
 		
 	else:
-		logging.debug('Discarding query to component %s: Not accesible', component[u'jid'])
+		logging.debug('Discarding query to components of %s: Not accesible', component[u'jid'])
 		return []
 
 
