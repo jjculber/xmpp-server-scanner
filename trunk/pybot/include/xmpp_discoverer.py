@@ -22,7 +22,11 @@ import xml
 
 from xmpp import Client, features
 
+# If a client can discover a server, only use that client to test services
+ONLY_USE_SUCCESFULL_CLIENT = True
+
 # Times to retry if a query fails
+# Not very useful if several accounts are used to do the discovery
 ONLY_RETRY_SERVERS = True
 INFO_QUERY_RETRIES = 1
 ITEM_QUERY_RETRIES = 0
@@ -226,7 +230,7 @@ def _add_component_unavailable(jid, services_list):
 
 
 
-def _get_item_info(dispatchers, component, retries=0):
+def _get_item_info(dispatcher, component, retries=0):
 	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
@@ -234,38 +238,37 @@ def _get_item_info(dispatchers, component, retries=0):
 	# Then, we don't need to waste resources querying them
 	
 	if not component[u'jid'].endswith('.localhost'):
-		for dispatcher in dispatchers:
-			retry = retries
-			while retry >= 0:
-				try:
-					if u'node' in component:
-						# TODO: Don't use _owner to get the client
-						logging.debug( 'Trying to discover component %s (node %s) using %s@%s/%s: %d/%d retries left',
-						               component[u'jid'], component[u'node'],
-						               dispatcher._owner.User, dispatcher._owner.Server,
-						               dispatcher._owner.Resource, retry, retries)
-						info = features.discoverInfo( dispatcher, component[u'jid'],
-						                              component[u'node'])
-					else:
-						# TODO: Don't use _owner to get the client
-						logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
-						               component[u'jid'], dispatcher._owner.User,
-						               dispatcher._owner.Server, dispatcher._owner.Resource,
-						               retry, retries)
-						info = features.discoverInfo(dispatcher, component[u'jid'])
-				except xml.parsers.expat.ExpatError:
-					logging.warning( '%s sent malformed XMPP', component[u'jid'],
-					                 exc_info=True)
-					#return ([], [])
-					#add_component_unavailable( component[u'jid'],
-					                            #server[u'unavailable_services'] )
-					raise
-				
-				if len(info[0]) != 0 or len(info[1]) != 0:
-					return info
-				
-				retry -= 1
+		retry = retries
+		while retry >= 0:
+			try:
+				if u'node' in component:
+					# TODO: Don't use _owner to get the client
+					logging.debug( 'Trying to discover component %s (node %s) using %s@%s/%s: %d/%d retries left',
+					               component[u'jid'], component[u'node'],
+					               dispatcher._owner.User, dispatcher._owner.Server,
+					               dispatcher._owner.Resource, retry, retries)
+					info = features.discoverInfo( dispatcher, component[u'jid'],
+					                              component[u'node'])
+				else:
+					# TODO: Don't use _owner to get the client
+					logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+					               component[u'jid'], dispatcher._owner.User,
+					               dispatcher._owner.Server, dispatcher._owner.Resource,
+					               retry, retries)
+					info = features.discoverInfo(dispatcher, component[u'jid'])
+			except xml.parsers.expat.ExpatError:
+				logging.warning( '%s sent malformed XMPP', component[u'jid'],
+				                 exc_info=True)
+				#return ([], [])
+				#add_component_unavailable( component[u'jid'],
+				                            #server[u'unavailable_services'] )
+				raise
 			
+			if len(info[0]) != 0 or len(info[1]) != 0:
+				return info
+			
+			retry -= 1
+		
 		else:
 			logging.debug( 'Discarding query to component %s: Not accesible',
 			               component[u'jid'] )
@@ -276,43 +279,42 @@ def _get_item_info(dispatchers, component, retries=0):
 		return ([], [])
 
 
-def _get_items(dispatchers, component, retries=0):
+def _get_items(dispatcher, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
-	for dispatcher in dispatchers:
-		retry = retries
-		while retry >= 0:
-			try:
-				if u'node' in component:
-					# TODO: Don't use _owner to get the client
-					logging.debug( 'Trying to discover components of %s (node %s) using %s@%s/%s: %d/%d retries left',
-					               component[u'jid'], component[u'node'],
-					               dispatcher._owner.User, dispatcher._owner.Server,
-					               dispatcher._owner.Resource, retry, retries)
-					items = features.discoverItems( dispatcher, component[u'jid'],
-					                                component[u'node'] )
-				else:
-					# TODO: Don't use _owner to get the client
-					logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
-					               component[u'jid'], dispatcher._owner.User,
-					               dispatcher._owner.Server, dispatcher._owner.Resource,
-					               retry, retries)
-					items = features.discoverItems(dispatcher, component[u'jid'])
-			except xml.parsers.expat.ExpatError:
-				logging.warning( '%s sent malformed XMPP', component[u'jid'],
-				                 exc_info=True)
-				#items = []
-				raise
-				
-			if len(items) > 0:
-				# Process items
-				for item in list(items):
-					if not _in_same_domain(component[u'jid'], item[u'jid']):
-						items.remove(item)
-				return items
+	retry = retries
+	while retry >= 0:
+		try:
+			if u'node' in component:
+				# TODO: Don't use _owner to get the client
+				logging.debug( 'Trying to discover components of %s (node %s) using %s@%s/%s: %d/%d retries left',
+				               component[u'jid'], component[u'node'],
+				               dispatcher._owner.User, dispatcher._owner.Server,
+				               dispatcher._owner.Resource, retry, retries)
+				items = features.discoverItems( dispatcher, component[u'jid'],
+				                                component[u'node'] )
+			else:
+				# TODO: Don't use _owner to get the client
+				logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+				               component[u'jid'], dispatcher._owner.User,
+				               dispatcher._owner.Server, dispatcher._owner.Resource,
+				               retry, retries)
+				items = features.discoverItems(dispatcher, component[u'jid'])
+		except xml.parsers.expat.ExpatError:
+			logging.warning( '%s sent malformed XMPP', component[u'jid'],
+			                 exc_info=True)
+			#items = []
+			raise
 			
-			retry -= 1
+		if len(items) > 0:
+			# Process items
+			for item in list(items):
+				if not _in_same_domain(component[u'jid'], item[u'jid']):
+					items.remove(item)
+			return items
+		
+		retry -= 1
 		
 	else:
 		logging.debug('Discarding query to component %s: Not accesible', component[u'jid'])
@@ -339,13 +341,19 @@ def _discover_item(dispatchers, component, server):
 		retries = INFO_QUERY_RETRIES
 		item_retries = ITEM_QUERY_RETRIES
 	
-	
-	try:
-		component[u'info'] = _get_item_info(dispatchers, component, retries)
-	except xml.parsers.expat.ExpatError:
-		component[u'info'] = ([], [])
-		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
-		raise
+	for dispatcher in dispatchers:
+		try:
+			component[u'info'] = _get_item_info(dispatcher, component, retries)
+		except xml.parsers.expat.ExpatError:
+			component[u'info'] = ([], [])
+			_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
+			raise
+		
+		if len(component[u'info'][0]) > 0 and len(component[u'info'][1]) > 0:
+			# Successfull discovery
+			if ONLY_USE_SUCCESFULL_CLIENT:
+				dispatchers = [dispatcher]
+			break
 	
 	# Detect if it's a server or a branch (if it have child items)
 	
@@ -408,11 +416,18 @@ def _discover_item(dispatchers, component, server):
 	# If it's a server or a branch node, get the child items
 	
 	if needs_to_query_items:
-		try:
-			component[u'items'] = _get_items(dispatchers, component, item_retries)
-		except xml.parsers.expat.ExpatError:
-			component[u'items'] = []
-			raise
+		for dispatcher in dispatchers:
+			try:
+				component[u'items'] = _get_items(dispatcher, component, item_retries)
+			except xml.parsers.expat.ExpatError:
+				component[u'items'] = []
+				raise
+			
+			if len(component[u'items']) > 0:
+				# Successfull discovery
+				if ONLY_USE_SUCCESFULL_CLIENT:
+					dispatchers = [dispatcher] # Uneeded filtering
+				break
 		
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
