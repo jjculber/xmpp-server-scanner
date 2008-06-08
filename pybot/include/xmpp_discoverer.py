@@ -317,7 +317,7 @@ def _get_items(dispatcher, component, retries=0):
 		retry -= 1
 		
 	else:
-		logging.debug('Discarding query to components of %s: Not accesible', component[u'jid'])
+		logging.debug('Discarding query to get components of %s: Not accesible', component[u'jid'])
 		return []
 
 
