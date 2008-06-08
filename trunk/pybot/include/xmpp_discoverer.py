@@ -24,7 +24,7 @@ from xmpp import Client, features
 
 # Times to retry if a query fails
 ONLY_RETRY_SERVERS = True
-INFO_QUERY_RETRIES = 2
+INFO_QUERY_RETRIES = 1
 ITEM_QUERY_RETRIES = 0
 
 
@@ -226,7 +226,7 @@ def _add_component_unavailable(jid, services_list):
 
 
 
-def _get_item_info(dispatcher, component, retries=0):
+def _get_item_info(dispatchers, component, retries=0):
 	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
@@ -234,30 +234,37 @@ def _get_item_info(dispatcher, component, retries=0):
 	# Then, we don't need to waste resources querying them
 	
 	if not component[u'jid'].endswith('.localhost'):
-		retry = retries
-		while retry >= 0:
-			try:
-				if u'node' in component:
-					logging.debug( 'Trying to discover component %s (node %s): %d/%d retries left',
-					               component[u'jid'], component[u'node'], retry, retries)
-					info = features.discoverInfo( dispatcher, component[u'jid'],
-					                              component[u'node'])
-				else:
-					logging.debug( 'Trying to discover component %s: %d/%d retries left',
-					               component[u'jid'], retry, retries)
-					info = features.discoverInfo(dispatcher, component[u'jid'])
-			except xml.parsers.expat.ExpatError:
-				logging.warning( '%s sent malformed XMPP', component[u'jid'],
-				                 exc_info=True)
-				#return ([], [])
-				#add_component_unavailable( component[u'jid'],
-				                            #server[u'unavailable_services'] )
-				raise
-			
-			if len(info[0]) != 0 or len(info[1]) != 0:
-				return info
-			
-			retry -= 1
+		for dispatcher in dispatchers:
+			retry = retries
+			while retry >= 0:
+				try:
+					if u'node' in component:
+						# TODO: Don't use _owner to get the client
+						logging.debug( 'Trying to discover component %s (node %s) using %s@%s/%s: %d/%d retries left',
+						               component[u'jid'], component[u'node'],
+						               dispatcher._owner.User, dispatcher._owner.Server,
+						               dispatcher._owner.Resource, retry, retries)
+						info = features.discoverInfo( dispatcher, component[u'jid'],
+						                              component[u'node'])
+					else:
+						# TODO: Don't use _owner to get the client
+						logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+						               component[u'jid'], dispatcher._owner.User,
+						               dispatcher._owner.Server, dispatcher._owner.Resource,
+						               retry, retries)
+						info = features.discoverInfo(dispatcher, component[u'jid'])
+				except xml.parsers.expat.ExpatError:
+					logging.warning( '%s sent malformed XMPP', component[u'jid'],
+					                 exc_info=True)
+					#return ([], [])
+					#add_component_unavailable( component[u'jid'],
+					                            #server[u'unavailable_services'] )
+					raise
+				
+				if len(info[0]) != 0 or len(info[1]) != 0:
+					return info
+				
+				retry -= 1
 			
 		else:
 			logging.debug( 'Discarding query to component %s: Not accesible',
@@ -269,45 +276,50 @@ def _get_item_info(dispatcher, component, retries=0):
 		return ([], [])
 
 
-def _get_items(dispatcher, component, retries=0):
+def _get_items(dispatchers, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
-	retry = retries
-	
-	while retry >= 0:
-		try:
-			if u'node' in component:
-				logging.debug( 'Trying to discover components of %s (node %s): %d/%d retries left',
-				               component[u'jid'], component[u'node'], retry, retries)
-				items = features.discoverItems( dispatcher, component[u'jid'],
-				                                component[u'node'] )
-			else:
-				logging.debug( 'Trying to discover components of %s: %d/%d retries left',
-				               component[u'jid'], retry, retries)
-				items = features.discoverItems(dispatcher, component[u'jid'])
-		except xml.parsers.expat.ExpatError:
-			logging.warning( '%s sent malformed XMPP', component[u'jid'],
-			                 exc_info=True)
-			#items = []
-			raise
+	for dispatcher in dispatchers:
+		retry = retries
+		while retry >= 0:
+			try:
+				if u'node' in component:
+					# TODO: Don't use _owner to get the client
+					logging.debug( 'Trying to discover components of %s (node %s) using %s@%s/%s: %d/%d retries left',
+					               component[u'jid'], component[u'node'],
+					               dispatcher._owner.User, dispatcher._owner.Server,
+					               dispatcher._owner.Resource, retry, retries)
+					items = features.discoverItems( dispatcher, component[u'jid'],
+					                                component[u'node'] )
+				else:
+					# TODO: Don't use _owner to get the client
+					logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+					               component[u'jid'], dispatcher._owner.User,
+					               dispatcher._owner.Server, dispatcher._owner.Resource,
+					               retry, retries)
+					items = features.discoverItems(dispatcher, component[u'jid'])
+			except xml.parsers.expat.ExpatError:
+				logging.warning( '%s sent malformed XMPP', component[u'jid'],
+				                 exc_info=True)
+				#items = []
+				raise
+				
+			if len(items) > 0:
+				# Process items
+				for item in list(items):
+					if not _in_same_domain(component[u'jid'], item[u'jid']):
+						items.remove(item)
+				return items
 			
-		if len(items) > 0:
-			# Process items
-			for item in list(items):
-				if not _in_same_domain(component[u'jid'], item[u'jid']):
-					items.remove(item)
-			return items
-		
-		retry -= 1
+			retry -= 1
 		
 	else:
-		logging.debug( 'Discarding query to component %s: Not accesible',
-		               component[u'jid'] )
+		logging.debug('Discarding query to component %s: Not accesible', component[u'jid'])
 		return []
 
 
-def _discover_item(dispatcher, component, server):
+def _discover_item(dispatchers, component, server):
 	'''Explore the component and its childs and 
 	update the component list in server.
 	Both, component and server, variables are modified.'''
@@ -329,7 +341,7 @@ def _discover_item(dispatcher, component, server):
 	
 	
 	try:
-		component[u'info'] = _get_item_info(dispatcher, component, retries)
+		component[u'info'] = _get_item_info(dispatchers, component, retries)
 	except xml.parsers.expat.ExpatError:
 		component[u'info'] = ([], [])
 		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
@@ -360,7 +372,7 @@ def _discover_item(dispatcher, component, server):
 		component[u'items'] = []
 		for item in component[u'info'][0]:
 			if _in_same_domain(component[u'jid'], item[u'jid']):
-				component[u'items'].append(_discover_item(dispatcher, item, server))
+				component[u'items'].append(_discover_item(dispatchers, item, server))
 		
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
@@ -379,7 +391,7 @@ def _discover_item(dispatcher, component, server):
 			component[u'items'] = []
 			for item in component[u'info'][0]:
 				if _in_same_domain(component[u'jid'], item[u'jid']):
-					component[u'items'].append(_discover_item(dispatcher, item,
+					component[u'items'].append(_discover_item(dispatchers, item,
 					                                          server))
 			
 			needs_to_query_items = False # We already have the items
@@ -397,18 +409,18 @@ def _discover_item(dispatcher, component, server):
 	
 	if needs_to_query_items:
 		try:
-			component[u'items'] = _get_items(dispatcher, component, item_retries)
+			component[u'items'] = _get_items(dispatchers, component, item_retries)
 		except xml.parsers.expat.ExpatError:
 			component[u'items'] = []
 			raise
 		
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
-				item = _discover_item(dispatcher, item, server)
+				item = _discover_item(dispatchers, item, server)
 			elif u'node' in component:
 				if (  (component[u'jid'] == item[u'jid']) &
 					  (component[u'node'] != item[u'node'])  ):
-					item = _discover_item(dispatcher, item, server)
+					item = _discover_item(dispatchers, item, server)
 	
 	return component
 
@@ -435,51 +447,111 @@ def _show_node(node, indent=0):
 			_show_node(item, indent+4)
 	
 
-def discover_servers( jabber_user, jabber_password, jabber_resource,
-                      jabber_server, server_list ):
+def _get_clients(accounts):
+	'''Connect clients to the jabber accounts'''
+	
+	clients = []
+	
+	for account in accounts:
+		client = Client(account['server'], debug=[])
+		if not client.connect(secure=0):
+			logging.error("Can not connect to %s server" % account['server'])
+			#raise IOError('Can not connect to server.')
+			continue
+		if not client.auth(account['user'], account['password'], account['resource']):
+			logging.error("Can not auth as %s@%s" % (account['user'], account['server']))
+			#raise IOError('Can not auth with server.')
+			continue
+		
+		client.sendInitPresence()
+		client.Process(1)
+		
+		clients.append(client)
+	
+	if len(clients) == 0:
+		logging.critical("Can not login into any jabber account, please check your configuration")
+		raise Exception('No jabber accounts available')
+	
+	return clients
+
+def _get_dispatchers(clients):
+	'''Return a dispatcher list'''
+	dispatchers = []
+	for client in clients:
+		dispatchers.append(client.Dispatcher)
+	
+	return dispatchers
+
+def _keep_alive_clients(clients):
+	'''Prevent client disconnections. Not sure if it really does something.'''
+	for client in clients:
+		client.Process(0.1)
+
+
+def _disconnect_clients(clients):
+	'''Disconnect clients'''
+	for client in clients:
+		try:
+			client.Process(10)
+			client.disconnect()
+		except:
+			# Ignore errors (i.e. Disconnections when a client has received
+			# invalid stanzas)
+			pass
+
+
+def discover_servers(accounts, server_list):
 
 	servers = {}
 	
 	for jid in server_list:
 		servers[jid] = { u'jid': jid, u'available_services': {}, 
 		                 u'unavailable_services': {} }
-
-
+	
 	# Connect to server
+		
+	#cl = Client(jabber_server, debug=[])
+	#if not cl.connect(secure=0):
+		#raise IOError('Can not connect to server.')
+	#if not cl.auth(jabber_user, jabber_password, jabber_resource):
+		#raise IOError('Can not auth with server.')
 	
-	cl = Client(jabber_server, debug=[])
-	if not cl.connect(secure=0):
-		raise IOError('Can not connect to server.')
-	if not cl.auth(jabber_user, jabber_password, jabber_resource):
-		raise IOError('Can not auth with server.')
+	#cl.sendInitPresence()
+	#cl.Process(1)
 	
-	cl.sendInitPresence()
-	cl.Process(1)
+	clients = _get_clients(accounts)
+	dispatchers = _get_dispatchers(clients)
 	
 	logging.info('Begin discovery')
 	
 	for jid in sorted(servers.keys()):
 		server = servers[jid]
+		_keep_alive_clients(clients)
 		
 		try:
-			_discover_item(cl.Dispatcher, server, server)
+			_discover_item(dispatchers, server, server)
 		
-		except xml.parsers.expat.ExpatError: # Restart the client
+		except xml.parsers.expat.ExpatError: # Restart the clients
 			#cl.disconnect()
-			logging.warning('Aborting discovery of %s server. ' +
-			                'Restarting the client.', server[u'jid'])
-			cl = Client(jabber_server, debug=[])
-			if not cl.connect(secure=0):
-				raise IOError('Can not connect to server.')
-			if not cl.auth(jabber_user, jabber_password, jabber_resource):
-				raise IOError('Can not auth with server.')
-			cl.sendInitPresence()
-			cl.Process(1)
+			logging.warning('Aborting discovery of %s server. Restarting clients.', server[u'jid'])
+			
+			_disconnect_clients(clients)
+			clients = _get_clients(accounts)
+			dispatchers = _get_dispatchers(clients)
+			
+			#cl = Client(jabber_server, debug=[])
+			#if not cl.connect(secure=0):
+				#raise IOError('Can not connect to server.')
+			#if not cl.auth(jabber_user, jabber_password, jabber_resource):
+				#raise IOError('Can not auth with server.')
+			#cl.sendInitPresence()
+			#cl.Process(1)
 	
-	cl.Process(10)
+	_disconnect_clients(clients)
+	#cl.Process(10)
 	#for server in servers:
 	#	show_node(server)
-	cl.disconnect()
+	#cl.disconnect()
 	
 	logging.info('Discovery Finished')
 	
