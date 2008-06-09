@@ -1,5 +1,5 @@
 
-#$Id$
+# $Id$
 
 """XML generator in the coccinella requested format
 
