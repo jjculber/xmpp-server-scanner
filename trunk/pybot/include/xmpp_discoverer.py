@@ -15,6 +15,7 @@
 # TODO: Simplify _discover_item()
 
 
+from ConfigParser import SafeConfigParser
 import logging
 import re
 import sys
@@ -23,14 +24,28 @@ import xml
 
 from xmpp import Client, features
 
-# If a client can discover a server, only use that client to test services
-ONLY_USE_SUCCESFULL_CLIENT = True
-
-# Times to retry if a query fails
-# Not very useful if several accounts are used to do the discovery
-ONLY_RETRY_SERVERS = True
-INFO_QUERY_RETRIES = 1
-ITEM_QUERY_RETRIES = 0
+# Load the configuration
+try:
+	cfg = SafeConfigParser()
+	cfg.readfp(open('config.cfg'))
+	
+	ONLY_USE_SUCCESFULL_CLIENT = cfg.getboolean("xmpp discoverer", "ONLY_USE_SUCCESFULL_CLIENT")
+	ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
+	INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
+	ITEM_QUERY_RETRIES = cfg.getint("xmpp discoverer", "ITEM_QUERY_RETRIES")
+	
+	del(cfg)
+except:
+	# Load default values
+	
+	# If a client can discover a server, only use that client to test services
+	ONLY_USE_SUCCESFULL_CLIENT = True
+	
+	# Times to retry if a query fails
+	# Not very useful if several accounts are used to do the discovery
+	ONLY_RETRY_SERVERS = True
+	INFO_QUERY_RETRIES = 1
+	ITEM_QUERY_RETRIES = 0
 
 
 URLREGEXP = re.compile(
