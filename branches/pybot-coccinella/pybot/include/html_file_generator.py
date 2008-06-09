@@ -1,5 +1,5 @@
 
-# $id$
+# $Id$
 
 # TODO: Make the HTML and the CSS less verbose
 
