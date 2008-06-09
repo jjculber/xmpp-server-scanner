@@ -44,16 +44,26 @@ cfg = SafeConfigParser()
 cfg.readfp(open('config.cfg'))
 
 # Jabber account
-JABBERUSER          = cfg.get("Jabber account", "JABBERUSER")
-JABBERPASSWORD      = cfg.get("Jabber account", "JABBERUSER")
-JABBERRESOURCE      = cfg.get("Jabber account", "JABBERRESOURCE")
-JABBERSERVER        = cfg.get("Jabber account", "JABBERSERVER")
+
+account_number = 1
+JABBER_ACCOUNTS = []
+while (cfg.has_section("Jabber account %d" % account_number)):
+	JABBER_ACCOUNTS.append( {
+	    'user': cfg.get("Jabber account %d" % account_number, "USER"),
+	    'password': cfg.get("Jabber account %d" % account_number, "PASSWORD"),
+	    'resource': cfg.get("Jabber account %d" % account_number, "RESOURCE"),
+	    'server': cfg.get("Jabber account %d" % account_number, "SERVER")
+	} )
+	account_number += 1
+
+if len(JABBER_ACCOUNTS) == 0:
+	raise Exception("No jabber accounts found. Check your configuration")
 
 # Database
-DBUSER              = cfg.get("Database", "DBUSER")
-DBPASSWORD          = cfg.get("Database", "DBPASSWORD")
-DBHOST              = cfg.get("Database", "DBHOST")
-DBDATABASE          = cfg.get("Database", "DBDATABASE")
+DBUSER              = cfg.get("Database", "USER")
+DBPASSWORD          = cfg.get("Database", "PASSWORD")
+DBHOST              = cfg.get("Database", "HOST")
+DBDATABASE          = cfg.get("Database", "DATABASE")
 
 UPDATE_DATABASE     = cfg.getboolean("Database", "UPDATE_DATABASE")
 
@@ -146,10 +156,7 @@ if DO_DISCOVERY:
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
 
-	servers = xmpp_discoverer.discover_servers( JABBERUSER, JABBERPASSWORD,
-	                                            JABBERRESOURCE, JABBERSERVER,
-	                                            server_list
-	                                          )
+	servers = xmpp_discoverer.discover_servers(JABBER_ACCOUNTS, server_list)
 	
 	
 	# Manage offline servers and stability information
@@ -162,7 +169,8 @@ if DO_DISCOVERY:
 		f.close()
 		
 	except IOError:
-		logging.warning("Error loading servers data in file servers.dump. Is the script executed for first time?", exc_info=sys.exc_info())
+		logging.warning( "Error loading servers data in file servers.dump. Is the script executed for first time?",
+		                 exc_info=sys.exc_info() )
 		for server in servers.itervalues():
 			if offline(server):
 				server['offline_since'] = time.gmtime()
