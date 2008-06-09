@@ -17,6 +17,7 @@
 
 from ConfigParser import SafeConfigParser
 import logging
+from random import choice
 import re
 import sys
 import xml
@@ -29,6 +30,7 @@ try:
 	cfg = SafeConfigParser()
 	cfg.readfp(open('config.cfg'))
 	
+	USE_ONE_RANDOM_ACCOUNT = cfg.getboolean("xmpp discoverer", "USE_ONE_RANDOM_ACCOUNT")
 	ONLY_USE_SUCCESFULL_CLIENT = cfg.getboolean("xmpp discoverer", "ONLY_USE_SUCCESFULL_CLIENT")
 	ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
 	INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
@@ -37,6 +39,14 @@ try:
 	del(cfg)
 except:
 	# Load default values
+	
+	# Use only one account (chosen randomly) to query servers
+	# When False if a server doesn't answer it will retry with another account
+	# This will benefit accuracy on services detection over their availability as
+	# seen by users
+	# When True only use one account. This will benefit accuracy on detect the
+	# services availability as seen by users over the real service availability
+	USE_ONE_RANDOM_ACCOUNT = True
 	
 	# If a client can discover a server, only use that client to test services
 	ONLY_USE_SUCCESFULL_CLIENT = True
@@ -532,7 +542,10 @@ def _disconnect_clients(clients):
 
 
 def discover_servers(accounts, server_list):
-
+	
+	if USE_ONE_RANDOM_ACCOUNT:
+		accounts = [choice(accounts)]
+	
 	servers = {}
 	
 	for jid in server_list:
