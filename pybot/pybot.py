@@ -170,8 +170,7 @@ if DO_DISCOVERY:
 		f.close()
 		
 	except IOError:
-		logging.warning( "Error loading servers data in file servers.dump. Is the script executed for first time?",
-		                 exc_info=sys.exc_info() )
+		logging.warning("Error loading servers data in file servers.dump. Is the script executed for first time?", exc_info=sys.exc_info())
 		for server in servers.itervalues():
 			if offline(server):
 				server['offline_since'] = time.gmtime()
