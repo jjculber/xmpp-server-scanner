@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-15 -*-
 
-# $id$
+# $Id$
 
 #
 # Under GNU General Public License
