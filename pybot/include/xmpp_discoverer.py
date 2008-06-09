@@ -17,6 +17,7 @@
 
 import logging
 import re
+import sys
 import xml
 
 
