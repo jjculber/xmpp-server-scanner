@@ -486,11 +486,11 @@ def _get_clients(accounts):
 	for account in accounts:
 		client = Client(account['server'], debug=[])
 		if not client.connect(secure=0):
-			logging.error("Can not connect to %s server" % account['server'])
+			logging.error("Can not connect to %s server", account['server'])
 			#raise IOError('Can not connect to server.')
 			continue
 		if not client.auth(account['user'], account['password'], account['resource']):
-			logging.error("Can not auth as %s@%s" % (account['user'], account['server']))
+			logging.error("Can not auth as %s@%s", (account['user'], account['server']))
 			#raise IOError('Can not auth with server.')
 			continue
 		
@@ -565,7 +565,8 @@ def discover_servers(accounts, server_list):
 			
 			except xml.parsers.expat.ExpatError: # Restart the clients
 				#cl.disconnect()
-				logging.warning('Aborting discovery of %s server. Restart clients and continue' % server[u'jid'], exc_info=sys.exc_info())
+				logging.warning( 'Aborting discovery of %s server. Restart clients and continue',
+				                 server[u'jid'], exc_info=sys.exc_info() )
 				
 				_disconnect_clients(clients)
 				clients = _get_clients(accounts)
@@ -579,7 +580,8 @@ def discover_servers(accounts, server_list):
 				#cl.sendInitPresence()
 				#cl.Process(1)
 	except:
-		logging.critical('Aborting discovery on %s server.' % server[u'jid'], exc_info=sys.exc_info())
+		logging.critical( 'Aborting discovery on %s server.',
+		                  server[u'jid'], exc_info=sys.exc_info() )
 		raise
 	else:
 		logging.info('Discovery Finished Succesfully')
