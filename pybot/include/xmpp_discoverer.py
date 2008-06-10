@@ -30,7 +30,7 @@ try:
 	cfg = SafeConfigParser()
 	cfg.readfp(open('config.cfg'))
 	
-	USE_ONE_RANDOM_ACCOUNT = cfg.getboolean("xmpp discoverer", "USE_ONE_RANDOM_ACCOUNT")
+	USE_MULTIPLE_QUERY_ACCOUNTS = cfg.getboolean("xmpp discoverer", "USE_MULTIPLE_QUERY_ACCOUNTS")
 	ONLY_USE_SUCCESFULL_CLIENT = cfg.getboolean("xmpp discoverer", "ONLY_USE_SUCCESFULL_CLIENT")
 	ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
 	INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
@@ -40,13 +40,16 @@ try:
 except:
 	# Load default values
 	
-	# Use only one account (chosen randomly) to query servers
-	# When False if a server doesn't answer it will retry with another account
+	# Use multiple accounts to query servers
+	# When this option is set to True and a server does not answer it will retry
+	# with another account
 	# This will benefit accuracy on services detection over their availability as
 	# seen by users
-	# When True only use one account. This will benefit accuracy on detect the
-	# services availability as seen by users over the real service availability
-	USE_ONE_RANDOM_ACCOUNT = True
+	# When set to False, only one randomly chosen account is used.
+	# When False only use one account chosen at random. This will benefit accuracy
+	# on detect the services availability as seen by users over the real service
+	# availability
+	USE_MULTIPLE_QUERY_ACCOUNTS = False
 	
 	# If a client can discover a server, only use that client to test services
 	ONLY_USE_SUCCESFULL_CLIENT = True
@@ -543,7 +546,7 @@ def _disconnect_clients(clients):
 
 def discover_servers(accounts, server_list):
 	
-	if USE_ONE_RANDOM_ACCOUNT:
+	if USE_MULTIPLE_QUERY_ACCOUNTS:
 		accounts = [choice(accounts)]
 	
 	servers = {}
