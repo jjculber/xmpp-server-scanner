@@ -102,6 +102,8 @@
   <item jid='jabber.fourecks.de'/>
   <item jid='jabber.freenet.de'/>
   <item jid='jabber.gathered-geeks.org'/>
+  <!-- jabber.gmx.net was not in the original file -->
+  <item jid='jabber.gmx.net'/>
   <item jid='jabber.grabyourgat.com'/>
   <item jid='jabber.gwadanina.com'/>
   <item jid='jabber.hellercom.de'/>
