@@ -76,6 +76,8 @@
   <item jid='jab.undernet.cz'/>
   <item jid='jabber-hispano.org'/>
 <!--   <item jid='jabber-hispano.org'/> -->
+  <!-- jabber80.com was not in the original file -->
+  <item jid='jabber80.com'/>
   <item jid='jabber.3gnt.org'/>
   <item jid='jabber.ambrero.nl'/>
   <item jid='jabber.anywise.com'/>
