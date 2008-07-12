@@ -23,7 +23,7 @@ CREATE TABLE pybot_components (
 	type VARCHAR(255) NOT NULL,
 	available BOOLEAN NOT NULL,
 	-- Add ther server_jid due the service.localhost components
-	PRIMARY KEY (jid, server_jid),
+	PRIMARY KEY (jid, server_jid, type),
 	FOREIGN KEY (server_jid) REFERENCES pybot_servers (jid)
 	    ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (type) REFERENCES pybot_service_types (type)
