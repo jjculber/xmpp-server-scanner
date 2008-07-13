@@ -35,20 +35,27 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 		service_types.update(server['available_services'].keys())
 		service_types.update(server['unavailable_services'].keys())
 	
+	if (None, None) in service_types:
+		service_types.remove((None, None))
+		service_types.update(('', ''))
+	
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
-	cursor.execute("""SELECT `type` FROM `pybot_service_types`""")
+	cursor.execute("""SELECT `category`, `type` FROM `pybot_service_types`""")
 	for row in cursor.fetchall():
-		if row['type'] not in service_types:
+		if (row['category'], row['type']) not in service_types:
 			logging.debug('Deleting service type %s', row['type'])
 			cursor.execute( """DELETE FROM pybot_service_types
-			                     WHERE type = %s """, (row['type'],) )
+			                     WHERE category = %s AND type = %s """,
+			                (row['category'], row['type']) )
 		else:
-			service_types.remove(row['type'])
+			service_types.remove((row['category'], row['type']))
 	
-	for service_type in service_types:
+	for service_category, service_type in service_types:
 		logging.debug('Add new service type %s', service_type)
-		cursor.execute( """INSERT INTO pybot_service_types SET type = %s""",
-		                (service_type,) )
+		
+		cursor.execute( """INSERT INTO pybot_service_types
+		                     SET category = %s, type = %s""",
+		                (service_category, service_type) )
 	
 	
 	# Save the servers and services
@@ -80,28 +87,32 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 			#Add services
 			
 			logging.debug('Delete components of %s server', server[u'jid'])
-			cursor.execute("""DELETE FROM pybot_components
-								WHERE server_jid = %s""", (server[u'jid'],) )
+			cursor.execute( """DELETE FROM pybot_components
+			                     WHERE server_jid = %s""", (server[u'jid'],) )
 			
-			for service in server[u'available_services']:
-				for component in server[u'available_services'][service]:
-					logging.debug( 'Add available %s component %s of %s server',
-								service, component, server[u'jid'])
-					cursor.execute("""INSERT INTO  pybot_components
-										SET jid = %s, server_jid = %s,
-											type = %s, available = %s
-										ON DUPLICATE KEY UPDATE available = %s""",
-									(component, server[u'jid'], service, True, True))
+			for service_type in server[u'available_services']:
+				for component in server[u'available_services'][service_type]:
+					logging.debug( 'Add available %s-%s component %s of %s server',
+					               service_type[0], service_type[1], component[u'jid'],
+					               server[u'jid'] )
+					cursor.execute( """INSERT INTO  pybot_components
+					                     SET jid = %s, server_jid = %s,
+					                       category = %s, type = %s, available = %s
+					                     ON DUPLICATE KEY UPDATE available = %s""",
+					                (component[u'jid'], server[u'jid'],
+					                 service_type[0], service_type[1], True, True) )
 			
-			for service in server[u'unavailable_services']:
-				for component in server[u'unavailable_services'][service]:
-					logging.debug( 'Add unavailable %s component %s of %s server',
-								service, component, server[u'jid'])
-					cursor.execute("""INSERT INTO pybot_components
-										SET jid = %s, server_jid = %s,
-											type = %s, available = %s
-										ON DUPLICATE KEY UPDATE available = %s""",
-									(component, server[u'jid'], service, False, False))
+			for service_type in server[u'unavailable_services']:
+				for component in server[u'unavailable_services'][service_type]:
+					logging.debug( 'Add unavailable %s-%s component %s of %s server',
+					               service_type[0], service_type[1], component[u'jid'],
+					               server[u'jid'])
+					cursor.execute( """INSERT INTO pybot_components
+					                    SET jid = %s, server_jid = %s,
+					                      category = %s, type = %s, available = %s
+					                    ON DUPLICATE KEY UPDATE available = %s""",
+					                (component[u'jid'], server[u'jid'],
+					                 service_type[0], service_type[1], False, False) )
 		
 		#else:                           # Offline server
 			#logging.debug('Add offline server %s', server[u'jid'])
