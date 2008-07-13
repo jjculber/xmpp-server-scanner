@@ -373,6 +373,7 @@ def _discover_item(dispatchers, component, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
 		                     component[u'info'][1] )
+		_handle_component_available(component, server)
 		needs_to_query_items = True
 	
 	elif u'jabber:iq:browse' in component[u'info'][1]: #Not sure if it's really used
@@ -385,8 +386,9 @@ def _discover_item(dispatchers, component, server):
 		
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
-		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                       component[u'info'][1] )
+		_handle_component_available(component, server)
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
@@ -405,8 +407,9 @@ def _discover_item(dispatchers, component, server):
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 			                       component[u'info'][1] )
+			_handle_component_available(component, server)
 		else:
 			#try:
 			_handle_component_available(component, server)
