@@ -35,57 +35,29 @@ def _add_identities_and_features(doc, element, server_component):
 	_add_features(doc, element, server_component)
 
 
-def _guess_and_add_identity(doc, element, service_type):
-	"""Guess the identity and add it"""
+def _get_fullinfo_component_element(doc, item):
+	component_element = doc.createElement("component")
+	component_element.setAttribute("jid", item[u'jid'])
+	_add_identities_and_features(doc, component_element, item)
+	if item['available']:
+		component_element.setAttribute("available", "yes")
+	else:
+		component_element.setAttribute("available", "no")
 	
-	# Convert the non standard types used by the script
-	if service_type == 'muc':
-		service_type = 'text'
-	if service_type == 'jud':
-		service_type = 'user'
-	if service_type == 'proxy':
-		service_type = 'bytestreams'
+	return component_element
+
+
+def _get_simple_component_element(doc, item, service_category, service_type):
+	component_element = doc.createElement("component")
+	component_element.setAttribute("jid", item[u'jid'])
+	component_element.setAttribute("category", service_category)
+	component_element.setAttribute("type", service_type)
+	if item['available']:
+		component_element.setAttribute("available", "yes")
+	else:
+		component_element.setAttribute("available", "no")
 	
-	identity_element = doc.createElement("identity")
-	
-	if service_type in ("admin", "anonymous", "registered"):
-		identity_element.setAttribute("category", "account")
-	elif service_type in ("cert", "generic", "ldap", "ntlm", "pam", "radius"):
-		identity_element.setAttribute("category", "auth")
-	elif service_type in ("command-list", "command-node", "rpc", "soap", "translation"):
-		identity_element.setAttribute("category", "automation")
-	elif service_type in ("bot", "console", "handheld", "pc", "phone", "web"):
-		identity_element.setAttribute("category", "client")
-	elif service_type in ("whiteboard",):
-		identity_element.setAttribute("category", "collaboration")
-	elif service_type in ("archive", "c2s", "generic", "load", "log",
-		                  "presence", "router", "s2s", "sm", "stats"):
-		identity_element.setAttribute("category", "component")
-	elif service_type in ("irc", "text"):
-		identity_element.setAttribute("category", "conference")
-	elif service_type in ("chatroom", "group", "user", "waitinglist"):
-		identity_element.setAttribute("category", "directory")
-	elif service_type in ("aim", "gadu-gadu", "http-ws", "icq", "msn", "qq",
-		                  "sms", "smtp", "tlen", "xfire", "yahoo"):
-		identity_element.setAttribute("category", "gateway")
-	elif service_type in ("newmail", "rss", "weather"):
-		identity_element.setAttribute("category", "headline")
-	elif service_type in ("branch""leaf"):
-		identity_element.setAttribute("category", "hierarchy")
-	elif service_type in ("bytestreams",):
-		identity_element.setAttribute("category", "proxy")
-	elif service_type in ("collection", "leaf", "pep", "service"):
-		identity_element.setAttribute("category", "pubsub")
-	elif service_type in ("im",):
-		identity_element.setAttribute("category", "server")
-	elif service_type in ("berkeley", "file", "generic", "ldap", "mysql",
-		                  "oracle", "postgres"):
-		identity_element.setAttribute("category", "store")
-	else: # Don't do anything
-		return
-	
-	identity_element.setAttribute("type", service_type)
-	element.appendChild(identity_element)
+	return component_element
 
 
 def generate(filename, servers, service_types=None, full_info=False,
@@ -133,48 +105,39 @@ def generate(filename, servers, service_types=None, full_info=False,
 		
 		if full_info:
 			
-			# Add available
 			if u'items' in server:
 				for item in server[u'items']:
-					# Add only available components here
-					if u'info' in item and (len(item[u'info'][0]) != 0 or len(item[u'info'][1]) != 0 ):
-						component_element = doc.createElement("component")
-						component_element.setAttribute("jid", item[u'jid'])
-						_add_identities_and_features(doc, component_element, item)
-						component_element.setAttribute("available", "yes")
-						server_element.appendChild(component_element)
-			
-			# Add unavailable
-			if not only_available_components:
-				for service_type in server[u'unavailable_services']:
-					for component in server['unavailable_services'][service_type]:
-						component_element = doc.createElement("component")
-						component_element.setAttribute("jid", component)
-						_guess_and_add_identity(doc, component_element, service_type)
-						component_element.setAttribute("available", "no")
-						server_element.appendChild(component_element)
+					if not only_available_components or item['available']:
+						server_element.appendChild(_get_fullinfo_component_element(doc, item))
+		
 		else:
 			if service_types is None:
-				service_types = server['available_services'].keys()
-				if only_available_components is False:
-					service_types.extend(server['unavailable_services'].keys())
-			
-			for service_type in service_types:
-				if service_type in server['available_services']:
+				for service_type in server['available_services']:
 					for component in server['available_services'][service_type]:
-						component_element = doc.createElement("component")
-						component_element.setAttribute("jid", component)
-						component_element.setAttribute("type", service_type)
-						component_element.setAttribute("available", "yes")
-						server_element.appendChild(component_element)
+						server_element.appendChild(
+						        _get_simple_component_element(doc, component,
+						                service_type[0], service_type[1]))
+				
 				if only_available_components is False:
-					if service_type in server['unavailable_services']:
+					for service_type in server['unavailable_services']:
 						for component in server['unavailable_services'][service_type]:
-							component_element = doc.createElement("component")
-							component_element.setAttribute("jid", component)
-							component_element.setAttribute("type", service_type)
-							component_element.setAttribute("available", "no")
-							server_element.appendChild(component_element)
+							server_element.appendChild(
+							        _get_simple_component_element(doc, component,
+							                service_type[0], service_type[1]))
+			
+			else:
+				for service_type in service_types:
+					if service_type in server['available_services']:
+						for component in server['available_services'][service_type]:
+							server_element.appendChild(
+							        _get_simple_component_element(doc, component,
+							                service_type[0], service_type[1]))
+					if only_available_components is False:
+						if service_type in server['unavailable_services']:
+							for component in server['unavailable_services'][service_type]:
+								server_element.appendChild(
+								        _get_simple_component_element(doc, component,
+								                service_type[0], service_type[1]))
 		
 		servers_element.appendChild(server_element)
 	
@@ -217,8 +180,11 @@ def generate_all(directory, filename_prefix, servers, service_types=None,
 	
 	# Generate individual filtered files by type
 	for service_type in service_types:
-		generate( os.path.join(directory, filename_prefix+'-'+service_type+extension),
+		generate( os.path.join(directory, "%s-%s_%s%s" % (filename_prefix,
+		                                                  service_type[0],
+		                                                  service_type[1],
+		                                                  extension),
 		          servers, full_info=False, service_types=(service_type,),
 		          only_available_components=only_available_components,
-		          minimun_uptime=minimun_uptime, compress=compress)
+		          minimun_uptime=minimun_uptime, compress=compress) )
 	
