@@ -55,7 +55,7 @@ def generate(filename, servers):
 		servers_element.appendChild(server_element)
 	
 	f = open(tmpfilename, 'w')
-	doc.writexml(f)
+	f.write(doc.toprettyxml().encode("utf-8"))
 	f.close()
 	
 	logging.info('XML file "%s" generated, moving to %s', tmpfilename, filename)
