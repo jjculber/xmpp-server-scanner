@@ -38,15 +38,17 @@ def generate(filename, servers):
 			if service_type in server['available_services']:
 				for component in server['available_services'][service_type]:
 					component_element = doc.createElement("component")
-					component_element.setAttribute("jid", component)
-					component_element.setAttribute("type", service_type)
+					component_element.setAttribute("jid", component[u'jid'])
+					component_element.setAttribute("category", service_type[0])
+					component_element.setAttribute("type", service_type[1])
 					component_element.setAttribute("available", "yes")
 					server_element.appendChild(component_element)
 			if service_type in server['unavailable_services']:
 				for component in server['unavailable_services'][service_type]:
 					component_element = doc.createElement("component")
-					component_element.setAttribute("jid", component)
-					component_element.setAttribute("type", service_type)
+					component_element.setAttribute("jid", component[u'jid'])
+					component_element.setAttribute("category", service_type[0])
+					component_element.setAttribute("type", service_type[1])
 					component_element.setAttribute("available", "no")
 					server_element.appendChild(component_element)
 	
