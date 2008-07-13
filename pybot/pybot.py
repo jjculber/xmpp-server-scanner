@@ -162,7 +162,8 @@ if DO_DISCOVERY:
 	
 	# Manage offline servers and stability information
 	
-	offline = lambda server: len(server[u'info'][0]) == 0 and len(server[u'info'][1]) == 0
+	#offline = lambda server: len(server[u'info'][0]) == 0 and len(server[u'info'][1]) == 0
+	offline = lambda server: not server['available']
 	
 	try:
 		f = open(SERVERS_DUMP_FILE, 'rb')
