@@ -399,7 +399,7 @@ def _discover_item(dispatchers, component, server):
 	
 	elif u'jabber:iq:agents' in component[u'info'][1]:
 		#Fake identities. But we aren't really sure that it's a server?
-		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                     component[u'info'][1] )
 		needs_to_query_items = True
 	
@@ -413,7 +413,7 @@ def _discover_item(dispatchers, component, server):
 		
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
-		component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                       component[u'info'][1] )
 	
 	elif (component[u'info'] == ([], [])):
@@ -433,7 +433,7 @@ def _discover_item(dispatchers, component, server):
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			component[u'info'] = ( ({u'category': u'server', u'type': u'im'}),
+			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 			                       component[u'info'][1] )
 		else:
 			#try:
