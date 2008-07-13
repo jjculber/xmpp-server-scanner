@@ -8,24 +8,26 @@ CREATE TABLE pybot_servers (
 	times_queried_online INT UNSIGNED NOT NULL,
 	times_queried INT UNSIGNED NOT NULL,
 	PRIMARY KEY (jid)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_bin;
 
 
 CREATE TABLE pybot_service_types (
-	type VARCHAR(255) NOT NULL UNIQUE,
-	PRIMARY KEY (type)
-) ENGINE=InnoDB;
+	category VARCHAR(255) NOT NULL,
+	type VARCHAR(255) NOT NULL,
+	PRIMARY KEY (category, type)
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_bin;
 
 
 CREATE TABLE pybot_components (
 	jid VARCHAR(255) NOT NULL,
 	server_jid VARCHAR(255) NOT NULL,
+	category VARCHAR(255) NOT NULL,
 	type VARCHAR(255) NOT NULL,
 	available BOOLEAN NOT NULL,
 	-- Add ther server_jid due the service.localhost components
-	PRIMARY KEY (jid, server_jid),
+	PRIMARY KEY (jid, server_jid, category, type),
 	FOREIGN KEY (server_jid) REFERENCES pybot_servers (jid)
 	    ON DELETE CASCADE ON UPDATE CASCADE,
-	FOREIGN KEY (type) REFERENCES pybot_service_types (type)
+	FOREIGN KEY (category, type) REFERENCES pybot_service_types (category, type)
 	    ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_bin;

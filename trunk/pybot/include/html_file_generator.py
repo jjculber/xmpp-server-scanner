@@ -59,48 +59,62 @@
 	"""
 
 
+from ConfigParser import SafeConfigParser
+from glob import iglob
 import gzip
 import logging
-import os.path
+from os.path import basename, join
 import shutil
 import time
 
 ROWS_BETWEEN_TITLES = 10
 
-
+# Take a look to the XMPP Registrar to see the component's category:type
+# http://www.xmpp.org/registrar/disco-categories.html
 COLUMNS_DESCRIPTION = {
   'server': 'Server',
-  'muc': 'MultiUser Chat',
-  'irc': 'IRC',
-  'aim': 'AIM',
-  'gadu-gadu': 'Gadu Gadu',
-  'http-ws': 'HTTP Web Services',
-  'icq': 'ICQ',
-  'msn': 'MSN',
-  'qq': 'QQ',
-  'sms': 'SMS',
-  'smtp': 'email',
-  'tlen': 'TLEN',
-  'yahoo': 'Yahoo!',
-  'jud': 'User Directory',
-  'pubsub': 'Publish-Subscribe',
-  'pep': 'Personal Eventing Protocol',
-  'presence': 'Web Presence',
-  'file': 'File Storage',
-  'newmail': 'New Mail Notifications',
-  'rss': 'RSS',
-  'weather': 'Weather',
-  'proxy': 'File transfer proxy',
+  # Pure MUC components are marked as x-muc by the xmpp_discoverer
+  ('conference', 'x-muc'): 'MultiUser Chat',
+  ('conference', 'irc'): 'IRC',
+  ('gateway', 'aim'): 'AIM',
+  ('gateway', 'gadu-gadu'): 'Gadu Gadu',
+  ('gateway', 'http-ws'): 'HTTP Web Services',
+  ('gateway', 'icq'): 'ICQ',
+  ('gateway', 'msn'): 'MSN',
+  ('gateway', 'qq'): 'QQ',
+  ('gateway', 'sms'): 'SMS',
+  ('gateway', 'smtp'): 'email',
+  ('gateway', 'tlen'): 'TLEN',
+  ('gateway', 'yahoo'): 'Yahoo!',
+  ('directory', 'user'): 'User Directory',
+  ('pubsub', 'service'): 'Publish-Subscribe',
+  ('pubsub', 'pep'): 'Personal Eventing Protocol',
+  ('component', 'presence'): 'Web Presence',
+  ('store', 'file'): 'File Storage',
+  ('headline', 'newmail'): 'New Mail Notifications',
+  ('headline', 'rss'): 'RSS',
+  ('headline', 'weather'): 'Weather',
+  ('proxy', 'bytestreams'): 'File transfer proxy',
   'offline_since': 'Offline since',
   'times_online': 'Times Online'
 }
 
 
+try:
+	cfg = SafeConfigParser()
+	cfg.readfp(open('config.cfg'))
+	OUTPUT_DIRECTORY = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
+except:
+	# Load default values
+	OUTPUT_DIRECTORY = '..'
+
 def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 	if by is None:
-		return os.path.join(directory, filename_prefix+extension)
+		return join(directory, filename_prefix+extension)
+	elif isinstance(by, tuple) and len(by)==2:
+		return join(directory, filename_prefix+'_by_'+by[0]+'_'+by[1]+extension)
 	else:
-		return os.path.join(directory, filename_prefix+'_by_'+by+extension)
+		return join(directory, filename_prefix+'_by_'+by+extension)
 
 def _count_components(server, service_type=None, availability='both'):
 	"""Count server components.
@@ -167,7 +181,7 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 		link = "<a href='%s'>%s</a>" % (
 			        _get_filename( sort_links['directory'], sort_links['filename_prefix'], service_type ),
 			        text )
-		header += "<th class='%s'>%s</th>" % ( service_type,
+		header += "<th class='%s_%s'>%s</th>" % ( service_type[0], service_type[1],
 		                        link if sort_links is not None else text )
 		#if service_type in COLUMNS_DESCRIPTION:
 			#text = COLUMNS_DESCRIPTION[service_type]
@@ -209,40 +223,25 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	
 	return header
 
+FILES = [basename(file) for file in iglob(join(OUTPUT_DIRECTORY, 'images', '*.png'))]
 def _get_image_filename(service_type, available):
-	filename = 'images/'
 	
-	if service_type in ['muc', 'irc']:
-		filename += "irc_protocol"
-	elif service_type == 'aim':
-		filename += "aim_protocol"
-	elif service_type == 'gadu-gadu':
-		filename += "gadu_protocol"
-	elif service_type == 'icq':
-		filename += "icq_protocol"
-	elif service_type == 'msn':
-		filename += "msn_protocol"
-	elif service_type == 'sms':
-		filename += "sms"
-	elif service_type == 'yahoo':
-		filename += "yahoo_protocol"
-	elif service_type == 'jud':
-		filename += "directory"
-	elif service_type == 'newmail':
-		filename += "email"
-	elif service_type == 'rss':
-		filename += "feed-icon-16x16"
-	elif service_type == 'weather':
-		filename += "weather"
+	if not isinstance(service_type, tuple):
+		raise Exception('Wrong service type')
+	
+	if available:
+		filename = "%s_%s.png" % (service_type[0], service_type[1])
 	else:
-		filename += "button_ok"
+		filename = "%s_%s-grey.png" % (service_type[0], service_type[1])
 	
-	if not available:
-		filename += "-grey"
+	if filename in FILES:
+		return 'images/%s' % filename
+	else:
+		if available:
+			return 'images/yes.png'
+		else:
+			return 'images/yes-grey.png'
 	
-	filename += '.png'
-	
-	return filename
 
 
 ROWS = None
@@ -285,7 +284,8 @@ def get_rows(servers, types):
 			
 			if (  service_type not in server['available_services'] and 
 				  service_type not in server['unavailable_services']  ):
-				row += """<td class='feature no %s'></td>""" % service_type
+				row += """<td class='feature no %s_%s'></td>""" % (
+				                            service_type[0], service_type[1])
 			else:
 				
 				#row += "<td class='feature yes"
@@ -300,9 +300,9 @@ def get_rows(servers, types):
 				#row += " " + service_type
 				#row += "'>"
 				
-				row += """<td class='feature yes %s %s'>""" % (
+				row += """<td class='feature yes %s %s_%s'>""" % (
 				           'available' if service_available else 'unavailable',
-				           service_type )
+				           service_type[0], service_type[1] )
 				
 				#row += "<div class='container'><img src=\""
 				#row += _get_image_filename(service_type, service_available)
@@ -315,10 +315,10 @@ def get_rows(servers, types):
 				row += "<div class='components'>"
 				if service_type in server['available_services']:
 					for component in sorted(server['available_services'][service_type]):
-						row += """<span class='available'>%s</span>""" % component
+						row += """<span class='available'>%s</span>""" % component[u'jid']
 				if service_type in server['unavailable_services']:
 					for component in sorted(server['unavailable_services'][service_type]):
-						row += """<span class='unavailable'>%s</span>""" % component
+						row += """<span class='unavailable'>%s</span>""" % component[u'jid']
 				row += "</div></div></td>"
 				
 			
@@ -581,7 +581,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	
 	cols = "\t\t\t<col class='server' />"
 	for service_type in types:
-		cols += "<col class='%s' />" % service_type
+		cols += "<col class='%s_%s' />" % (service_type[0], service_type[1])
 	#cols += "<col class='times_offline' />"
 	cols += "<col class='offline_since' /><col class='times_online' />\n"
 	

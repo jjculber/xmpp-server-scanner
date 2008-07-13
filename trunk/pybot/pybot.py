@@ -253,16 +253,24 @@ elif UPDATE_DATABASE and CAN_UPDATE_DATABASE:
 
 # And build the HTML pages and the XML
 
-columns = [ 'muc', 'irc', 'aim', 'gadu-gadu', 'icq', 'msn',
-            'sms', 'smtp', 'tlen', 'yahoo', 'jud', 'pep',
-            'presence', 'file', 'newmail', 'rss', 'weather', 'proxy' ]
+# Take a look to the XMPP Registrar to see the component's category:type
+# http://www.xmpp.org/registrar/disco-categories.html
+# Pure MUC components are marked as x-muc by the xmpp_discoverer
+show_types = [ ('conference','x-muc'), ('conference','irc'),
+               ('gateway', 'aim'), ('gateway', 'gadu-gadu'), ('gateway', 'icq'),
+               ('gateway', 'msn'), ('gateway', 'sms'), ('gateway', 'smtp'),
+               ('gateway', 'tlen'), ('gateway', 'yahoo'),
+               ('directory', 'user'), ('pubsub', 'pep'),
+               ('component', 'presence'), ('store', 'file'),
+               ('headline', 'newmail'), ('headline', 'rss'), ('headline', 'weather'),
+               ('proxy', 'bytestreams') ]
 
 #known_types.sort()
 #html_file_generator.generate('../servers-pybot.html', servers, known_types)
 if GENERATE_HTML_FILES:
 	html_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
 	                                  filename_prefix=HTML_FILES_PREFIX,
-	                                  servers=servers, types=columns,
+	                                  servers=servers, types=show_types,
 	                                  compress=COMPRESS_FILES )
 
 if GENERATE_XML_FILES:

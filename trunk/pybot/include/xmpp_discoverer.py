@@ -95,168 +95,135 @@ def _in_same_domain(parent, child):
 	
 
 
-def _add_to_services_list(services_list, service_type, component_jid):
+def _add_to_services_list(services_list, service_category_type, component):
 	'''Add the compoenent to the server services list.
 	There can be several components providing the same service.'''
-	if service_type in services_list:
-		services_list[service_type].append(component_jid)
+	if service_category_type in services_list:
+		services_list[service_category_type].append(component)
 	else:
-		services_list[service_type] = [(component_jid)]
+		services_list[service_category_type] = [(component)]
 
 
-def _add_component_available(component, services_list):
-	'''Process identity and update the set of server services_list'''
+def _guess_component_info(component):
+	'''Guess and add the service info using the JID'''
 	
-	for identity in component[u'info'][0]:
-		if identity[u'category'] == u'conference':
-			# Try to detect IRC transports advertised as MUC
-			if identity[u'type'] == u'text':
-				if (  ( 'name' in component and 'IRC' in component['name'] ) or
-				      '.irc.' in component['jid'] or
-				      component['jid'].startswith('irc.') ):
-					_add_to_services_list(services_list, 'irc', component['jid'])
-				elif u'http://jabber.org/protocol/muc' in component[u'info'][1]:
-					_add_to_services_list(services_list, 'muc', component['jid'])
-			elif identity[u'type'] == u'irc':
-				_add_to_services_list(services_list, 'irc', component['jid'])
-			
-		elif identity[u'category'] == u'gateway':
-			if identity[u'type'] == u'aim':
-				_add_to_services_list(services_list, 'aim', component['jid'])
-			elif identity[u'type'] == u'gadu-gadu':
-				_add_to_services_list(services_list, 'gadu-gadu', component['jid'])
-			elif identity[u'type'] == u'http-ws':
-				_add_to_services_list(services_list, 'http-ws', component['jid'])
-			elif identity[u'type'] == u'icq':
-				_add_to_services_list(services_list, 'icq', component['jid'])
-			elif identity[u'type'] == u'msn':
-				_add_to_services_list(services_list, 'msn', component['jid'])
-			elif identity[u'type'] == u'qq':
-				_add_to_services_list(services_list, 'qq', component['jid'])
-			elif identity[u'type'] == u'sms':
-				_add_to_services_list(services_list, 'sms', component['jid'])
-			elif identity[u'type'] == u'smtp':
-				_add_to_services_list(services_list, 'smtp', component['jid'])
-			elif identity[u'type'] == u'tlen':
-				_add_to_services_list(services_list, 'tlen', component['jid'])
-			elif identity[u'type'] == u'xfire':
-				_add_to_services_list(services_list, 'xfire', component['jid'])
-			elif identity[u'type'] == u'yahoo':
-				_add_to_services_list(services_list, 'yahoo', component['jid'])
-			
-		elif identity[u'category'] == u'directory':
-			if identity[u'type'] == u'user':
-				_add_to_services_list(services_list, 'jud', component['jid'])
-			
-		elif identity[u'category'] == u'pubsub':
-			if identity[u'type'] == u'service': # XEP
-				_add_to_services_list(services_list, 'pubsub', component['jid'])
-			elif identity[u'type'] == u'generic': # ejabberd 1.1.3
-				_add_to_services_list(services_list, 'pubsub', component['jid'])
-			elif identity[u'type'] == u'pep':
-				_add_to_services_list(services_list, 'pep', component['jid'])
-			
-		elif identity[u'category'] == u'component':
-			if identity[u'type'] == u'presence':
-				_add_to_services_list(services_list, 'presence', component['jid'])
-			
-		elif identity[u'category'] == u'headline':
-			if identity[u'type'] == u'newmail':
-				_add_to_services_list(services_list, 'newmail', component['jid'])
-			elif identity[u'type'] == u'rss':
-				_add_to_services_list(services_list, 'rss', component['jid'])
-			elif identity[u'type'] == u'weather':
-				_add_to_services_list(services_list, 'weather', component['jid'])
-			
-		elif identity[u'category'] == u'proxy':
-			if identity[u'type'] == u'bytestreams':
-				_add_to_services_list(services_list, 'proxy', component['jid'])
-			
-		elif identity[u'category'] == u'store':
-			if identity[u'type'] == u'file':
-				_add_to_services_list(services_list, 'file', component['jid'])
-			
-		# Non standard services
-		
-		elif identity[u'category'] == u'agent': 
-			if identity[u'type'] == u'weather':
-				_add_to_services_list(services_list, 'weather', component['jid'])
-			
-		elif identity[u'category'] == u'x-service':
-			if identity[u'type'] == u'x-rss': # PyRSS
-				_add_to_services_list(services_list, 'rss', component['jid'])
-
-
-def _add_component_unavailable(jid, services_list):
-	'''Guess the service using the JIDs and update the set of servers
-	services_list'''
+	jid = component[u'jid']
+	#info = ([{u'category': None, u'type': None}], [])
+	info = ([], [])
 	
 	logging.debug('Guessing type of %s', jid)
 	
 	# Conference
 	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
-		_add_to_services_list(services_list, 'muc', jid)
+		# MUC
+		info = ( [{u'category': u'conference', u'type': u'text'}],
+		                      [u'http://jabber.org/protocol/muc'] )
 	elif jid.startswith(u'irc.'):
-		_add_to_services_list(services_list, 'irc', jid)
+		info = ( [{u'category': u'conference', u'type': u'irc'}], [] )
 	
 	# Transports
 	elif jid.startswith((u'aim.', u'aim-jab.')):
-		_add_to_services_list(services_list, 'aim', jid)
+		info = ( [{u'category': u'gateway', u'type': u'aim'}], [] )
 	elif jid.startswith(u'aim-icq.'):
-		_add_to_services_list(services_list, 'aim', jid)
-		_add_to_services_list(services_list, 'icq', jid)
+		info = ( [ {u'category': u'gateway', u'type': u'aim'},
+	               {u'category': u'gateway', u'type': u'icq'} ], [] )
 	elif jid.startswith((u'gg.', u'gadugadu.', u'gadu-gadu.')):
-		_add_to_services_list(services_list, 'gadu-gadu', jid)
+		info = ( [{u'category': u'gateway', u'type': u'gadu-gadu'}], [] )
 	elif jid.startswith(u'http-ws.'):
-		_add_to_services_list(services_list, 'http-ws', jid)
+		info = ( [{u'category': u'gateway', u'type': u'http-ws'}], [] )
 	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
-		_add_to_services_list(services_list, 'icq', jid)
+		info = ( [{u'category': u'gateway', u'type': u'icq'}], [] )
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
-		_add_to_services_list(services_list, 'msn', jid)
+		info = ( [{u'category': u'gateway', u'type': u'msn'}], [] )
 	elif jid.startswith(u'qq.'):
-		_add_to_services_list(services_list, 'qq', jid)
+		info = ( [{u'category': u'gateway', u'type': u'qq'}], [] )
 	elif jid.startswith(u'sms.'):
-		_add_to_services_list(services_list, 'sms', jid)
+		info = ( [{u'category': u'gateway', u'type': u'sms'}], [] )
 	elif jid.startswith(u'smtp.'):
-		_add_to_services_list(services_list, 'smtp', jid)
+		info = ( [{u'category': u'gateway', u'type': u'smtp'}], [] )
 	elif jid.startswith(u'tlen.'):
-		_add_to_services_list(services_list, 'tlen', jid)
+		info = ( [{u'category': u'gateway', u'type': u'tlen'}], [] )
 	elif jid.startswith(u'xfire.'):
-		_add_to_services_list(services_list, 'xfire', jid)
+		info = ( [{u'category': u'gateway', u'type': u'xfire'}], [] )
 	elif jid.startswith(u'yahoo.'):
-		_add_to_services_list(services_list, 'yahoo', jid)
+		info = ( [{u'category': u'gateway', u'type': u'yahoo'}], [] )
 	
 	# Directories
 	elif jid.startswith((u'jud.', u'vjud.', u'search.', u'users.')):
-		_add_to_services_list(services_list, 'jud', jid)
+		info = ( [{u'category': u'directory', u'type': u'user'}], [] )
 	
 	# PubSub
 	elif jid.startswith(u'pubsub.'):
-		_add_to_services_list(services_list, 'pubsub', jid)
+		info = ( [{u'category': u'pubsub', u'type': u'service'}], [] )
 	elif jid.startswith(u'pep.'):
-		_add_to_services_list(services_list, 'pep', jid)
+		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
 	elif jid.startswith((u'presence.', u'webpresence.')):
-		_add_to_services_list(services_list, 'presence', jid)
+		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
 	elif jid.startswith((u'newmail.', u'mail.', u'jmc.')):
-		_add_to_services_list(services_list, 'newmail', jid)
+		info = ( [{u'category': u'headline', u'type': u'newmail'}], [] )
 	elif jid.startswith(u'rss.'):
-		_add_to_services_list(services_list, 'rss', jid)
+		info = ( [{u'category': u'headline', u'type': u'rss'}], [] )
 	elif jid.startswith(u'weather.'):
-		_add_to_services_list(services_list, 'weather', jid)
+		info = ( [{u'category': u'headline', u'type': u'weather'}], [] )
 	
 	# Proxy
 	elif jid.startswith((u'proxy.', u'proxy65.')):
-		_add_to_services_list(services_list, 'proxy', jid)
+		info = ( [{u'category': u'proxy', u'type': u'bytestreams'}], [] )
 		
 	# Store
 	elif jid.startswith((u'file.', u'disk.', u'jdisk.')):
-		_add_to_services_list(services_list, 'file', jid)
+		info = ( [{u'category': u'store', u'type': u'file'}], [] )
+	
+	
+	return info
 
+
+def _handle_component_available(component, server):	
+	for identity in component[u'info'][0]:
+		
+		# MUC is not the only service that announces conference:text and
+		# some IRC transports even annountce the feature
+		# 'http://jabber.org/protocol/muc', so try to detect the pure MUC
+		# services and add them also in a special category:type conference:x-muc
+		
+		if identity[u'category']=='conference' and identity[u'type']=='text':
+			if (  not ( ('name' in component and 'IRC' in component['name']) or
+			            '.irc.' in component['jid'] or
+			            component['jid'].startswith('irc.') ) and
+			      u'http://jabber.org/protocol/muc' in component[u'info'][1]):
+				_add_to_services_list( server[u'available_services'],
+				                       ('conference', 'x-muc'), component )
+			#continue
+		
+		# ejabberd1.1.3 uses pubsub:generic instead pubsub:service
+		if identity[u'category']=='pubsub' and identity[u'type']=='generic':
+			identity[u'type'] = 'service'
+		
+		# Some weather components use agent:weather instead headline:weather
+		if identity[u'category']=='agent' and identity[u'type']=='weather':
+			identity[u'category'] = 'headline'
+		
+		# PyRSS
+		if identity[u'category']=='x-service' and identity[u'type']=='x-rss':
+			identity[u'category'] = 'headline'
+			identity[u'type'] = 'rss'
+		
+		_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
+
+
+def _handle_component_unavailable(component, server):
+	
+	component[u'info'] = _guess_component_info(component)
+	
+	for identity in component[u'info'][0]:
+		
+		# TODO: some way to diference services from non-muc services
+		_add_to_services_list(server[u'unavailable_services'], (identity[u'category'], identity[u'type']), component)
 
 
 def _get_item_info(dispatcher, component, retries=0):
@@ -375,7 +342,7 @@ def _discover_item(dispatchers, component, server):
 			component[u'info'] = _get_item_info(dispatcher, component, retries)
 		except xml.parsers.expat.ExpatError:
 			component[u'info'] = ([], [])
-			_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
+			_handle_component_unavailable(component, server)
 			raise
 		
 		if len(component[u'info'][0]) > 0 and len(component[u'info'][1]) > 0:
@@ -389,7 +356,7 @@ def _discover_item(dispatchers, component, server):
 	if (  (u'http://jabber.org/protocol/disco#info' in component[u'info'][1]) |
 	      (u'http://jabber.org/protocol/disco' in component[u'info'][1])  ):
 		needs_to_query_items = False
-		_add_component_available(component, server[u'available_services'])
+		_handle_component_available(component, server)
 		for identity in component[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
@@ -418,7 +385,7 @@ def _discover_item(dispatchers, component, server):
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
-		_add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
+		_handle_component_unavailable(component, server)
 	
 	else:
 		if u'available_services' in component:
@@ -437,10 +404,9 @@ def _discover_item(dispatchers, component, server):
 			                       component[u'info'][1] )
 		else:
 			#try:
-			_add_component_available(component, server[u'available_services'])
+			_handle_component_available(component, server)
 			#except:
-				#add_component_unavailable(component[u'jid'],
-				                        #server[u'unavailable_services'])
+				#_handle_component_unavailable(component, server)
 	
 	# If it's a server or a branch node, get the child items
 	
