@@ -183,7 +183,10 @@ def _guess_component_info(component):
 	return info
 
 
-def _handle_component_available(component, server):	
+def _handle_component_available(component, server):
+	
+	component['available'] = True
+	
 	for identity in component[u'info'][0]:
 		
 		# MUC is not the only service that announces conference:text and
@@ -217,6 +220,8 @@ def _handle_component_available(component, server):
 
 
 def _handle_component_unavailable(component, server):
+	
+	component['available'] = False
 	
 	component[u'info'] = _guess_component_info(component)
 	
