@@ -38,6 +38,24 @@ ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
 INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
 ITEM_QUERY_RETRIES = cfg.getint("xmpp discoverer", "ITEM_QUERY_RETRIES")
 
+# Jabber account
+
+account_number = 1
+JABBER_ACCOUNTS = []
+while (cfg.has_section("Jabber account %d" % account_number)):
+	JABBER_ACCOUNTS.append( {
+	    'user': cfg.get("Jabber account %d" % account_number, "USER"),
+	    'password': cfg.get("Jabber account %d" % account_number, "PASSWORD"),
+	    'resource': cfg.get("Jabber account %d" % account_number, "RESOURCE"),
+	    'server': cfg.get("Jabber account %d" % account_number, "SERVER")
+	} )
+	account_number += 1
+
+del(account_number)
+
+if len(JABBER_ACCOUNTS) == 0:
+	raise Exception("No jabber accounts found. Check your configuration")
+
 del(cfg)
 
 
@@ -498,10 +516,12 @@ def _disconnect_clients(clients):
 			pass
 
 
-def discover_servers(accounts, server_list):
+def discover_servers(server_list):
 	
 	if USE_MULTIPLE_QUERY_ACCOUNTS:
-		accounts = [choice(accounts)]
+		accounts = [choice(JABBER_ACCOUNTS)]
+	else:
+		accounts = JABBER_ACCOUNTS
 	
 	servers = {}
 	
