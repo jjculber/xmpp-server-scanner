@@ -134,10 +134,14 @@ else:
 if DO_DISCOVERY:
 	# Get server list
 	
-	if USEURL:
-		f = urllib.urlopen(SERVERS_URL)
-	else:
-		f = open(SERVERS_FILE, 'r')
+	try:
+		if USEURL:
+			f = urllib.urlopen(SERVERS_URL)
+		else:
+			f = open(SERVERS_FILE, 'r')
+	except IOError:
+		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
+		raise
 	
 	xmldata = f.read()
 	f.close()
@@ -155,6 +159,10 @@ if DO_DISCOVERY:
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
+	
+	if len(server_list) == 0:
+		logging.critical('The list of servers to check is empty')
+		raise Exception('The list of servers to check is empty')
 
 	servers = xmpp_discoverer.discover_servers(JABBER_ACCOUNTS, server_list)
 	
