@@ -17,6 +17,7 @@
 
 from ConfigParser import SafeConfigParser
 import logging
+from os.path import abspath, dirname, join
 from random import choice
 import re
 import sys
@@ -26,39 +27,17 @@ import xml
 from xmpp import Client, features
 
 # Load the configuration
-try:
-	cfg = SafeConfigParser()
-	cfg.readfp(open('config.cfg'))
-	
-	USE_MULTIPLE_QUERY_ACCOUNTS = cfg.getboolean("xmpp discoverer", "USE_MULTIPLE_QUERY_ACCOUNTS")
-	ONLY_USE_SUCCESFULL_CLIENT = cfg.getboolean("xmpp discoverer", "ONLY_USE_SUCCESFULL_CLIENT")
-	ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
-	INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
-	ITEM_QUERY_RETRIES = cfg.getint("xmpp discoverer", "ITEM_QUERY_RETRIES")
-	
-	del(cfg)
-except:
-	# Load default values
-	
-	# Use multiple accounts to query servers
-	# When this option is set to True and a server does not answer it will retry
-	# with another account
-	# This will benefit accuracy on services detection over their availability as
-	# seen by users
-	# When set to False, only one randomly chosen account is used.
-	# When False only use one account chosen at random. This will benefit accuracy
-	# on detect the services availability as seen by users over the real service
-	# availability
-	USE_MULTIPLE_QUERY_ACCOUNTS = True
-	
-	# If a client can discover a server, only use that client to test services
-	ONLY_USE_SUCCESFULL_CLIENT = True
-	
-	# Times to retry if a query fails
-	# Not very useful if several accounts are used to do the discovery
-	ONLY_RETRY_SERVERS = True
-	INFO_QUERY_RETRIES = 1
-	ITEM_QUERY_RETRIES = 0
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
+cfg = SafeConfigParser()
+cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
+
+USE_MULTIPLE_QUERY_ACCOUNTS = cfg.getboolean("xmpp discoverer", "USE_MULTIPLE_QUERY_ACCOUNTS")
+ONLY_USE_SUCCESFULL_CLIENT = cfg.getboolean("xmpp discoverer", "ONLY_USE_SUCCESFULL_CLIENT")
+ONLY_RETRY_SERVERS = cfg.getboolean("xmpp discoverer", "ONLY_RETRY_SERVERS")
+INFO_QUERY_RETRIES = cfg.getint("xmpp discoverer", "INFO_QUERY_RETRIES")
+ITEM_QUERY_RETRIES = cfg.getint("xmpp discoverer", "ITEM_QUERY_RETRIES")
+
+del(cfg)
 
 
 URLREGEXP = re.compile(

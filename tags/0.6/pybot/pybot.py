@@ -40,8 +40,9 @@ from include import html_file_generator, xml_file_generator
 
 
 # Load the configuration
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
 cfg = SafeConfigParser()
-cfg.readfp(open('config.cfg'))
+cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
 
 # Jabber account
 
@@ -101,7 +102,6 @@ del(cfg)
 # Configuration loaded
 
 
-SCRIPT_DIR = abspath(dirname(sys.argv[0]))
 
 if not isabs(LOGFILE):
 	LOGFILE = join(SCRIPT_DIR, LOGFILE)

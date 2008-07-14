@@ -61,8 +61,9 @@
 
 import gzip
 import logging
-import os.path
+from os.path import abspath, dirname, basename, join
 import shutil
+import sys
 import time
 
 ROWS_BETWEEN_TITLES = 10
@@ -96,11 +97,18 @@ COLUMNS_DESCRIPTION = {
 }
 
 
+# Load the configuration
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
+cfg = SafeConfigParser()
+cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
+OUTPUT_DIRECTORY = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
+
+
 def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 	if by is None:
-		return os.path.join(directory, filename_prefix+extension)
+		return join(directory, filename_prefix+extension)
 	else:
-		return os.path.join(directory, filename_prefix+'_by_'+by+extension)
+		return join(directory, filename_prefix+'_by_'+by+extension)
 
 def _count_components(server, service_type=None, availability='both'):
 	"""Count server components.
