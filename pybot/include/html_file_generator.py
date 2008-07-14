@@ -63,8 +63,9 @@ from ConfigParser import SafeConfigParser
 from glob import iglob
 import gzip
 import logging
-from os.path import basename, join
+from os.path import abspath, dirname, basename, join
 import shutil
+import sys
 import time
 
 ROWS_BETWEEN_TITLES = 10
@@ -100,13 +101,11 @@ COLUMNS_DESCRIPTION = {
 }
 
 
-try:
-	cfg = SafeConfigParser()
-	cfg.readfp(open('config.cfg'))
-	OUTPUT_DIRECTORY = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
-except:
-	# Load default values
-	OUTPUT_DIRECTORY = '..'
+# Load the configuration
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
+cfg = SafeConfigParser()
+cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
+OUTPUT_DIRECTORY = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
 
 def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 	if by is None:
