@@ -44,21 +44,7 @@ SCRIPT_DIR = abspath(dirname(sys.argv[0]))
 cfg = SafeConfigParser()
 cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
 
-# Jabber account
 
-account_number = 1
-JABBER_ACCOUNTS = []
-while (cfg.has_section("Jabber account %d" % account_number)):
-	JABBER_ACCOUNTS.append( {
-	    'user': cfg.get("Jabber account %d" % account_number, "USER"),
-	    'password': cfg.get("Jabber account %d" % account_number, "PASSWORD"),
-	    'resource': cfg.get("Jabber account %d" % account_number, "RESOURCE"),
-	    'server': cfg.get("Jabber account %d" % account_number, "SERVER")
-	} )
-	account_number += 1
-
-if len(JABBER_ACCOUNTS) == 0:
-	raise Exception("No jabber accounts found. Check your configuration")
 
 # Database
 DBUSER              = cfg.get("Database", "USER")
@@ -165,7 +151,7 @@ if DO_DISCOVERY:
 		logging.critical('The list of servers to check is empty')
 		raise Exception('The list of servers to check is empty')
 
-	servers = xmpp_discoverer.discover_servers(JABBER_ACCOUNTS, server_list)
+	servers = xmpp_discoverer.discover_servers(server_list)
 	
 	
 	# Manage offline servers and stability information
