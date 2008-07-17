@@ -24,7 +24,8 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	logging.info('Updating Database')
 	
 	db = MySQLdb.Connection( user=db_user, passwd=db_password, host=db_host,
-	                         db=db_database )
+	                         db=db_database, use_unicode=True, charset='utf8',
+	                         init_command='SET NAMES utf8' )
 	
 	#db.autocommit(True)
 	
