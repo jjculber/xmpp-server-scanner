@@ -16,7 +16,6 @@
 
 import logging
 import MySQLdb
-import time
 
 
 def update_database(db_user, db_password, db_host, db_database, servers):
@@ -67,7 +66,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	
 	for server in servers.itervalues():
 		
-		offline_since = None if server['offline_since'] is None else time.strftime('%Y-%m-%d %H:%M:%S', server['offline_since'])
+		offline_since = None if server['offline_since'] is None else server['offline_since'].strftime('%Y-%m-%d %H:%M:%S')
 		
 		# Add server
 		logging.debug('Add server %s', server[u'jid'])
