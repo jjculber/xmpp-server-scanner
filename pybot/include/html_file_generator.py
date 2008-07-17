@@ -97,7 +97,7 @@ COLUMNS_DESCRIPTION = {
   ('headline', 'weather'): 'Weather',
   ('proxy', 'bytestreams'): 'File transfer proxy',
   'offline_since': 'Offline since',
-  'times_online': 'Times Online'
+  'times_online': '% Availability'
 }
 
 
