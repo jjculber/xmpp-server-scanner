@@ -16,6 +16,7 @@
 
 import logging
 import MySQLdb
+import time
 
 
 def update_database(db_user, db_password, db_host, db_database, servers):
@@ -23,8 +24,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	logging.info('Updating Database')
 	
 	db = MySQLdb.Connection( user=db_user, passwd=db_password, host=db_host,
-	                         db=db_database, use_unicode=True, charset='utf8',
-	                         init_command='SET NAMES utf8' )
+	                         db=db_database )
 	
 	#db.autocommit(True)
 	
@@ -42,17 +42,13 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	cursor = db.cursor(MySQLdb.cursors.DictCursor)
 	cursor.execute("""SELECT `category`, `type` FROM `pybot_service_types`""")
 	for row in cursor.fetchall():
-		service_category = row['category'].decode('utf-8')
-		service_type = row['type'].decode('utf-8')
-		
-		if (service_category, service_type) not in service_types:
-			logging.debug('Deleting service type %s', service_type)
-			
+		if (row['category'], row['type']) not in service_types:
+			logging.debug('Deleting service type %s', row['type'])
 			cursor.execute( """DELETE FROM pybot_service_types
 			                     WHERE category = %s AND type = %s """,
-			                (service_category, service_type) )
+			                (row['category'], row['type']) )
 		else:
-			service_types.remove((service_category, service_type))
+			service_types.remove((row['category'], row['type']))
 	
 	for service_category, service_type in service_types:
 		logging.debug('Add new service type %s', service_type)
@@ -66,7 +62,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	
 	for server in servers.itervalues():
 		
-		offline_since = None if server['offline_since'] is None else server['offline_since'].strftime('%Y-%m-%d %H:%M:%S')
+		offline_since = None if server['offline_since'] is None else time.strftime('%Y-%m-%d %H:%M:%S', server['offline_since'])
 		
 		# Add server
 		logging.debug('Add server %s', server[u'jid'])
@@ -136,14 +132,14 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 				#exists = True
 				#break
 		# Servers are indexed by JID
-		if row[u'jid'].decode('utf-8') in servers:
+		if row[u'jid'] in servers:
 			exists = True
 			break
 			
 		if not exists:
 			logging.debug('Delete old server %s', row['jid'])
 			cursor.execute("""DELETE FROM pybot_servers WHERE jid = %s""",
-			                (row['jid'].decode('utf-8'),))
+			                (row['jid'],))
 	
 	cursor.close()
 	
