@@ -47,7 +47,7 @@ cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
 
 
 # Misc
-AVAILABILITY_LOG_DAYS = cfg.getint("Misc", "AVAILABILITY_LOG_DAYS")
+UPTIME_LOG_DAYS     = cfg.getint("Misc", "UPTIME_LOG_DAYS")
 
 # Database
 DBUSER              = cfg.get("Database", "USER")
@@ -161,7 +161,7 @@ if DO_DISCOVERY:
 	#offline = lambda server: len(server[u'info'][0]) == 0 and len(server[u'info'][1]) == 0
 	offline = lambda server: not server['available']
 	now = datetime.utcnow()
-	availability_log_days = timedelta(AVAILABILITY_LOG_DAYS)
+	uptime_log_days = timedelta(UPTIME_LOG_DAYS)
 	
 	try:
 		f = open(SERVERS_DUMP_FILE, 'rb')
@@ -174,12 +174,12 @@ if DO_DISCOVERY:
 		for server in servers.itervalues():
 			if offline(server):
 				server['offline_since'] = now
-				server['availability'] = {now: False}
+				server['uptime_data'] = {now: False}
 				server['times_queried_online'] = 0
 				server['times_queried'] = 1
 			else:
 				server['offline_since'] = None
-				server['availability'] = {now: True}
+				server['uptime_data'] = {now: True}
 				server['times_queried_online'] = 1
 				server['times_queried'] = 1
 		
@@ -192,39 +192,39 @@ if DO_DISCOVERY:
 					#servers[jid]['times_queried'] += 1
 					if server['offline_since'] is None:
 						server['offline_since'] = now
-					server['availability'][now] = False
+					server['uptime_data'][now] = False
 					logging.warning("%s server seems to be offline, using old data", jid)
 				except KeyError: # It's a new server
 					logging.debug("Initializing stability data for %s", jid)
-					server['availability'] = {now: False}
+					server['uptime_data'] = {now: False}
 					server['offline_since'] = now
 					#server['times_queried_online'] = 0
 					#server['times_queried'] = 1
 			else:
 				server['offline_since'] = None
 				try:
-					server['availability'] = old_servers[jid]['availability']
-					server['availability'][now] = True
+					server['uptime_data'] = old_servers[jid]['uptime_data']
+					server['uptime_data'][now] = True
 					#server['times_queried_online'] = old_servers[jid]['times_queried_online'] + 1
 					#server['times_queried'] =  old_servers[jid]['times_queried'] + 1
 				except KeyError: # It's a new server
 					logging.debug("Initializing stability data for %s", jid)
-					server['availability'] = {now: True}
+					server['uptime_data'] = {now: True}
 					#server['times_queried_online'] = 1
 					#server['times_queried'] = 1
 			
-			# Delete old availability information
+			# Delete old uptime information
 			
-			for log_date in sorted(server['availability']):
-				if (now - log_date) > availability_log_days:
-					del(server['availability'][log_date])
+			for log_date in sorted(server['uptime_data']):
+				if (now - log_date) > uptime_log_days:
+					del(server['uptime_data'][log_date])
 				else:
 					break
 			
 			#Recalculate times_queried_online and times_queried
 			
-			server['times_queried_online'] = server['availability'].values().count(True)
-			server['times_queried'] = len(server['availability'])
+			server['times_queried_online'] = server['uptime_data'].values().count(True)
+			server['times_queried'] = len(server['uptime_data'])
 		
 	finally:
 		try:
