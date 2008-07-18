@@ -60,13 +60,13 @@
 
 
 from ConfigParser import SafeConfigParser
+from datetime import datetime
 from glob import iglob
 import gzip
 import logging
 from os.path import abspath, dirname, basename, join
 import shutil
 import sys
-import time
 
 ROWS_BETWEEN_TITLES = 10
 
@@ -97,7 +97,7 @@ COLUMNS_DESCRIPTION = {
   ('headline', 'weather'): 'Weather',
   ('proxy', 'bytestreams'): 'File transfer proxy',
   'offline_since': 'Offline since',
-  'times_online': 'Times Online'
+  'times_online': '% Availability'
 }
 
 
@@ -322,7 +322,7 @@ def get_rows(servers, types):
 				
 			
 		row += "<td class='offline_since'>%s</td><td class='times_online'>%d/%d (%d%%)</td>" % (
-		        '' if server['offline_since'] is None else time.strftime('%d-%B-%Y %H:%M UTC', server['offline_since']),
+		        '' if server['offline_since'] is None else server['offline_since'].strftime('%d-%B-%Y %H:%M UTC'),
 		        server['times_queried_online'], server['times_queried'],
 		        int(100*server['times_queried_online']/server['times_queried']) )
 		
@@ -370,7 +370,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	elif sort_by is 'offline_since':
 		
 		# None is earlier than any date, so use current date
-		now = time.gmtime()
+		now = datetime.utcnow()
 		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
 		#server_keys.sort(key=jid)
 		server_keys.sort()
@@ -629,7 +629,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		f.write(table_header)
 	
 	f.write("</table><div class='footer'>Page generated on %s</div></body></html>\n" %
-	                    time.strftime('%d-%B-%Y %H:%M UTC', time.gmtime()) )
+	                    datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC') )
 	
 	
 	if compress:
