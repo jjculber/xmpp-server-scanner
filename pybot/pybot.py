@@ -15,13 +15,13 @@
 # TODO: Make the code prettier, pylint
 
 from ConfigParser import SafeConfigParser
-from datetime import datetime, timedelta
 import logging
 from os.path import abspath, dirname, isabs, join
 try:
 	import cPickle as pickle
 except ImportError:
 	import pickle
+import time
 import sys
 import urllib
 
@@ -45,9 +45,6 @@ cfg = SafeConfigParser()
 cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
 
 
-
-# Misc
-AVAILABILITY_LOG_DAYS = cfg.getint("Misc", "AVAILABILITY_LOG_DAYS")
 
 # Database
 DBUSER              = cfg.get("Database", "USER")
@@ -160,8 +157,6 @@ if DO_DISCOVERY:
 	
 	#offline = lambda server: len(server[u'info'][0]) == 0 and len(server[u'info'][1]) == 0
 	offline = lambda server: not server['available']
-	now = datetime.utcnow()
-	availability_log_days = timedelta(AVAILABILITY_LOG_DAYS)
 	
 	try:
 		f = open(SERVERS_DUMP_FILE, 'rb')
@@ -173,13 +168,11 @@ if DO_DISCOVERY:
 		                 exc_info=sys.exc_info() )
 		for server in servers.itervalues():
 			if offline(server):
-				server['offline_since'] = now
-				server['availability'] = {now: False}
+				server['offline_since'] = time.gmtime()
 				server['times_queried_online'] = 0
 				server['times_queried'] = 1
 			else:
 				server['offline_since'] = None
-				server['availability'] = {now: True}
 				server['times_queried_online'] = 1
 				server['times_queried'] = 1
 		
@@ -188,43 +181,24 @@ if DO_DISCOVERY:
 			if offline(server):
 				try:
 					servers[jid] = old_servers[jid]
-					server = servers[jid]
-					#servers[jid]['times_queried'] += 1
-					if server['offline_since'] is None:
-						server['offline_since'] = now
-					server['availability'][now] = False
+					servers[jid]['times_queried'] += 1
+					if servers[jid]['offline_since'] is None:
+						servers[jid]['offline_since'] = time.gmtime()
 					logging.warning("%s server seems to be offline, using old data", jid)
 				except KeyError: # It's a new server
 					logging.debug("Initializing stability data for %s", jid)
-					server['availability'] = {now: False}
-					server['offline_since'] = now
-					#server['times_queried_online'] = 0
-					#server['times_queried'] = 1
+					server['offline_since'] = time.gmtime()
+					server['times_queried_online'] = 0
+					server['times_queried'] = 1
 			else:
 				server['offline_since'] = None
 				try:
-					server['availability'] = old_servers[jid]['availability']
-					server['availability'][now] = True
-					#server['times_queried_online'] = old_servers[jid]['times_queried_online'] + 1
-					#server['times_queried'] =  old_servers[jid]['times_queried'] + 1
+					server['times_queried_online'] = old_servers[jid]['times_queried_online'] + 1
+					server['times_queried'] =  old_servers[jid]['times_queried'] + 1
 				except KeyError: # It's a new server
 					logging.debug("Initializing stability data for %s", jid)
-					server['availability'] = {now: True}
-					#server['times_queried_online'] = 1
-					#server['times_queried'] = 1
-			
-			# Delete old availability information
-			
-			for log_date in sorted(server['availability']):
-				if (now - log_date) > availability_log_days:
-					del(server['availability'][log_date])
-				else:
-					break
-			
-			#Recalculate times_queried_online and times_queried
-			
-			server['times_queried_online'] = server['availability'].values().count(True)
-			server['times_queried'] = len(server['availability'])
+					server['times_queried_online'] = 1
+					server['times_queried'] = 1
 		
 	finally:
 		try:
