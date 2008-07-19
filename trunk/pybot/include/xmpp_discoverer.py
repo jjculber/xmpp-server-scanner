@@ -213,6 +213,16 @@ def _handle_component_available(component, server):
 			identity[u'category'] = 'headline'
 			identity[u'type'] = 'rss'
 		
+		#
+		if identity[u'category']=='gateway' and identity[u'type']=='gadugadu':
+			identity[u'category'] = 'gateway'
+			identity[u'type'] = 'gadu-gadu'
+		
+		#
+		if identity[u'category']=='gateway' and identity[u'type']=='x-tlen':
+			identity[u'category'] = 'gateway'
+			identity[u'type'] = 'tlen'
+		
 		_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
 
 
