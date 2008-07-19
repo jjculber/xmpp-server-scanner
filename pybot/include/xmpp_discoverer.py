@@ -200,6 +200,9 @@ def _handle_component_available(component, server):
 				                       ('conference', 'x-muc'), component )
 			#continue
 		
+		
+		# Adapt non standard indentities to standard equivalents
+		
 		# ejabberd1.1.3 uses pubsub:generic instead pubsub:service
 		if identity[u'category']=='pubsub' and identity[u'type']=='generic':
 			identity[u'type'] = 'service'
@@ -222,6 +225,20 @@ def _handle_component_available(component, server):
 		if identity[u'category']=='gateway' and identity[u'type']=='x-tlen':
 			identity[u'category'] = 'gateway'
 			identity[u'type'] = 'tlen'
+		
+		
+		# Normalize non standard indentities
+		
+		#
+		if identity[u'category']=='gateway' and identity[u'type']=='XMPP':
+			identity[u'type'] = 'xmpp'
+		
+		#
+		if identity[u'category']=='gateway' and identity[u'type']=='gmail':
+			identity[u'type'] = 'gtalk'
+		
+		
+		#Add the component
 		
 		_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
 
