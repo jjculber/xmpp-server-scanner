@@ -294,7 +294,13 @@ if GENERATE_HTML_FILES:
 	                                  compress=COMPRESS_FILES )
 
 
-if GENERATE_XML_FILES:
+if GENERATE_XML_FILES:	
+	# Create a file for every category:type
+	show_types = set()
+	for server in servers.itervalues():
+		show_types.update(server['available_services'].keys())
+		show_types.update(server['unavailable_services'].keys())
+	
 	cc_xml_file_generator.generate( directory=OUTPUT_DIRECTORY,
 	                                servers=servers, service_types=show_types,
 	                                minimun_uptime=XML_UPTIME_FILTER,
