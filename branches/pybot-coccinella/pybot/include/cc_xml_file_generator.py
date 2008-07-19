@@ -74,14 +74,18 @@ def generate(directory, servers, service_types, minimun_uptime=None, compress=Fa
 					query_element = doc.createElement("query")
 					identity_element = doc.createElement("identity")
 					identity_element.setAttribute("category", service_type[0])
-					identity_element.setAttribute("type", service_type[1])
+					# Sander asked to display conference:text instead conference:x-muc
+					if not service_type[1] == 'x-muc':
+						identity_element.setAttribute("type", service_type[1])
+					else:
+						identity_element.setAttribute("type", 'text')
 					query_element.appendChild(identity_element)
 					#component_element.setAttribute("available", "no")
 					iq_element.appendChild(query_element)
 					doc.documentElement.appendChild(iq_element)
 	
 	for service_type in service_types:
-		filename = "%s_%s.xml" % (service_type[0], service_type[1])
+		filename = ("%s_%s.xml" % (service_type[0], service_type[1])).encode("utf-8").replace('/','_')
 		filename = os.path.join(directory, filename)
 		tmpfilename = "%s.tmp" % filename
 		
