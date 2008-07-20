@@ -468,10 +468,12 @@ def _discover_item(dispatchers, component, server):
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
 				item = _discover_item(dispatchers, item, server)
-			elif u'node' in component:
+			elif u'node' in component and u'node' in item:
 				if (  (component[u'jid'] == item[u'jid']) &
 					  (component[u'node'] != item[u'node'])  ):
 					item = _discover_item(dispatchers, item, server)
+			else:
+				item = _discover_item(dispatchers, item, server)
 	
 	return component
 
