@@ -158,7 +158,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
-	elif jid.startswith((u'presence.', u'webpresence.')):
+	elif jid.startswith((u'presence.', u'webpresence.', u'status')):
 		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
@@ -174,7 +174,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'proxy', u'type': u'bytestreams'}], [] )
 		
 	# Store
-	elif jid.startswith((u'file.', u'disk.', u'jdisk.')):
+	elif jid.startswith((u'file.', u'disk.', u'jdisk.', u'dysk.')):
 		info = ( [{u'category': u'store', u'type': u'file'}], [] )
 	
 	
@@ -207,6 +207,11 @@ def _handle_component_available(component, server):
 		# ejabberd1.1.3 uses pubsub:generic instead pubsub:service
 		if identity[u'category']=='pubsub' and identity[u'type']=='generic':
 			identity[u'type'] = 'service'
+		
+		# ejabberd's webpresence module uses presence:text instead component:presence
+		if identity[u'category']=='presence' and identity[u'type']=='text':
+			identity[u'category'] = 'component'
+			identity[u'type'] = 'presence'
 		
 		# Some weather components use agent:weather instead headline:weather
 		if identity[u'category']=='agent' and identity[u'type']=='weather':
