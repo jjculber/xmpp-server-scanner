@@ -20,6 +20,7 @@ CREATE TABLE pybot_service_types (
 
 CREATE TABLE pybot_components (
 	jid VARCHAR(255) NOT NULL,
+	node VARCHAR(255) NULL,
 	server_jid VARCHAR(255) NOT NULL,
 	category VARCHAR(255) NOT NULL,
 	type VARCHAR(255) NOT NULL,

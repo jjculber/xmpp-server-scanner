@@ -72,6 +72,8 @@ def generate(directory, servers, service_types, minimun_uptime=None, compress=Fa
 					iq_element = doc.createElement("iq")
 					iq_element.setAttribute("from", component[u'jid'])
 					query_element = doc.createElement("query")
+					if u'node' in component:
+						query_element.setAttribute("node", component[u'node'])
 					identity_element = doc.createElement("identity")
 					identity_element.setAttribute("category", service_type[0])
 					# Sander asked to display conference:text instead conference:x-muc

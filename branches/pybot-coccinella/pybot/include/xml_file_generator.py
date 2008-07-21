@@ -38,6 +38,8 @@ def _add_identities_and_features(doc, element, server_component):
 def _get_fullinfo_component_element(doc, item):
 	component_element = doc.createElement("component")
 	component_element.setAttribute("jid", item[u'jid'])
+	if u'node' in item:
+		component_element.setAttribute("node", item[u'node'])
 	_add_identities_and_features(doc, component_element, item)
 	if item['available']:
 		component_element.setAttribute("available", "yes")
@@ -50,6 +52,8 @@ def _get_fullinfo_component_element(doc, item):
 def _get_simple_component_element(doc, item, service_category, service_type):
 	component_element = doc.createElement("component")
 	component_element.setAttribute("jid", item[u'jid'])
+	if u'node' in item:
+		component_element.setAttribute("node", item[u'node'])
 	component_element.setAttribute("category", service_category)
 	component_element.setAttribute("type", service_type)
 	if item['available']:
