@@ -336,8 +336,17 @@ def _get_items(dispatcher, component, retries=0):
 		if len(items) > 0:
 			# Process items
 			for item in list(items):
+				# Remove items from other servers
 				if not _in_same_domain(component[u'jid'], item[u'jid']):
 					items.remove(item)
+				
+				# Remove itself if the server includes itself in the items list
+				if component[u'jid'] == item[u'jid']:
+					if 'node' in component and 'node' in item:
+						if component[u'node'] == item[u'node']:
+							items.remove(item)
+					elif 'node' not in component and 'node' not in item:
+						items.remove(item)
 			return items
 		
 		retry -= 1
@@ -460,10 +469,12 @@ def _discover_item(dispatchers, component, server):
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
 				item = _discover_item(dispatchers, item, server)
-			elif u'node' in component:
+			elif u'node' in component and u'node' in item:
 				if (  (component[u'jid'] == item[u'jid']) &
 					  (component[u'node'] != item[u'node'])  ):
 					item = _discover_item(dispatchers, item, server)
+			else:
+				item = _discover_item(dispatchers, item, server)
 	
 	return component
 
