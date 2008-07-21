@@ -100,11 +100,13 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 					               service_type[0], service_type[1], component[u'jid'],
 					               server[u'jid'] )
 					cursor.execute( """INSERT INTO  pybot_components
-					                     SET jid = %s, server_jid = %s,
+					                     SET jid = %s, node = %s, server_jid = %s,
 					                       category = %s, type = %s, available = %s
 					                     ON DUPLICATE KEY UPDATE available = %s""",
-					                (component[u'jid'], server[u'jid'],
-					                 service_type[0], service_type[1], True, True) )
+					                (component[u'jid'],
+					                 component[u'node'] if 'node' in component else None,
+					                 server[u'jid'], service_type[0], service_type[1],
+					                 True, True) )
 			
 			for service_type in server[u'unavailable_services']:
 				for component in server[u'unavailable_services'][service_type]:
@@ -112,11 +114,13 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 					               service_type[0], service_type[1], component[u'jid'],
 					               server[u'jid'])
 					cursor.execute( """INSERT INTO pybot_components
-					                    SET jid = %s, server_jid = %s,
+					                    SET jid = %s, node = %s, server_jid = %s,
 					                      category = %s, type = %s, available = %s
 					                    ON DUPLICATE KEY UPDATE available = %s""",
-					                (component[u'jid'], server[u'jid'],
-					                 service_type[0], service_type[1], False, False) )
+					                (component[u'jid'],
+					                 component[u'node'] if 'node' in component else None,
+					                 server[u'jid'], service_type[0], service_type[1],
+					                 False, False) )
 		
 		#else:                           # Offline server
 			#logging.debug('Add offline server %s', server[u'jid'])
