@@ -36,7 +36,7 @@ except ImportError:
 else:
 	CAN_UPDATE_DATABASE = True
 	
-from include import html_file_generator, cc_xml_file_generator
+from include import html_file_generator, cc_xml_file_generator, xml_file_generator
 
 
 # Load the configuration
@@ -301,6 +301,8 @@ if GENERATE_XML_FILES:
 		show_types.update(server['available_services'].keys())
 		show_types.update(server['unavailable_services'].keys())
 	
+	xml_file_generator.generate('servers.xml', servers, service_types=show_types, full_info=False,
+    only_available_components=False, minimun_uptime=None, compress=False)
 	cc_xml_file_generator.generate( directory=OUTPUT_DIRECTORY,
 	                                servers=servers, service_types=show_types,
 	                                minimun_uptime=XML_UPTIME_FILTER,
