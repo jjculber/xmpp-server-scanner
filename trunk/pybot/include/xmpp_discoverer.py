@@ -97,15 +97,10 @@ def _get_version(component, dispatcher):
 	version = {}
 	node = dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
 	                                            queryNS='jabber:iq:version'))
-	print component[u'jid']
-	print node.__str__()
 	if isResultNode(node):
-		print node.getTag('query').__str__()
-		print node.getTag('query').getChildren()
 		for element in node.getTag('query').getChildren():
 			version[element.getName()] = element.getData()
 	
-	print version
 	return version
 
 
