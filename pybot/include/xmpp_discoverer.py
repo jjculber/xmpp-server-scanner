@@ -131,8 +131,9 @@ def _guess_component_info(component):
 	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		# MUC
-		info = ( [{u'category': u'conference', u'type': u'text'}],
-		                      [u'http://jabber.org/protocol/muc'] )
+		info = ( [ {u'category': u'conference', u'type': u'text'},
+		           {u'category': u'conference', u'type': u'x-muc'} ],
+		         [u'http://jabber.org/protocol/muc'] )
 	elif jid.startswith(u'irc.'):
 		info = ( [{u'category': u'conference', u'type': u'irc'}], [] )
 	
