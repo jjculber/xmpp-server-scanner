@@ -571,7 +571,7 @@ def _get_clients(accounts):
 			#raise IOError('Can not connect to server.')
 			continue
 		if not client.auth(account['user'], account['password'], account['resource']):
-			logging.error("Can not auth as %s@%s", (account['user'], account['server']))
+			logging.error("Can not auth as %s@%s", account['user'], account['server'])
 			#raise IOError('Can not auth with server.')
 			continue
 		
