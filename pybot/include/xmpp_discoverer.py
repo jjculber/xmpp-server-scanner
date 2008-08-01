@@ -615,9 +615,9 @@ def _disconnect_clients(clients):
 def discover_servers(server_list):
 	
 	if USE_MULTIPLE_QUERY_ACCOUNTS:
-		accounts = [choice(JABBER_ACCOUNTS)]
-	else:
 		accounts = JABBER_ACCOUNTS
+	else:
+		accounts = [choice(JABBER_ACCOUNTS)]
 	
 	servers = {}
 	
