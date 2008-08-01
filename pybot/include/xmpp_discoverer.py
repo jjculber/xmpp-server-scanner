@@ -278,17 +278,15 @@ def _handle_component_available(component, server, dispatcher):
 		if 'jabber:iq:register' not in component[u'info'][1]:
 			component['available'] = False
 			services_list = server[u'unavailable_services']
-		else:
-			try:
-				if _get_version(component, dispatcher)['name'].startswith('Openfire '):
-					available = False
-			except KeyError:
-				pass
-	elif component[u'jid'].startswith('conference.irc.'):
-		try:
+		elif 'jabber:iq:version' in component[u'info'][1]:
 			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
 				available = False
-		except KeyError: # It's likely to be an Openfire IRC Gateway
+	elif component[u'jid'].startswith('conference.irc.'):
+		if 'jabber:iq:version' in component[u'info'][1]:
+			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
+				available = False
+		else:
+			# It's likely to be an Openfire IRC Gateway
 			available = False
 		
 	_normalize_identities(component)
