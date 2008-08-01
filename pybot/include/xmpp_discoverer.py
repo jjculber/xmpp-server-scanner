@@ -25,6 +25,8 @@ import xml
 
 
 from xmpp import Client, features
+from xmpp.protocol import Iq, isResultNode
+
 
 # Load the configuration
 
@@ -90,7 +92,17 @@ def _in_same_domain(parent, child):
 	else:
 		# It's a usual domain name, check until the second level
 		return (parent_match.group('fulldomain') == child_match.group('fulldomain'))
+
+
+def _get_version(component, dispatcher):
+	version = {}
+	node = dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
+	                                            queryNS='jabber:iq:version'))
+	if isResultNode(node):
+		for element in node.getTag('query').getChildren():
+			version[element.getName()] = element.getData()
 	
+	return version
 
 
 def _add_to_services_list(services_list, service_category_type, component):
@@ -115,8 +127,9 @@ def _guess_component_info(component):
 	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		# MUC
-		info = ( [{u'category': u'conference', u'type': u'text'}],
-		                      [u'http://jabber.org/protocol/muc'] )
+		info = ( [ {u'category': u'conference', u'type': u'text'},
+		           {u'category': u'conference', u'type': u'x-muc'} ],
+		         [u'http://jabber.org/protocol/muc'] )
 	elif jid.startswith(u'irc.'):
 		info = ( [{u'category': u'conference', u'type': u'irc'}], [] )
 	
@@ -181,9 +194,7 @@ def _guess_component_info(component):
 	return info
 
 
-def _handle_component_available(component, server):
-	
-	component['available'] = True
+def _normalize_identities(component):
 	
 	for identity in component[u'info'][0]:
 		
@@ -197,12 +208,23 @@ def _handle_component_available(component, server):
 			            '.irc.' in component['jid'] or
 			            component['jid'].startswith('irc.') ) and
 			      u'http://jabber.org/protocol/muc' in component[u'info'][1]):
-				_add_to_services_list( server[u'available_services'],
-				                       ('conference', 'x-muc'), component )
+				#_add_to_services_list( services_list, ('conference', 'x-muc'), component )
+				# Add fake identity
+				component[u'info'][0].append({u'category': u'conference', u'type': 'x-muc'})
 			#continue
 		
 		
 		# Adapt non standard indentities to standard equivalents
+		
+		# Openfire has tho components for the irc gateway
+		# - irc.server category:gateway type:irc with jabber:iq:gateway feature
+		# - conference.irc.server category:conference type:text without jabber:iq:gateway feature but with http://jabber.org/protocol/muc feature
+		# Add both components as irc gateway, though it's not a very good solution
+		if identity[u'category']=='gateway' and identity[u'type']=='irc':
+			identity[u'category'] = 'conference'
+		if (identity[u'category']=='conference' and identity[u'type']=='text' and
+		    '.irc.' in component[u'jid']):
+			identity[u'type'] = 'irc'
 		
 		# ejabberd1.1.3 uses pubsub:generic instead pubsub:service
 		if identity[u'category']=='pubsub' and identity[u'type']=='generic':
@@ -242,18 +264,49 @@ def _handle_component_available(component, server):
 		#
 		if identity[u'category']=='gateway' and identity[u'type']=='gmail':
 			identity[u'type'] = 'gtalk'
+
+
+def _handle_component_available(component, server, dispatcher):
+	
+	available = True
+	
+	# If it's a gateway, be sure that we can register on it, if not, treat it as a unavailable component
+	# The Openfire check is a temporary workarround
+	# http://www.igniterealtime.org/community/thread/34023
+	# http://www.igniterealtime.org/issues/browse/GATE-432
+	
+	if 'jabber:iq:gateway' in component[u'info'][1]:
+		if 'jabber:iq:register' not in component[u'info'][1]:
+			component['available'] = False
+			services_list = server[u'unavailable_services']
+		elif 'jabber:iq:version' in component[u'info'][1]:
+			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
+				available = False
+	elif component[u'jid'].startswith('conference.irc.'):
+		if 'jabber:iq:version' in component[u'info'][1]:
+			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
+				available = False
+		else:
+			# It's likely to be an Openfire IRC Gateway
+			available = False
 		
-		
+	_normalize_identities(component)
+	
+	if available:
+		component['available'] = True 
 		#Add the component
-		
-		_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
+		for identity in component[u'info'][0]:
+			_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
+	else:
+		_handle_component_unavailable(component, server)
 
 
 def _handle_component_unavailable(component, server):
 	
 	component['available'] = False
 	
-	component[u'info'] = _guess_component_info(component)
+	if component[u'info']==([], []):
+		component[u'info'] = _guess_component_info(component)
 	
 	for identity in component[u'info'][0]:
 		
@@ -391,6 +444,7 @@ def _discover_item(dispatchers, component, server):
 		
 		if len(component[u'info'][0]) > 0 and len(component[u'info'][1]) > 0:
 			# Successfull discovery
+			
 			if ONLY_USE_SUCCESFULL_CLIENT:
 				dispatchers = [dispatcher]
 			break
@@ -400,7 +454,7 @@ def _discover_item(dispatchers, component, server):
 	if (  (u'http://jabber.org/protocol/disco#info' in component[u'info'][1]) |
 	      (u'http://jabber.org/protocol/disco' in component[u'info'][1])  ):
 		needs_to_query_items = False
-		_handle_component_available(component, server)
+		_handle_component_available(component, server, dispatcher)
 		for identity in component[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
@@ -412,7 +466,7 @@ def _discover_item(dispatchers, component, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                     component[u'info'][1] )
-		_handle_component_available(component, server)
+		_handle_component_available(component, server, dispatcher)
 		needs_to_query_items = True
 	
 	elif u'jabber:iq:browse' in component[u'info'][1]: #Not sure if it's really used
@@ -427,7 +481,7 @@ def _discover_item(dispatchers, component, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                       component[u'info'][1] )
-		_handle_component_available(component, server)
+		_handle_component_available(component, server, dispatcher)
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
@@ -448,10 +502,10 @@ def _discover_item(dispatchers, component, server):
 			#Fake identities. But we aren't really sure that it's a server?
 			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 			                       component[u'info'][1] )
-			_handle_component_available(component, server)
+			_handle_component_available(component, server, dispatcher)
 		else:
 			#try:
-			_handle_component_available(component, server)
+			_handle_component_available(component, server, dispatcher)
 			#except:
 				#_handle_component_unavailable(component, server)
 	
@@ -518,7 +572,7 @@ def _get_clients(accounts):
 			#raise IOError('Can not connect to server.')
 			continue
 		if not client.auth(account['user'], account['password'], account['resource']):
-			logging.error("Can not auth as %s@%s", (account['user'], account['server']))
+			logging.error("Can not auth as %s@%s", account['user'], account['server'])
 			#raise IOError('Can not auth with server.')
 			continue
 		
