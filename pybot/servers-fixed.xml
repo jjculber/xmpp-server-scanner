@@ -215,6 +215,8 @@
 <!--   <item jid='planetjabber.info'/> -->
 <!--   <item jid='pono.mauiholm.org'/> -->
 <!--   <item jid='pono.mauiholm.org'/> -->
+<!-- portal-on.ru was not in the original file -->
+  <item jid='portal-on.ru'/>
   <item jid='prolly.org'/>
   <item jid='rooyee.biz'/>
   <item jid='schokokeks.org'/>
