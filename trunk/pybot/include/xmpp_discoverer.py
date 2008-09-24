@@ -122,8 +122,11 @@ def _guess_component_info(component):
 	
 	logging.debug('Guessing type of %s', jid)
 	
+	# Server
+	if jid in SERVER_LIST:
+		info = ( [{u'category': u'server', u'type': u'im'}], [] )
 	# Conference
-	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
+	elif ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		# MUC
 		info = ( [ {u'category': u'conference', u'type': u'text'},
@@ -142,7 +145,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'gateway', u'type': u'gadu-gadu'}], [] )
 	elif jid.startswith(u'http-ws.'):
 		info = ( [{u'category': u'gateway', u'type': u'http-ws'}], [] )
-	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
+	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2.')):
 		info = ( [{u'category': u'gateway', u'type': u'icq'}], [] )
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
 		info = ( [{u'category': u'gateway', u'type': u'msn'}], [] )
@@ -156,6 +159,8 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'gateway', u'type': u'tlen'}], [] )
 	elif jid.startswith(u'xfire.'):
 		info = ( [{u'category': u'gateway', u'type': u'xfire'}], [] )
+	elif jid.startswith((u'xmpp.', u'j2j.')):
+		info = ( [{u'category': u'gateway', u'type': u'xmpp'}], [] )
 	elif jid.startswith(u'yahoo.'):
 		info = ( [{u'category': u'gateway', u'type': u'yahoo'}], [] )
 	
@@ -170,7 +175,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
-	elif jid.startswith((u'presence.', u'webpresence.', u'status')):
+	elif jid.startswith((u'presence.', u'webpresence.', u'status.')):
 		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
@@ -188,6 +193,11 @@ def _guess_component_info(component):
 	# Store
 	elif jid.startswith((u'file.', u'disk.', u'jdisk.', u'dysk.')):
 		info = ( [{u'category': u'store', u'type': u'file'}], [] )
+	
+	
+	# Non standard
+	elif jid.startswith(u'gtalk.'):
+		info = ( [{u'category': u'gateway', u'type': u'gtalk'}], [] )
 	
 	
 	return info
@@ -212,6 +222,20 @@ def _normalize_identities(component):
 				component[u'info'][0].append({u'category': u'conference', u'type': 'x-muc'})
 			#continue
 		
+		# Change gateway/xmpp identities on gtalk transports to gateway/gtalk
+		if identity['category'] == 'gateway' and identity['type'] == 'xmpp' and (
+		        component[u'jid'].startswith('gtalk.') or (identity.has_key('name') and (
+		                identity['name'].lower().find('google') != -1 or
+		                identity['name'].lower().find('gtalk') != -1 ))):
+			# If is a gtalk transport
+			has_gtalk_identity = False
+			for iden in component[u'info'][0]:
+				if iden['category'] == 'gateway' and iden['type'] == 'gtalk':
+					has_gtalk_identity = True
+					break
+			if not has_gtalk_identity:
+				# And gateway/gtalk is not already in the identities
+				identity[u'type'] = 'gtalk'
 		
 		# Adapt non standard indentities to standard equivalents
 		
@@ -265,7 +289,21 @@ def _normalize_identities(component):
 			identity[u'type'] = 'gtalk'
 
 
+def _is_gateway(component):
+	
+	if 'jabber:iq:gateway' in component[u'info'][1]:
+		return True
+	
+	for identity in component[u'info'][0]:
+		if identity['category'] == 'gateway':
+			return True
+	
+	return False
+
+
 def _handle_component_available(component, server, dispatcher):
+	
+	_normalize_identities(component)
 	
 	available = True
 	
@@ -274,7 +312,7 @@ def _handle_component_available(component, server, dispatcher):
 	# http://www.igniterealtime.org/community/thread/34023
 	# http://www.igniterealtime.org/issues/browse/GATE-432
 	
-	if 'jabber:iq:gateway' in component[u'info'][1]:
+	if _is_gateway(component):
 		if 'jabber:iq:register' not in component[u'info'][1]:
 			component['available'] = False
 			services_list = server[u'unavailable_services']
@@ -289,8 +327,6 @@ def _handle_component_available(component, server, dispatcher):
 			# It's likely to be an Openfire IRC Gateway
 			available = False
 		
-	_normalize_identities(component)
-	
 	if available:
 		component['available'] = True 
 		#Add the component
@@ -611,8 +647,11 @@ def _disconnect_clients(clients):
 			# invalid stanzas)
 			pass
 
-
+SERVER_LIST = None
 def discover_servers(server_list):
+	
+	global SERVER_LIST
+	SERVER_LIST = server_list
 	
 	if USE_MULTIPLE_QUERY_ACCOUNTS:
 		accounts = JABBER_ACCOUNTS
