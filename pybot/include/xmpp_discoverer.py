@@ -314,7 +314,7 @@ def _handle_component_available(component, server, dispatcher):
 	
 	if _is_gateway(component):
 		if 'jabber:iq:register' not in component[u'info'][1]:
-			component['available'] = False
+			available = False
 		elif 'jabber:iq:version' in component[u'info'][1]:
 			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
 				available = False
