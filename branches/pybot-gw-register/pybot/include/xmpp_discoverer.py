@@ -541,12 +541,9 @@ def _handle_component_available(component, server, dispatcher):
 		if 'jabber:iq:register' not in component[u'info'][1]:
 			available = False
 		elif 'jabber:iq:version' in component[u'info'][1]:
-			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
-				available = False
-			else:
-				for identity in component[u'info'][0]:
-					if _test_gateway(dispatcher, component[u'jid'], identity[u'category'], identity[u'type']) == False:
-						available = False
+			for identity in component[u'info'][0]:
+				if _test_gateway(dispatcher, component[u'jid'], identity[u'category'], identity[u'type']) == False:
+					available = False
 	elif component[u'jid'].startswith('conference.irc.'):
 		# It's likely to be part of the old Openfire IRC Gateway.
 		# Their transport was separated in two components ( irc.server and conference.irc.server)
