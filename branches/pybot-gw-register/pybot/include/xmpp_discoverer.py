@@ -548,12 +548,10 @@ def _handle_component_available(component, server, dispatcher):
 					if _test_gateway(dispatcher, component[u'jid'], identity[u'category'], identity[u'type']) == False:
 						available = False
 	elif component[u'jid'].startswith('conference.irc.'):
-		if 'jabber:iq:version' in component[u'info'][1]:
-			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
-				available = False
-		else:
-			# It's likely to be an Openfire IRC Gateway
-			available = False
+		# It's likely to be part of the old Openfire IRC Gateway.
+		# Their transport was separated in two components ( irc.server and conference.irc.server)
+		# Their gateways were blocked for external users.
+		available = False
 		
 	if available:
 		component['available'] = True
