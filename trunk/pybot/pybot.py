@@ -149,6 +149,8 @@ if DO_DISCOVERY:
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
+	server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net', 'jaim.at', 'nexus.homeunix.com']
+	server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net', 'jaim.at', 'nexus.homeunix.com','jwchat.org','jabber.ru']
 	
 	if len(server_list) == 0:
 		logging.critical('The list of servers to check is empty')
