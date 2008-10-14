@@ -148,6 +148,8 @@
   <item jid='jabber.sow.as'/>
   <item jid='jabber.stammtisch.it'/>
   <item jid='jabber.tcweb.org'/>
+  <!-- jabber.thehutt.info was not in the original file -->
+  <item jid='jabber.thehutt.info'/>
   <item jid='jabber.te.ua'/>
   <item jid='jabber.tf-network.de'/>
   <item jid='jabber.ukrwest.net'/>
@@ -215,6 +217,8 @@
 <!--   <item jid='planetjabber.info'/> -->
 <!--   <item jid='pono.mauiholm.org'/> -->
 <!--   <item jid='pono.mauiholm.org'/> -->
+<!-- portal-on.ru was not in the original file -->
+  <item jid='portal-on.ru'/>
   <item jid='prolly.org'/>
   <item jid='rooyee.biz'/>
   <item jid='schokokeks.org'/>
