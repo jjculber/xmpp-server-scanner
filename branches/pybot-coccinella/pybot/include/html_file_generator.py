@@ -343,11 +343,18 @@ def get_rows(servers, types):
 
 
 def generate( filename, servers, types, sort_by=None, sort_links=None,
-              compress=False ):
+              minimun_uptime=0, compress=False ):
 	"""Generate a html file with the servers information.
 	Don't display times_offline, to avoid a database access.
 	If sort_links is not None, it will be a dictionary with the following keys:
 	'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
+	
+	if minimun_uptime>0:
+		# Filter by uptime
+		_servers = {}
+		_servers.update([(k,v) for k,v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])
+		servers = _servers
+	
 	
 	tmpfilename = "%s.tmp" % filename
 	
@@ -654,7 +661,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		logging.info('%s generated', filename)
 
 
-def generate_all(directory, filename_prefix, servers, types, compress=False):
+def generate_all( directory, filename_prefix, servers, types, minimun_uptime=0,
+                  compress=False ):
 	'''Generate a set of HTML files sorted by different columns'''
 	
 	extension = '.html'
@@ -663,7 +671,8 @@ def generate_all(directory, filename_prefix, servers, types, compress=False):
 	
 	# Name
 	generate( _get_filename( directory, filename_prefix, extension=extension ),
-	          servers, types, sort_links=sort_links, compress=compress )
+	          servers, types, sort_links=sort_links, minimun_uptime=minimun_uptime,
+              compress=compress )
 	#generate( _get_filename( directory, filename_prefix, service_type='server',
 	                         #extension=extension ),
 	          #servers, types, sort_by='server', sort_links=sort_links,
@@ -673,13 +682,13 @@ def generate_all(directory, filename_prefix, servers, types, compress=False):
 		generate( _get_filename( directory, filename_prefix, by=service_type,
 		                         extension=extension ),
 		          servers, types, sort_by=service_type, sort_links=sort_links,
-		          compress=compress )
+		          minimun_uptime=minimun_uptime, compress=compress )
 	
 	generate( _get_filename( directory, filename_prefix, by='offline_since',
 	                         extension=extension ),
 	          servers, types, sort_by='offline_since', sort_links=sort_links,
-	          compress=compress )
+	          minimun_uptime=minimun_uptime, compress=compress )
 	generate( _get_filename( directory, filename_prefix, by='times_online',
 	                         extension=extension ),
 	          servers, types, sort_by='times_online', sort_links=sort_links,
-	          compress=compress )
+	          minimun_uptime=minimun_uptime, compress=compress )
