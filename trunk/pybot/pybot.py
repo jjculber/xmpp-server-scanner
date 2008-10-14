@@ -64,6 +64,9 @@ GENERATE_HTML_FILES = cfg.getboolean("Output configuration", "GENERATE_HTML_FILE
 GENERATE_XML_FILES  = cfg.getboolean("Output configuration", "GENERATE_XML_FILES")
 COMPRESS_FILES      = cfg.getboolean("Output configuration", "COMPRESS_FILES")
 
+HTML_UPTIME_FILTER   = cfg.getfloat("Output configuration", "HTML_UPTIME_FILTER")
+XML_UPTIME_FILTER   = cfg.getfloat("Output configuration", "XML_UPTIME_FILTER")
+
 HTML_FILES_PREFIX   = cfg.get("Output configuration", "HTML_FILES_PREFIX")
 XML_FILENAME        = cfg.get("Output configuration", "XML_FILENAME")
 
@@ -292,7 +295,8 @@ if GENERATE_HTML_FILES:
 	html_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
 	                                  filename_prefix=HTML_FILES_PREFIX,
 	                                  servers=servers, types=show_types,
+	                                  minimun_uptime=HTML_UPTIME_FILTER,
 	                                  compress=COMPRESS_FILES )
 
 if GENERATE_XML_FILES:
-	xml_file_generator.generate(XML_FILE, servers)
+	xml_file_generator.generate(XML_FILE, servers, minimun_uptime=XML_UPTIME_FILTER)
