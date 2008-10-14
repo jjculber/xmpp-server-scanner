@@ -44,11 +44,11 @@ from xml.dom.minidom import getDOMImplementation
 	#_add_features(doc, element, server_component)
 
 
-def generate(directory, servers, service_types, minimun_uptime=None, compress=False):
+def generate(directory, servers, service_types, minimun_uptime=0, compress=False):
 	"""Generate several XML files with the information stored in servers.
 	It will generate one fine per type with only the available elements"""
 	
-	if minimun_uptime is not None:
+	if minimun_uptime>0:
 		# Filter by uptime
 		_servers = {}
 		_servers.update([(k, v) for k, v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])
