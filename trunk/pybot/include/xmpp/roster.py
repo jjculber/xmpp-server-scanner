@@ -74,10 +74,17 @@ class Roster(PlugIn):
             self._data[jid]['name']=item.getAttr('name')
             self._data[jid]['ask']=item.getAttr('ask')
             self._data[jid]['subscription']=item.getAttr('subscription')
+            if item.getAttr('subscription') == 'both':
+                self._data[jid]['subs_from_status'] = 'subscribed'
+                self._data[jid]['subs_to_status'] = 'subscribed'
+            elif item.getAttr('subscription') == 'from':
+                self._data[jid]['subs_from_status'] = 'subscribed'
+            if item.getAttr('subscription') == 'to':
+                self._data[jid]['subs_to_status'] = 'subscribed'
             self._data[jid]['groups']=[]
             if not self._data[jid].has_key('resources'): self._data[jid]['resources']={}
             for group in item.getTags('group'): self._data[jid]['groups'].append(group.getData())
-        self._data[self._owner.User+'@'+self._owner.Server]={'resources':{},'name':None,'ask':None,'subscription':None,'groups':None,}
+        self._data[self._owner.User+'@'+self._owner.Server]={'resources':{},'name':None,'ask':None,'subscription':None,'subs_from_status':None,'subs_to_status':None,'groups':None,}
         self.set=1
         raise NodeProcessed   # a MUST. Otherwise you'll get back an <iq type='error'/>
 
@@ -85,7 +92,7 @@ class Roster(PlugIn):
         """ Presence tracker. Used internally for setting items' resources state in
             internal roster representation. """
         jid=JID(pres.getFrom())
-        if not self._data.has_key(jid.getStripped()): self._data[jid.getStripped()]={'name':None,'ask':None,'subscription':'none','groups':['Not in roster'],'resources':{}}
+        if not self._data.has_key(jid.getStripped()): self._data[jid.getStripped()]={'name':None,'ask':None,'subscription':'none','subs_from_status':None,'subs_to_status':None,'groups':['Not in roster'],'resources':{}}
 
         item=self._data[jid.getStripped()]
         typ=pres.getType()
@@ -98,7 +105,9 @@ class Roster(PlugIn):
             if pres.getTag('priority'): res['priority']=pres.getPriority()
             if not pres.getTimestamp(): pres.setTimestamp()
             res['timestamp']=pres.getTimestamp()
+            item['subs_to_status'] = 'subscribed'
         elif typ=='unavailable' and item['resources'].has_key(jid.getResource()): del item['resources'][jid.getResource()]
+        elif typ=='subscribe': item['subs_from_status'] = 'pending'
         # Need to handle type='error' also
 
     def _getItemData(self,jid,dataname):
@@ -136,6 +145,12 @@ class Roster(PlugIn):
     def getRawItem(self,jid):
         """ Returns roster item 'jid' representation in internal format. """
         return self._data[jid[:(jid+'/').find('/')]]
+    def getSubscriptionFromStatus(self,jid):
+        """ Returns the status of the subscription request of contact 'jid' to us. Can be None, 'pending' or 'subscribed'"""
+        return self._getItemData(jid,'subs_from_status')
+    def getSubscriptionToStatus(self,jid):
+        """ Returns the status of the subscription request to contact 'jid'. Can be None, 'pending' or 'subscribed'"""
+        return self._getItemData(jid,'subs_to_status')
     def getShow(self, jid):
         """ Returns 'show' value of contact 'jid'. 'jid' should be a full (not bare) JID."""
         return self._getResourceData(jid,'show')
@@ -171,14 +186,18 @@ class Roster(PlugIn):
         if self._data.has_key(item): return self._data[item]
     def Subscribe(self,jid):
         """ Send subscription request to JID 'jid'."""
+        self._data[jid]['subs_to_status'] = 'pending'
         self._owner.send(Presence(jid,'subscribe'))
     def Unsubscribe(self,jid):
         """ Ask for removing our subscription for JID 'jid'."""
+        self._data[jid]['subs_to_status'] = None
         self._owner.send(Presence(jid,'unsubscribe'))
     def Authorize(self,jid):
         """ Authorise JID 'jid'. Works only if these JID requested auth previously. """
+        self._data[jid]['subs_from_status'] = 'subscribed'
         self._owner.send(Presence(jid,'subscribed'))
     def Unauthorize(self,jid):
         """ Unauthorise JID 'jid'. Use for declining authorisation request 
             or for removing existing authorization. """
+        self._data[jid]['subs_from_status'] = None
         self._owner.send(Presence(jid,'unsubscribed'))
