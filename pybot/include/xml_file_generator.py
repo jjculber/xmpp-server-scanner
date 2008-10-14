@@ -5,8 +5,14 @@ import logging
 import shutil
 from xml.dom.minidom import getDOMImplementation
 
-def generate(filename, servers):
+def generate(filename, servers, minimun_uptime=0):
 	"""Generate a XML file with the information stored in servers"""
+	
+	if minimun_uptime>0:
+		# Filter by uptime
+		_servers = {}
+		_servers.update([(k,v) for k,v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])
+		servers = _servers
 	
 	tmpfilename = filename + '.tmp'
 	logging.info('Generating XML file "%s"', tmpfilename)
