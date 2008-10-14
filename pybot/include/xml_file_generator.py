@@ -65,7 +65,7 @@ def _get_simple_component_element(doc, item, service_category, service_type):
 
 
 def generate(filename, servers, service_types=None, full_info=False,
-    only_available_components=False, minimun_uptime=None, compress=False):
+    only_available_components=False, minimun_uptime=0, compress=False):
 	"""Generate a XML file with the information stored in servers.
 	If full_info is True, service_types will be ignored"""
 	
@@ -78,7 +78,7 @@ def generate(filename, servers, service_types=None, full_info=False,
 			_servers.update([(k,v) for k,v in servers.iteritems() if len(set(service_types) & set(v['available_services'].keys() + v['unavailable_services'].keys())) > 0])
 		servers = _servers
 	
-	if minimun_uptime is not None:
+	if minimun_uptime>0:
 		# Filter by uptime
 		_servers = {}
 		_servers.update([(k,v) for k,v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])
@@ -167,7 +167,7 @@ def generate(filename, servers, service_types=None, full_info=False,
 
 
 def generate_all(directory, filename_prefix, servers, service_types=None,
-                 only_available_components=False, minimun_uptime=None, compress=False):
+                 only_available_components=False, minimun_uptime=0, compress=False):
 	
 	extension = '.xml'
 	
