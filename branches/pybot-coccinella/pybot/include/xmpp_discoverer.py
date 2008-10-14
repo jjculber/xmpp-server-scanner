@@ -24,12 +24,11 @@ import sys
 import xml
 
 
-from xmpp import Client, features
-from xmpp.protocol import Iq, isResultNode
+from xmpp import Client, features, NodeProcessed
+from xmpp.protocol import DataForm, Iq, isResultNode, Message, Presence
 
 
 # Load the configuration
-
 SCRIPT_DIR = abspath(dirname(sys.argv[0]))
 cfg = SafeConfigParser()
 cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
@@ -57,6 +56,19 @@ del(account_number)
 
 if len(JABBER_ACCOUNTS) == 0:
 	raise Exception("No jabber accounts found. Check your configuration")
+
+
+# Gateway accounts
+
+GATEWAY_ACCOUNTS = {}
+for section in cfg.sections():
+	# Find [category type gateway account] sections
+	if section.endswith(' gateway account'):
+		words = section.split()
+		GATEWAY_ACCOUNTS[(words[0], words[1])] = dict(cfg.items(section))
+
+del(words)
+del(section)
 
 del(cfg)
 
@@ -96,6 +108,27 @@ def _in_same_domain(parent, child):
 		# It's a usual domain name, check until the second level
 		return (parent_match.group('fulldomain') == child_match.group('fulldomain'))
 
+MESSAGES = {}
+
+def _handle_messages(con, message):
+	'''Store received messages'''
+	#message = Message(node=event)
+	
+	typ = message.getType()
+	fromjid = message.getFrom().getStripped()
+	body = message.getTagData('body')
+	logging.debug('Handling %s message from %s: %s', typ, fromjid, body)
+	
+	if MESSAGES.has_key(fromjid):
+		if MESSAGES[fromjid].has_key(typ):
+			MESSAGES[fromjid][typ].append(body)
+		else:
+			MESSAGES[fromjid][typ] = [body]
+	else:
+		MESSAGES[fromjid] = {typ: [body]}
+	
+	raise NodeProcessed
+
 
 def _get_version(component, dispatcher):
 	version = {}
@@ -106,6 +139,197 @@ def _get_version(component, dispatcher):
 			version[element.getName()] = element.getData()
 	
 	return version
+
+
+def _get_reg_fields(dispatcher, jid, only_required=True):
+	'''Get the input fields from the registration form.
+	Returns a dictionary {field:value} where value is None if the form field is empty'''
+	
+	reg_fields = {}
+	
+	reg_info = features.getRegInfo(dispatcher._owner, jid)
+	
+	form = reg_info.getTag('query').getTag('x', attrs={'type':'form'}, namespace='jabber:x:data')
+	
+	if form: # x:data form is present
+		# TODO: Rewrite it using DataForm class?
+		if form.getTag('registered'):
+			logging.warning('Already registered in %s gateway', jid)
+		
+		fields = [field for field in form.getTags('field') if field.getAttr('type') != 'fixed']
+		has_required_fields = False
+		
+		for field in fields:
+			if only_required and field.getTag('required'):
+				if has_required_fields == False:
+					has_required_fields = True
+					# Previous fields aren't required, so delete them
+					reg_fields = {}
+			if (not has_required_fields) or field.getTag('required'):
+				if field.getTag('value'):
+					reg_fields[field.getAttr('var')] = field.getTag('value').getData() or None
+				else:
+					reg_fields[field.getAttr('var')] = None
+			else:
+				logging.debug('Ignoring %s field not required in %s gateway',
+				                field.getAttr('var'), jid)
+	else: # iq:register fields
+		reg_fields = dict(
+		      [(children.getName(), children.getData()) for children in reg_info.getTag('query').getChildren() \
+		          if children.getName() in (
+		                'username', 'nick', 'password', 'name', 'first', 'last',
+		                'email', 'address', 'city', 'state', 'zip', 'phone', 'url',
+		                'date', 'misc', 'text', 'key')])
+	
+	return reg_fields, bool(form)
+
+
+def _unregister(dispatcher, roster, jid):
+	'''Unregister from gaweway. Used internally by _test_gateway()'''
+	
+	if features.unregister(dispatcher._owner, jid) != 1:
+		logging.error('Error unregistering from %s gateway', jid)
+	else:
+		logging.debug('Unregistering from %s gateway', jid)
+	
+	roster.delItem(jid)
+
+
+def _try_register(dispatcher, jid, account, use_data_form):
+	'''Try to register and unregister as specified on XEP-0100'''
+	
+	# Perform registration
+	
+	if use_data_form:
+		reg_iq = Iq(to=jid, typ='set', queryNS='jabber:iq:register')
+		data_form = DataForm('submit', account)
+		
+		reg_iq.getTag('query').addChild(node=data_form)
+		node = dispatcher.SendAndWaitForResponse(reg_iq)
+	else:
+		
+		if features.register(dispatcher._owner, jid, info=account) == 1:
+			# Success
+			logging.debug('Registered on %s gateway', jid)
+		else:
+			#print dispatcher._owner.lastErrCode.encode('utf-8'), ' ', dispatcher._owner.lastErr.encode('utf-8')
+			logging.debug('Can not register on %s gateway (%s: %s)', jid,
+			              dispatcher._owner.lastErrCode, dispatcher._owner.lastErr)
+			return False
+	
+	# TODO: change variable name
+	cl = dispatcher._owner
+	roster = cl.getRoster()
+	
+	# Seconds to wait
+	# A openfire gtalk gateway on localhost can take 21 seconds on inform of a
+	# invalid username/password
+	max_wait = 30
+	
+	# Wait for a error message (Openfire gateways send messages)
+	for time in range(0, max_wait):
+		if (  MESSAGES.has_key(jid) and MESSAGES[jid].has_key('error')
+		      and len(MESSAGES[jid]['error']) > 0 ) :
+			for message in MESSAGES[jid]['error']:
+				logging.warning('Error message received from %s gateway: %s', jid, message)
+			MESSAGES[jid]['error'] = []
+			_unregister(dispatcher, roster, jid)
+			return False
+			#break
+		cl.Process(1)
+	
+	if time < max_wait-1:
+		_unregister(dispatcher, roster, jid)
+		return False
+	
+	
+	# Perform subscriptions
+	
+	# Wait subscrition request
+	for time in range(0, max_wait):
+		if jid in roster.keys() and roster.getSubscriptionFromStatus(jid) != None:
+			break
+		cl.Process(1)
+	
+	if time >= max_wait-1:
+		# The gateway didn't requested subscription
+		logging.debug('Subcription request from %s gateway not received', jid)
+		_unregister(dispatcher, roster, jid)
+		return False
+	
+	if roster.getSubscriptionFromStatus(jid) == 'pending':
+		roster.Authorize(jid)
+	
+	if roster.getSubscriptionToStatus(jid) == None:
+		roster.Subscribe(jid)
+	for time in range(0, max_wait):
+		if roster.getSubscriptionToStatus(jid) == 'subscribed':
+			break
+		cl.Process(1)
+	
+	if time >= max_wait-1:
+		# The gateway rejected our subscription request
+		logging.debug('Subcription request rejected by %s gateway', jid)
+		_unregister(dispatcher, roster, jid)
+		return False
+	
+	# Try to login
+	dispatcher.send(Presence(jid))
+	for time in range(0,max_wait):
+		if len(roster.getResources(jid)) > 0:
+			break
+		cl.Process(1)
+	
+	if time >= max_wait-1:
+		# Login failed
+		logging.debug('Can not login on %s gateway', jid)
+		_unregister(dispatcher, roster, jid)
+		return False
+	
+	logging.debug('Successfull login on %s gateway', jid)
+	
+	# Successfull registration, now unregister
+	_unregister(dispatcher, roster, jid)
+	return True
+
+
+def _test_gateway(dispatcher, jid, service_category, service_type):
+	'''Select the account data and try to register on a gateway'''
+	
+	# Guess if the xmpp gateway is a GoogleTalk gateway
+	# If so, use Google account
+	if service_category == 'gateway' and service_type == 'xmpp' and  jid.startswith('gtalk.'):
+		# TODO: Check also the service Name from service discovery
+		raise Exception('Not needed')
+		service_type = 'gtalk'
+	
+	
+	if (service_category, service_type) in GATEWAY_ACCOUNTS:
+		account = GATEWAY_ACCOUNTS[(service_category, service_type)]
+		
+		required_fields, is_form = _get_reg_fields(dispatcher, jid)
+		
+		fields_not_available = [field for field, value in required_fields.iteritems() if field not in account and value is None]
+		if fields_not_available:
+			logging.error('Not enough data to test register on %s %s/%s gateway %s',
+			              jid, service_category, service_type, str(fields_not_available))
+			return True
+		
+		account = dict([(field, account[field] if field in account else value) for field, value in required_fields.iteritems()])
+		
+		# Openfire XMPP gateway uses username as the Jabber ID
+		# J2J Transport (http://JRuDevels.org) Twisted-version uses username and server
+		# Openfire doesn't check if it's a valid JID, so this is unnecesary
+		# but could be neccesary in the future
+		if service_category == 'gateway' and service_type == 'xmpp' and 'server' not in account:
+			account['username'] = '%s@%s' % ( account['username'],
+			                  GATEWAY_ACCOUNTS[('gateway', 'xmpp')]['server'] )
+		
+		return _try_register(dispatcher._owner, jid, account, is_form)
+		
+	else:
+		# We can't test the gateway, assume that it works
+		return True
 
 
 def _add_to_services_list(services_list, service_category_type, component):
@@ -126,8 +350,11 @@ def _guess_component_info(component):
 	
 	logging.debug('Guessing type of %s', jid)
 	
+	# Server
+	if jid in SERVER_LIST:
+		info = ( [{u'category': u'server', u'type': u'im'}], [] )
 	# Conference
-	if ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
+	elif ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		# MUC
 		info = ( [ {u'category': u'conference', u'type': u'text'},
@@ -146,7 +373,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'gateway', u'type': u'gadu-gadu'}], [] )
 	elif jid.startswith(u'http-ws.'):
 		info = ( [{u'category': u'gateway', u'type': u'http-ws'}], [] )
-	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2')):
+	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2.')):
 		info = ( [{u'category': u'gateway', u'type': u'icq'}], [] )
 	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
 		info = ( [{u'category': u'gateway', u'type': u'msn'}], [] )
@@ -160,6 +387,8 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'gateway', u'type': u'tlen'}], [] )
 	elif jid.startswith(u'xfire.'):
 		info = ( [{u'category': u'gateway', u'type': u'xfire'}], [] )
+	elif jid.startswith((u'xmpp.', u'j2j.')):
+		info = ( [{u'category': u'gateway', u'type': u'xmpp'}], [] )
 	elif jid.startswith(u'yahoo.'):
 		info = ( [{u'category': u'gateway', u'type': u'yahoo'}], [] )
 	
@@ -174,7 +403,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
-	elif jid.startswith((u'presence.', u'webpresence.', u'status')):
+	elif jid.startswith((u'presence.', u'webpresence.', u'status.')):
 		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
@@ -192,6 +421,11 @@ def _guess_component_info(component):
 	# Store
 	elif jid.startswith((u'file.', u'disk.', u'jdisk.', u'dysk.')):
 		info = ( [{u'category': u'store', u'type': u'file'}], [] )
+	
+	
+	# Non standard
+	elif jid.startswith(u'gtalk.'):
+		info = ( [{u'category': u'gateway', u'type': u'gtalk'}], [] )
 	
 	
 	return info
@@ -216,6 +450,20 @@ def _normalize_identities(component):
 				component[u'info'][0].append({u'category': u'conference', u'type': 'x-muc'})
 			#continue
 		
+		# Change gateway/xmpp identities on gtalk transports to gateway/gtalk
+		if identity['category'] == 'gateway' and identity['type'] == 'xmpp' and (
+		        component[u'jid'].startswith('gtalk.') or (identity.has_key('name') and (
+		                identity['name'].lower().find('google') != -1 or
+		                identity['name'].lower().find('gtalk') != -1 ))):
+			# If is a gtalk transport
+			has_gtalk_identity = False
+			for iden in component[u'info'][0]:
+				if iden['category'] == 'gateway' and iden['type'] == 'gtalk':
+					has_gtalk_identity = True
+					break
+			if not has_gtalk_identity:
+				# And gateway/gtalk is not already in the identities
+				identity[u'type'] = 'gtalk'
 		
 		# Adapt non standard indentities to standard equivalents
 		
@@ -269,7 +517,21 @@ def _normalize_identities(component):
 			identity[u'type'] = 'gtalk'
 
 
+def _is_gateway(component):
+	
+	if 'jabber:iq:gateway' in component[u'info'][1]:
+		return True
+	
+	for identity in component[u'info'][0]:
+		if identity['category'] == 'gateway':
+			return True
+	
+	return False
+
+
 def _handle_component_available(component, server, dispatcher):
+	
+	_normalize_identities(component)
 	
 	available = True
 	
@@ -278,25 +540,21 @@ def _handle_component_available(component, server, dispatcher):
 	# http://www.igniterealtime.org/community/thread/34023
 	# http://www.igniterealtime.org/issues/browse/GATE-432
 	
-	if 'jabber:iq:gateway' in component[u'info'][1]:
+	if _is_gateway(component):
 		if 'jabber:iq:register' not in component[u'info'][1]:
-			component['available'] = False
-			services_list = server[u'unavailable_services']
-		elif 'jabber:iq:version' in component[u'info'][1]:
-			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
-				available = False
-	elif component[u'jid'].startswith('conference.irc.'):
-		if 'jabber:iq:version' in component[u'info'][1]:
-			if _get_version(component, dispatcher)['name'].startswith('Openfire '):
-				available = False
-		else:
-			# It's likely to be an Openfire IRC Gateway
 			available = False
+		elif 'jabber:iq:version' in component[u'info'][1]:
+			for identity in component[u'info'][0]:
+				if _test_gateway(dispatcher, component[u'jid'], identity[u'category'], identity[u'type']) == False:
+					available = False
+	elif component[u'jid'].startswith('conference.irc.'):
+		# It's likely to be part of the old Openfire IRC Gateway.
+		# Their transport was separated in two components ( irc.server and conference.irc.server)
+		# Their gateways were blocked for external users.
+		available = False
 		
-	_normalize_identities(component)
-	
 	if available:
-		component['available'] = True 
+		component['available'] = True
 		#Add the component
 		for identity in component[u'info'][0]:
 			_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
@@ -579,6 +837,7 @@ def _get_clients(accounts):
 			#raise IOError('Can not auth with server.')
 			continue
 		
+		client.RegisterHandler('message', _handle_messages)
 		client.sendInitPresence()
 		client.Process(1)
 		
@@ -615,8 +874,11 @@ def _disconnect_clients(clients):
 			# invalid stanzas)
 			pass
 
-
+SERVER_LIST = None
 def discover_servers(server_list):
+	
+	global SERVER_LIST
+	SERVER_LIST = server_list
 	
 	if USE_MULTIPLE_QUERY_ACCOUNTS:
 		accounts = JABBER_ACCOUNTS
