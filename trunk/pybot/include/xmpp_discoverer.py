@@ -79,7 +79,10 @@ def _in_same_domain(parent, child):
 	parent_match = URLREGEXP.search(parent)
 	child_match = URLREGEXP.search(child)
 	
-	if child_match.group('tld') == 'localhost':
+	if child_match is None:
+		# The child url is not an url
+		return False
+	elif child_match.group('tld') == 'localhost':
 		return True
 	elif 'domain' not in child_match.groupdict():
 		return True
