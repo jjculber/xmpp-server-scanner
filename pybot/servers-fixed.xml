@@ -3,6 +3,8 @@
 <query xmlns='http://jabber.org/protocol/disco#items'>
   <item jid='12jabber.com'/>
   <item jid='12jabber.net'/>
+  <!-- 21region.org was not in the original file -->
+  <item jid='21region.org'/>
 <!--   <item jid='2on.net'/> -->
   <item jid='4business.nl'/>
   <item jid='911910.cn'/>
