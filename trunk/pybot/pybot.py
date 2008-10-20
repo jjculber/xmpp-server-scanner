@@ -30,9 +30,11 @@ from include.xmpp import simplexml
 from include import xmpp_discoverer
 
 try:
+	from MySQLdb import MySQLError
 	from include import database_updater
 except ImportError:
 	CAN_UPDATE_DATABASE = False
+	raise
 else:
 	CAN_UPDATE_DATABASE = True
 	
@@ -269,10 +271,14 @@ else:
 # Now dump the information to the dataabase
 
 if UPDATE_DATABASE and not CAN_UPDATE_DATABASE:
-	logging.error("Can't update the database. Is MySQLdb module available?")
+	logging.critical("Can't update the database. Is MySQLdb module available?")
 elif UPDATE_DATABASE and CAN_UPDATE_DATABASE:
-	database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
-	                                  DBDATABASE, servers )
+	try:
+		database_updater.update_database( DBUSER, DBPASSWORD, DBHOST,
+		                                  DBDATABASE, servers )
+	except MySQLError:
+		# TODO: database_updater should raise a custom exception
+			logging.critical("Can't update the database.", exc_info=sys.exc_info())
 
 
 # And build the HTML pages and the XML
