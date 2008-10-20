@@ -15,84 +15,78 @@ RESOURCE            = pybot
 SERVER              = jabber.example.com
 
 
-[Jabber account 2]
-USER                = xxxxxxx
-PASSWORD            = xxxxxxxx
-RESOURCE            = pybot
-SERVER              = jabberes.org
+# [Jabber account 2]
+# USER                = xxxxxxx
+# PASSWORD            = xxxxxxxx
+# RESOURCE            = pybot
+# SERVER              = jabberes.org
 
 
 # Accounts to test gateways
 # They doesn't need to be real accounts
 # [service_category service_type gateway account]
-; # AIM Terms of Service seems to forbid use with bots or third party software
-; [gateway aim gateway account]
-; username            = 1234
-; password            = 1234
-; 
-; [gateway gadu-gadu gateway account]
-; username            = 1234
-; uin                 = 1234
-; password            = 1234
-
-[gateway gtalk gateway account]
-username            = xxxxxxxxxxxxxxxx@gmail.com
-password            = xxxxxxxx
-
-; # ICQ Terms of Service seems to forbid use with bots or third party software
-; [gateway icq gateway account]
-; username            = 1234
-; password            = 1234
-; 
-; [conference irc gateway account]
-; username            = 1234
-; password            = 1234
-; nick                = 1234
-; 
-; # MSN Terms of Service seems to forbid use with bots or third party software
-; [gateway msn gateway account]
-; username            = 1234@hotmail.com
-; password            = 1234
-; 
-; # QQ Terms of Service seems to forbid use with bots or third party software
-; [gateway qq gateway account]
-; username            = 1234
-; password            = 1234
-; 
-; [gateway sms gateway account]
-; username            = 1234
-; # url                 =
-; # phone               =
-; password            = 1234
-; 
-; [gateway smtp gateway account]
-; username            = 1234
-; password            = 1234
-; 
-; [gateway sip gateway account]
-; username            = 1234
-; password            = 1234
-; 
-; [gateway tlen gateway account]
-; username            = 1234
-; password            = 1234
-
-; [gateway xmpp gateway account]
-; username            = 1234
-; domain              = 1234
-; server              = 1234
-; password            = 1234
-
-[gateway xmpp gateway account]
-username            = xxxxxx
-; domain              = jabber.example.com
-server              = jabber.example.com
-password            = xxxxxx
-
-[gateway yahoo gateway account]
-; username            = xxxxxxxxxxxxxxxx@yahoo.es
-username            = xxxxxxxxxxxxxxxx
-password            = xxxxxxxx
+# # AIM Terms of Service seems to forbid use with bots or third party software
+# [gateway aim gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [gateway gadu-gadu gateway account]
+# username            = 1234
+# uin                 = 1234
+# password            = 1234
+# 
+# [gateway gtalk gateway account]
+# username            = xxxxxxxxxxxxxxxx@gmail.com
+# password            = xxxxxxxx
+# 
+# # ICQ Terms of Service seems to forbid use with bots or third party software
+# [gateway icq gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [conference irc gateway account]
+# username            = 1234
+# password            = 1234
+# nick                = 1234
+# 
+# # MSN Terms of Service seems to forbid use with bots or third party software
+# [gateway msn gateway account]
+# username            = 1234@hotmail.com
+# password            = 1234
+# 
+# # QQ Terms of Service seems to forbid use with bots or third party software
+# [gateway qq gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [gateway sms gateway account]
+# username            = 1234
+# # url                 =
+# # phone               =
+# password            = 1234
+# 
+# [gateway smtp gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [gateway sip gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [gateway tlen gateway account]
+# username            = 1234
+# password            = 1234
+# 
+# [gateway xmpp gateway account]
+# username            = xxxxxx
+# # domain              = jabber.example.com
+# server              = jabber.example.com
+# password            = xxxxxx
+# 
+# [gateway yahoo gateway account]
+# # username            = xxxxxxxxxxxxxxxx@yahoo.es
+# username            = xxxxxxxxxxxxxxxx
+# password            = xxxxxxxx
 
 
 
@@ -159,7 +153,6 @@ XML_FILENAME        = servers-fullinfo.xml
 [Server list]
 USEURL              = False
 SERVERS_URL         = http://www.jabber.org/basicservers.xml
-#SERVERS_FILE       = servers-fixed.xml
 SERVERS_FILE        = servers-fixed.xml
 
 [Logs]
