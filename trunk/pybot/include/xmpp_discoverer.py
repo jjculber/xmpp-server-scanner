@@ -314,7 +314,7 @@ def _test_gateway(client, jid, service_category, service_type):
 		if required_fields is None:
 			# TODO: Should be a exception catching
 			# The component didn't gave us the data
-			logging.warning'Can not fetch the fields needed to register on %s gateway', jid)
+			logging.warning('Can not fetch the fields needed to register on %s gateway', jid)
 			return False
 		
 		fields_not_available = [field for field, value in required_fields.iteritems() if field not in account and value is None]
