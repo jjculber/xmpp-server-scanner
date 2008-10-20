@@ -175,7 +175,7 @@ if DO_DISCOVERY:
 		f.close()
 		
 	except IOError:
-		logging.warning( "Error loading servers data in file servers.dump. Is the script executed for first time?",
+		logging.warning( "Error loading servers data in file %s. Is the script executed for first time?" % SERVERS_DUMP_FILE,
 		                 exc_info=sys.exc_info() )
 		for server in servers.itervalues():
 			if offline(server):
@@ -238,14 +238,17 @@ if DO_DISCOVERY:
 			pickle.dump(servers, f, -1)
 			f.close()
 		except IOError:
-			logging.error("Error saving servers data in servers.dump")
+			logging.error("Error saving servers data in %s" % SERVERS_DUMP_FILE)
 else:
 	try:
+		logging.info("Skiping discovery proccess. Will use the data stored in %s file." % SERVERS_DUMP_FILE,
+		             exc_info=sys.exc_info())
 		f = open(SERVERS_DUMP_FILE, 'rb')
 		servers = pickle.load(f)
 		f.close()
 	except IOError:
-		logging.critical("Error loading servers data in file servers.dump", exc_info=sys.exc_info())
+		logging.critical("Error loading servers data from file %s" % SERVERS_DUMP_FILE,
+		                 exc_info=sys.exc_info())
 		raise
 
 #for jid, server in sorted(servers.iteritems()):
