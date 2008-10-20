@@ -149,6 +149,10 @@ def _get_reg_fields(client, jid, only_required=True):
 	
 	reg_info = features.getRegInfo(client, jid)
 	
+	if not isResultNode(reg_info):
+		# Should raise an exception
+		return None
+	
 	form = reg_info.getTag('query').getTag('x', attrs={'type':'form'}, namespace='jabber:x:data')
 	
 	if form: # x:data form is present
@@ -306,6 +310,11 @@ def _test_gateway(client, jid, service_category, service_type):
 		account = GATEWAY_ACCOUNTS[(service_category, service_type)]
 		
 		required_fields, is_form = _get_reg_fields(client, jid)
+		
+		if required_fields is None:
+			# Should be a exception catching
+			# The component didn't gave us the data
+			return False
 		
 		fields_not_available = [field for field, value in required_fields.iteritems() if field not in account and value is None]
 		if fields_not_available:
