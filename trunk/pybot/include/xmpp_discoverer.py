@@ -217,7 +217,6 @@ def _try_register(client, jid, account, use_data_form):
 			              client.lastErrCode, client.lastErr)
 			return False
 	
-	# TODO: change variable name
 	roster = client.getRoster()
 	
 	# Seconds to wait
@@ -586,7 +585,6 @@ def _get_item_info(client, component, retries=0):
 		while retry >= 0:
 			try:
 				if u'node' in component:
-					# TODO: Don't use _owner to get the client
 					logging.debug( 'Trying to discover component %s (node %s) using %s@%s/%s: %d/%d retries left',
 					               component[u'jid'], component[u'node'],
 					               client.User, client.Server, client.Resource,
@@ -594,7 +592,6 @@ def _get_item_info(client, component, retries=0):
 					info = features.discoverInfo( client.Dispatcher,
 					                    component[u'jid'], component[u'node'])
 				else:
-					# TODO: Don't use _owner to get the client
 					logging.debug( 'Trying to discover component %s using %s@%s/%s: %d/%d retries left',
 					               component[u'jid'], client.User, client.Server,
 					               client.Resource, retry, retries)
@@ -631,7 +628,6 @@ def _get_items(client, component, retries=0):
 	while retry >= 0:
 		try:
 			if u'node' in component:
-				# TODO: Don't use _owner to get the client
 				logging.debug( 'Trying to discover components of %s (node %s) using %s@%s/%s: %d/%d retries left',
 				               component[u'jid'], component[u'node'],
 				               client.User, client.Server, client.Resource,
@@ -639,7 +635,6 @@ def _get_items(client, component, retries=0):
 				items = features.discoverItems( client.Dispatcher,
 				                       component[u'jid'], component[u'node'] )
 			else:
-				# TODO: Don't use _owner to get the client
 				logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
 				               component[u'jid'], client.User, client.Server,
 				               client.Resource, retry, retries )
