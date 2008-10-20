@@ -241,7 +241,7 @@ if DO_DISCOVERY:
 			logging.error("Error saving servers data in %s" % SERVERS_DUMP_FILE)
 else:
 	try:
-		logging.info("Skiping discovery proccess. Will use the data stored in %s file." % SERVERS_DUMP_FILE,
+		logging.warning("Skiping discovery proccess. Will use the data stored in %s file." % SERVERS_DUMP_FILE,
 		             exc_info=sys.exc_info())
 		f = open(SERVERS_DUMP_FILE, 'rb')
 		servers = pickle.load(f)
