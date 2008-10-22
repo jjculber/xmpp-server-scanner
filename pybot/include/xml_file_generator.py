@@ -37,8 +37,8 @@ def generate(filename, servers, minimun_uptime=0):
 		else:
 			server_element.setAttribute("offline", "yes")
 			
-		service_types = server['available_services'].keys()
-		service_types.extend(server['unavailable_services'].keys())
+		service_types = set(server['available_services'].keys())
+		service_types.update(server['unavailable_services'].keys())
 		
 		for service_type in service_types:
 			if service_type in server['available_services']:
