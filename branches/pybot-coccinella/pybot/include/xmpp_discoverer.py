@@ -130,9 +130,9 @@ def _handle_messages(con, message):
 	raise NodeProcessed
 
 
-def _get_version(component, dispatcher):
+def _get_version(component, client):
 	version = {}
-	node = dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
+	node = client.Dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
 	                                            queryNS='jabber:iq:version'))
 	if isResultNode(node):
 		for element in node.getTag('query').getChildren():
@@ -141,13 +141,17 @@ def _get_version(component, dispatcher):
 	return version
 
 
-def _get_reg_fields(dispatcher, jid, only_required=True):
+def _get_reg_fields(client, jid, only_required=True):
 	'''Get the input fields from the registration form.
 	Returns a dictionary {field:value} where value is None if the form field is empty'''
 	
 	reg_fields = {}
 	
-	reg_info = features.getRegInfo(dispatcher._owner, jid)
+	reg_info = features.getRegInfo(client, jid)
+	
+	if not isResultNode(reg_info):
+		# TODO: Should raise an exception
+		return None
 	
 	form = reg_info.getTag('query').getTag('x', attrs={'type':'form'}, namespace='jabber:x:data')
 	
@@ -184,10 +188,10 @@ def _get_reg_fields(dispatcher, jid, only_required=True):
 	return reg_fields, bool(form)
 
 
-def _unregister(dispatcher, roster, jid):
+def _unregister(client, roster, jid):
 	'''Unregister from gaweway. Used internally by _test_gateway()'''
 	
-	if features.unregister(dispatcher._owner, jid) != 1:
+	if features.unregister(client, jid) != 1:
 		logging.error('Error unregistering from %s gateway', jid)
 	else:
 		logging.debug('Unregistering from %s gateway', jid)
@@ -195,8 +199,9 @@ def _unregister(dispatcher, roster, jid):
 	roster.delItem(jid)
 
 
-def _try_register(dispatcher, jid, account, use_data_form):
+def _try_register(client, jid, account, use_data_form):
 	'''Try to register and unregister as specified on XEP-0100'''
+	# TODO: Managing this with exceptions should be cleaner
 	
 	# Perform registration
 	
@@ -205,21 +210,19 @@ def _try_register(dispatcher, jid, account, use_data_form):
 		data_form = DataForm('submit', account)
 		
 		reg_iq.getTag('query').addChild(node=data_form)
-		node = dispatcher.SendAndWaitForResponse(reg_iq)
+		node = client.Dispatcher.SendAndWaitForResponse(reg_iq)
 	else:
 		
-		if features.register(dispatcher._owner, jid, info=account) == 1:
+		if features.register(client, jid, info=account) == 1:
 			# Success
 			logging.debug('Registered on %s gateway', jid)
 		else:
-			#print dispatcher._owner.lastErrCode.encode('utf-8'), ' ', dispatcher._owner.lastErr.encode('utf-8')
+			#print client.lastErrCode.encode('utf-8'), ' ', client.lastErr.encode('utf-8')
 			logging.debug('Can not register on %s gateway (%s: %s)', jid,
-			              dispatcher._owner.lastErrCode, dispatcher._owner.lastErr)
+			              client.lastErrCode, client.lastErr)
 			return False
 	
-	# TODO: change variable name
-	cl = dispatcher._owner
-	roster = cl.getRoster()
+	roster = client.getRoster()
 	
 	# Seconds to wait
 	# A openfire gtalk gateway on localhost can take 21 seconds on inform of a
@@ -233,13 +236,13 @@ def _try_register(dispatcher, jid, account, use_data_form):
 			for message in MESSAGES[jid]['error']:
 				logging.warning('Error message received from %s gateway: %s', jid, message)
 			MESSAGES[jid]['error'] = []
-			_unregister(dispatcher, roster, jid)
+			_unregister(client, roster, jid)
 			return False
 			#break
-		cl.Process(1)
+		client.Process(1)
 	
 	if time < max_wait-1:
-		_unregister(dispatcher, roster, jid)
+		_unregister(client, roster, jid)
 		return False
 	
 	
@@ -249,12 +252,12 @@ def _try_register(dispatcher, jid, account, use_data_form):
 	for time in range(0, max_wait):
 		if jid in roster.keys() and roster.getSubscriptionFromStatus(jid) != None:
 			break
-		cl.Process(1)
+		client.Process(1)
 	
 	if time >= max_wait-1:
 		# The gateway didn't requested subscription
 		logging.debug('Subcription request from %s gateway not received', jid)
-		_unregister(dispatcher, roster, jid)
+		_unregister(client, roster, jid)
 		return False
 	
 	if roster.getSubscriptionFromStatus(jid) == 'pending':
@@ -265,35 +268,47 @@ def _try_register(dispatcher, jid, account, use_data_form):
 	for time in range(0, max_wait):
 		if roster.getSubscriptionToStatus(jid) == 'subscribed':
 			break
-		cl.Process(1)
+		client.Process(1)
 	
 	if time >= max_wait-1:
 		# The gateway rejected our subscription request
 		logging.debug('Subcription request rejected by %s gateway', jid)
-		_unregister(dispatcher, roster, jid)
+		_unregister(client, roster, jid)
 		return False
 	
 	# Try to login
-	dispatcher.send(Presence(jid))
+	client.Dispatcher.send(Presence(jid))
+	full_client_jid = "%s@%s/%s" % (client.User, client.Server, client.Resource)
 	for time in range(0,max_wait):
 		if len(roster.getResources(jid)) > 0:
-			break
-		cl.Process(1)
+			full_gw_jid = "%s/%s" % (jid, roster.getResources(jid)[0])
+			if ( roster.getShow(full_gw_jid) == 'unavailable' and
+			     roster.getStatus(full_gw_jid) == 'error'):
+				# Error in login, was the account data correct?
+				time = max_wait
+				break
+			elif (roster.getShow(full_gw_jid) == roster.getShow(full_client_jid) and
+			      roster.getStatus(full_gw_jid) == roster.getStatus(full_client_jid)):
+				# Transport presence and status should be the equal to ours
+				# J2J Transport (http://JRuDevels.org) Twisted-version uses 'xa'
+				# and 'Logging in...' while trying to login
+				break
+		client.Process(1)
 	
 	if time >= max_wait-1:
 		# Login failed
 		logging.debug('Can not login on %s gateway', jid)
-		_unregister(dispatcher, roster, jid)
+		_unregister(client, roster, jid)
 		return False
 	
 	logging.debug('Successfull login on %s gateway', jid)
 	
 	# Successfull registration, now unregister
-	_unregister(dispatcher, roster, jid)
+	_unregister(client, roster, jid)
 	return True
 
 
-def _test_gateway(dispatcher, jid, service_category, service_type):
+def _test_gateway(client, jid, service_category, service_type):
 	'''Select the account data and try to register on a gateway'''
 	
 	# Guess if the xmpp gateway is a GoogleTalk gateway
@@ -307,7 +322,13 @@ def _test_gateway(dispatcher, jid, service_category, service_type):
 	if (service_category, service_type) in GATEWAY_ACCOUNTS:
 		account = GATEWAY_ACCOUNTS[(service_category, service_type)]
 		
-		required_fields, is_form = _get_reg_fields(dispatcher, jid)
+		required_fields, is_form = _get_reg_fields(client, jid)
+		
+		if required_fields is None:
+			# TODO: Should be a exception catching
+			# The component didn't gave us the data
+			logging.warning('Can not fetch the fields needed to register on %s gateway', jid)
+			return False
 		
 		fields_not_available = [field for field, value in required_fields.iteritems() if field not in account and value is None]
 		if fields_not_available:
@@ -325,7 +346,7 @@ def _test_gateway(dispatcher, jid, service_category, service_type):
 			account['username'] = '%s@%s' % ( account['username'],
 			                  GATEWAY_ACCOUNTS[('gateway', 'xmpp')]['server'] )
 		
-		return _try_register(dispatcher._owner, jid, account, is_form)
+		return _try_register(client, jid, account, is_form)
 		
 	else:
 		# We can't test the gateway, assume that it works
@@ -336,7 +357,8 @@ def _add_to_services_list(services_list, service_category_type, component):
 	'''Add the compoenent to the server services list.
 	There can be several components providing the same service.'''
 	if service_category_type in services_list:
-		services_list[service_category_type].append(component)
+		if component not in services_list[service_category_type]:
+			services_list[service_category_type].append(component)
 	else:
 		services_list[service_category_type] = [(component)]
 
@@ -529,7 +551,7 @@ def _is_gateway(component):
 	return False
 
 
-def _handle_component_available(component, server, dispatcher):
+def _handle_component_available(component, server, client):
 	
 	_normalize_identities(component)
 	
@@ -545,7 +567,7 @@ def _handle_component_available(component, server, dispatcher):
 			available = False
 		elif 'jabber:iq:version' in component[u'info'][1]:
 			for identity in component[u'info'][0]:
-				if _test_gateway(dispatcher, component[u'jid'], identity[u'category'], identity[u'type']) == False:
+				if _test_gateway(client, component[u'jid'], identity[u'category'], identity[u'type']) == False:
 					available = False
 	elif component[u'jid'].startswith('conference.irc.'):
 		# It's likely to be part of the old Openfire IRC Gateway.
@@ -575,7 +597,7 @@ def _handle_component_unavailable(component, server):
 		_add_to_services_list(server[u'unavailable_services'], (identity[u'category'], identity[u'type']), component)
 
 
-def _get_item_info(dispatcher, component, retries=0):
+def _get_item_info(client, component, retries=0):
 	'''Query the information about the item'''
 	
 	# Some components adresses ends in .localhost so the querys
@@ -587,20 +609,18 @@ def _get_item_info(dispatcher, component, retries=0):
 		while retry >= 0:
 			try:
 				if u'node' in component:
-					# TODO: Don't use _owner to get the client
 					logging.debug( 'Trying to discover component %s (node %s) using %s@%s/%s: %d/%d retries left',
 					               component[u'jid'], component[u'node'],
-					               dispatcher._owner.User, dispatcher._owner.Server,
-					               dispatcher._owner.Resource, retry, retries)
-					info = features.discoverInfo( dispatcher, component[u'jid'],
-					                              component[u'node'])
-				else:
-					# TODO: Don't use _owner to get the client
-					logging.debug( 'Trying to discover component %s using %s@%s/%s: %d/%d retries left',
-					               component[u'jid'], dispatcher._owner.User,
-					               dispatcher._owner.Server, dispatcher._owner.Resource,
+					               client.User, client.Server, client.Resource,
 					               retry, retries)
-					info = features.discoverInfo(dispatcher, component[u'jid'])
+					info = features.discoverInfo( client.Dispatcher,
+					                    component[u'jid'], component[u'node'])
+				else:
+					logging.debug( 'Trying to discover component %s using %s@%s/%s: %d/%d retries left',
+					               component[u'jid'], client.User, client.Server,
+					               client.Resource, retry, retries)
+					info = features.discoverInfo( client.Dispatcher,
+					                              component[u'jid'] )
 			except xml.parsers.expat.ExpatError:
 				logging.warning( '%s sent malformed XMPP', component[u'jid'],
 				                 exc_info=True)
@@ -624,7 +644,7 @@ def _get_item_info(dispatcher, component, retries=0):
 		return ([], [])
 
 
-def _get_items(dispatcher, component, retries=0):
+def _get_items(client, component, retries=0):
 	'''Query the child items and nodes of component.
 	Only returns items whose address it's equal or a subdomain of component'''
 	
@@ -632,20 +652,18 @@ def _get_items(dispatcher, component, retries=0):
 	while retry >= 0:
 		try:
 			if u'node' in component:
-				# TODO: Don't use _owner to get the client
 				logging.debug( 'Trying to discover components of %s (node %s) using %s@%s/%s: %d/%d retries left',
 				               component[u'jid'], component[u'node'],
-				               dispatcher._owner.User, dispatcher._owner.Server,
-				               dispatcher._owner.Resource, retry, retries)
-				items = features.discoverItems( dispatcher, component[u'jid'],
-				                                component[u'node'] )
-			else:
-				# TODO: Don't use _owner to get the client
-				logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
-				               component[u'jid'], dispatcher._owner.User,
-				               dispatcher._owner.Server, dispatcher._owner.Resource,
+				               client.User, client.Server, client.Resource,
 				               retry, retries)
-				items = features.discoverItems(dispatcher, component[u'jid'])
+				items = features.discoverItems( client.Dispatcher,
+				                       component[u'jid'], component[u'node'] )
+			else:
+				logging.debug( 'Trying to discover components of %s using %s@%s/%s: %d/%d retries left',
+				               component[u'jid'], client.User, client.Server,
+				               client.Resource, retry, retries )
+				items = features.discoverItems( client.Dispatcher,
+				                                component[u'jid'] )
 		except xml.parsers.expat.ExpatError:
 			logging.warning( '%s sent malformed XMPP', component[u'jid'],
 			                 exc_info=True)
@@ -675,7 +693,7 @@ def _get_items(dispatcher, component, retries=0):
 		return []
 
 
-def _discover_item(dispatchers, component, server):
+def _discover_item(clients, component, server):
 	'''Explore the component and its childs and 
 	update the component list in server.
 	Both, component and server, variables are modified.'''
@@ -695,9 +713,9 @@ def _discover_item(dispatchers, component, server):
 		retries = INFO_QUERY_RETRIES
 		item_retries = ITEM_QUERY_RETRIES
 	
-	for dispatcher in dispatchers:
+	for client in clients:
 		try:
-			component[u'info'] = _get_item_info(dispatcher, component, retries)
+			component[u'info'] = _get_item_info(client, component, retries)
 		except xml.parsers.expat.ExpatError:
 			component[u'info'] = ([], [])
 			_handle_component_unavailable(component, server)
@@ -707,7 +725,7 @@ def _discover_item(dispatchers, component, server):
 			# Successfull discovery
 			
 			if ONLY_USE_SUCCESFULL_CLIENT:
-				dispatchers = [dispatcher]
+				clients = [client]
 			break
 	
 	# Detect if it's a server or a branch (if it have child items)
@@ -715,7 +733,7 @@ def _discover_item(dispatchers, component, server):
 	if (  (u'http://jabber.org/protocol/disco#info' in component[u'info'][1]) |
 	      (u'http://jabber.org/protocol/disco' in component[u'info'][1])  ):
 		needs_to_query_items = False
-		_handle_component_available(component, server, dispatcher)
+		_handle_component_available(component, server, client)
 		for identity in component[u'info'][0]:
 			if ( (identity['category'] == u'server') | (
 			        (identity['category'] == u'hierarchy') &
@@ -727,7 +745,7 @@ def _discover_item(dispatchers, component, server):
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                     component[u'info'][1] )
-		_handle_component_available(component, server, dispatcher)
+		_handle_component_available(component, server, client)
 		needs_to_query_items = True
 	
 	elif u'jabber:iq:browse' in component[u'info'][1]: #Not sure if it's really used
@@ -736,13 +754,13 @@ def _discover_item(dispatchers, component, server):
 		component[u'items'] = []
 		for item in component[u'info'][0]:
 			if _in_same_domain(component[u'jid'], item[u'jid']):
-				component[u'items'].append(_discover_item(dispatchers, item, server))
+				component[u'items'].append(_discover_item(clients, item, server))
 		
 		needs_to_query_items = False # We already have the items
 		#Fake identities. But we aren't really sure that it's a server?
 		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 		                       component[u'info'][1] )
-		_handle_component_available(component, server, dispatcher)
+		_handle_component_available(component, server, client)
 	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
@@ -756,26 +774,25 @@ def _discover_item(dispatchers, component, server):
 			component[u'items'] = []
 			for item in component[u'info'][0]:
 				if _in_same_domain(component[u'jid'], item[u'jid']):
-					component[u'items'].append(_discover_item(dispatchers, item,
-					                                          server))
+					component[u'items'].append(_discover_item(clients, item, server))
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
 			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
 			                       component[u'info'][1] )
-			_handle_component_available(component, server, dispatcher)
+			_handle_component_available(component, server, client)
 		else:
 			#try:
-			_handle_component_available(component, server, dispatcher)
+			_handle_component_available(component, server, client)
 			#except:
 				#_handle_component_unavailable(component, server)
 	
 	# If it's a server or a branch node, get the child items
 	
 	if needs_to_query_items:
-		for dispatcher in dispatchers:
+		for client in clients:
 			try:
-				component[u'items'] = _get_items(dispatcher, component, item_retries)
+				component[u'items'] = _get_items(client, component, item_retries)
 			except xml.parsers.expat.ExpatError:
 				component[u'items'] = []
 				raise
@@ -783,18 +800,18 @@ def _discover_item(dispatchers, component, server):
 			if len(component[u'items']) > 0:
 				# Successfull discovery
 				if ONLY_USE_SUCCESFULL_CLIENT:
-					dispatchers = [dispatcher] # Uneeded filtering
+					clients = [client] # Uneeded filtering
 				break
 		
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
-				item = _discover_item(dispatchers, item, server)
+				item = _discover_item(clients, item, server)
 			elif u'node' in component and u'node' in item:
 				if (  (component[u'jid'] == item[u'jid']) &
 					  (component[u'node'] != item[u'node'])  ):
-					item = _discover_item(dispatchers, item, server)
+					item = _discover_item(clients, item, server)
 			else:
-				item = _discover_item(dispatchers, item, server)
+				item = _discover_item(clients, item, server)
 	
 	return component
 
@@ -903,7 +920,7 @@ def discover_servers(server_list):
 	#cl.Process(1)
 	
 	clients = _get_clients(accounts)
-	dispatchers = _get_dispatchers(clients)
+	#dispatchers = _get_dispatchers(clients)
 	
 	logging.info('Begin discovery')
 	
@@ -913,7 +930,7 @@ def discover_servers(server_list):
 			_keep_alive_clients(clients)
 			
 			try:
-				_discover_item(dispatchers, server, server)
+				_discover_item(clients, server, server)
 			
 			except xml.parsers.expat.ExpatError: # Restart the clients
 				#cl.disconnect()
@@ -922,7 +939,7 @@ def discover_servers(server_list):
 				
 				_disconnect_clients(clients)
 				clients = _get_clients(accounts)
-				dispatchers = _get_dispatchers(clients)
+				#dispatchers = _get_dispatchers(clients)
 				
 				#cl = Client(jabber_server, debug=[])
 				#if not cl.connect(secure=0):

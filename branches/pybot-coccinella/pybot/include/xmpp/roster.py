@@ -108,7 +108,13 @@ class Roster(PlugIn):
             item['subs_to_status'] = 'subscribed'
         elif typ=='unavailable' and item['resources'].has_key(jid.getResource()): del item['resources'][jid.getResource()]
         elif typ=='subscribe': item['subs_from_status'] = 'pending'
-        # Need to handle type='error' also
+        elif typ=='error':
+            # Need to handle type='error' better
+            item['resources'][jid.getResource()]=res={'show':None,'status':None,'priority':'0','timestamp':None}
+            if not pres.getTimestamp(): pres.setTimestamp()
+            res['timestamp']=pres.getTimestamp()
+            res['show'] = 'unavailable'
+            res['status'] = 'error'
 
     def _getItemData(self,jid,dataname):
         """ Return specific jid's representation in internal format. Used internally. """
