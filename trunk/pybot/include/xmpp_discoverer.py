@@ -357,7 +357,8 @@ def _add_to_services_list(services_list, service_category_type, component):
 	'''Add the compoenent to the server services list.
 	There can be several components providing the same service.'''
 	if service_category_type in services_list:
-		services_list[service_category_type].append(component)
+		if component not in services_list[service_category_type]:
+			services_list[service_category_type].append(component)
 	else:
 		services_list[service_category_type] = [(component)]
 
