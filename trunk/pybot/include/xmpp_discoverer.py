@@ -201,6 +201,7 @@ def _unregister(client, roster, jid):
 
 def _try_register(client, jid, account, use_data_form):
 	'''Try to register and unregister as specified on XEP-0100'''
+	# TODO: Managing this with exceptions should be cleaner
 	
 	# Perform registration
 	
@@ -277,9 +278,21 @@ def _try_register(client, jid, account, use_data_form):
 	
 	# Try to login
 	client.Dispatcher.send(Presence(jid))
+	full_client_jid = "%s@%s/%s" % (client.User, client.Server, client.Resource)
 	for time in range(0,max_wait):
 		if len(roster.getResources(jid)) > 0:
-			break
+			full_gw_jid = "%s/%s" % (jid, roster.getResources(jid)[0])
+			if ( roster.getShow(full_gw_jid) == 'unavailable' and
+			     roster.getStatus(full_gw_jid) == 'error'):
+				# Error in login, was the account data correct?
+				time = max_wait
+				break
+			elif (roster.getShow(full_gw_jid) == roster.getShow(full_client_jid) and
+			      roster.getStatus(full_gw_jid) == roster.getStatus(full_client_jid)):
+				# Transport presence and status should be the equal to ours
+				# J2J Transport (http://JRuDevels.org) Twisted-version uses 'xa'
+				# and 'Logging in...' while trying to login
+				break
 		client.Process(1)
 	
 	if time >= max_wait-1:
