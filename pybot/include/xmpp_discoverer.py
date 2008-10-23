@@ -151,7 +151,7 @@ def _get_reg_fields(client, jid, only_required=True):
 	
 	if not isResultNode(reg_info):
 		# TODO: Should raise an exception
-		return None
+		return None, False
 	
 	form = reg_info.getTag('query').getTag('x', attrs={'type':'form'}, namespace='jabber:x:data')
 	
