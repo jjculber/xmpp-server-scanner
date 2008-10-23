@@ -78,7 +78,7 @@ def generate(filename, servers, service_types=None, full_info=False,
 			_servers.update([(k,v) for k,v in servers.iteritems() if len(set(service_types) & set(v['available_services'].keys() + v['unavailable_services'].keys())) > 0])
 		servers = _servers
 	
-	if minimun_uptime>0:
+	if minimun_uptime > 0:
 		# Filter by uptime
 		_servers = {}
 		_servers.update([(k,v) for k,v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])

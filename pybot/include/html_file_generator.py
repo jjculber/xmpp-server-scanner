@@ -222,7 +222,7 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	
 	return header
 
-FILES = [basename(file) for file in iglob(join(OUTPUT_DIRECTORY, 'images', '*.png'))]
+FILES = [basename(f) for f in iglob(join(OUTPUT_DIRECTORY, 'images', '*.png'))]
 def _get_image_filename(service_type, available):
 	
 	if not isinstance(service_type, tuple):
@@ -349,7 +349,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	If sort_links is not None, it will be a dictionary with the following keys:
 	'directory' and 'filename_prefix'. They will be used to build the links in the header table."""
 	
-	if minimun_uptime>0:
+	if minimun_uptime > 0:
 		# Filter by uptime
 		_servers = {}
 		_servers.update([(k,v) for k,v in servers.iteritems() if float(v['times_queried_online'])/v['times_queried'] > minimun_uptime])

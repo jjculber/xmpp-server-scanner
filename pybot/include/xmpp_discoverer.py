@@ -279,7 +279,7 @@ def _try_register(client, jid, account, use_data_form):
 	# Try to login
 	client.Dispatcher.send(Presence(jid))
 	full_client_jid = "%s@%s/%s" % (client.User, client.Server, client.Resource)
-	for time in range(0,max_wait):
+	for time in range(0, max_wait):
 		if len(roster.getResources(jid)) > 0:
 			full_gw_jid = "%s/%s" % (jid, roster.getResources(jid)[0])
 			if ( roster.getShow(full_gw_jid) == 'unavailable' and
@@ -462,7 +462,7 @@ def _normalize_identities(component):
 		# 'http://jabber.org/protocol/muc', so try to detect the pure MUC
 		# services and add them also in a special category:type conference:x-muc
 		
-		if identity[u'category']=='conference' and identity[u'type']=='text':
+		if identity[u'category'] == 'conference' and identity[u'type'] == 'text':
 			if (  not ( ('name' in component and 'IRC' in component['name']) or
 			            '.irc.' in component['jid'] or
 			            component['jid'].startswith('irc.') ) and
@@ -493,37 +493,37 @@ def _normalize_identities(component):
 		# - irc.server category:gateway type:irc with jabber:iq:gateway feature
 		# - conference.irc.server category:conference type:text without jabber:iq:gateway feature but with http://jabber.org/protocol/muc feature
 		# Add both components as irc gateway, though it's not a very good solution
-		if identity[u'category']=='gateway' and identity[u'type']=='irc':
+		if identity[u'category'] == 'gateway' and identity[u'type'] == 'irc':
 			identity[u'category'] = 'conference'
-		if (identity[u'category']=='conference' and identity[u'type']=='text' and
+		if (identity[u'category'] == 'conference' and identity[u'type'] == 'text' and
 		    '.irc.' in component[u'jid']):
 			identity[u'type'] = 'irc'
 		
 		# ejabberd1.1.3 uses pubsub:generic instead pubsub:service
-		if identity[u'category']=='pubsub' and identity[u'type']=='generic':
+		if identity[u'category'] == 'pubsub' and identity[u'type'] == 'generic':
 			identity[u'type'] = 'service'
 		
 		# ejabberd's webpresence module uses presence:text instead component:presence
-		if identity[u'category']=='presence' and identity[u'type']=='text':
+		if identity[u'category'] == 'presence' and identity[u'type'] == 'text':
 			identity[u'category'] = 'component'
 			identity[u'type'] = 'presence'
 		
 		# Some weather components use agent:weather instead headline:weather
-		if identity[u'category']=='agent' and identity[u'type']=='weather':
+		if identity[u'category'] == 'agent' and identity[u'type'] == 'weather':
 			identity[u'category'] = 'headline'
 		
 		# PyRSS
-		if identity[u'category']=='x-service' and identity[u'type']=='x-rss':
+		if identity[u'category'] == 'x-service' and identity[u'type'] == 'x-rss':
 			identity[u'category'] = 'headline'
 			identity[u'type'] = 'rss'
 		
 		#
-		if identity[u'category']=='gateway' and identity[u'type']=='gadugadu':
+		if identity[u'category'] == 'gateway' and identity[u'type'] == 'gadugadu':
 			identity[u'category'] = 'gateway'
 			identity[u'type'] = 'gadu-gadu'
 		
 		#
-		if identity[u'category']=='gateway' and identity[u'type']=='x-tlen':
+		if identity[u'category'] == 'gateway' and identity[u'type'] == 'x-tlen':
 			identity[u'category'] = 'gateway'
 			identity[u'type'] = 'tlen'
 		
@@ -531,11 +531,11 @@ def _normalize_identities(component):
 		# Normalize non standard indentities
 		
 		#
-		if identity[u'category']=='gateway' and identity[u'type']=='XMPP':
+		if identity[u'category'] == 'gateway' and identity[u'type'] == 'XMPP':
 			identity[u'type'] = 'xmpp'
 		
 		#
-		if identity[u'category']=='gateway' and identity[u'type']=='gmail':
+		if identity[u'category'] == 'gateway' and identity[u'type'] == 'gmail':
 			identity[u'type'] = 'gtalk'
 
 
@@ -588,7 +588,7 @@ def _handle_component_unavailable(component, server):
 	
 	component['available'] = False
 	
-	if component[u'info']==([], []):
+	if component[u'info'] == ([], []):
 		component[u'info'] = _guess_component_info(component)
 	
 	for identity in component[u'info'][0]:
