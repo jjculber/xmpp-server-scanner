@@ -66,9 +66,10 @@ for section in cfg.sections():
 	if section.endswith(' gateway account'):
 		words = section.split()
 		GATEWAY_ACCOUNTS[(words[0], words[1])] = dict(cfg.items(section))
+		del(words)
 
-del(words)
-del(section)
+if len(cfg.sections()) > 0:
+	del(section)
 
 del(cfg)
 
