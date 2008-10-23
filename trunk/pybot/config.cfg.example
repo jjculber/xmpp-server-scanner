@@ -23,7 +23,6 @@ SERVER              = jabber.example.com
 
 
 # Accounts to test gateways
-# They doesn't need to be real accounts
 # [service_category service_type gateway account]
 # # AIM Terms of Service seems to forbid use with bots or third party software
 # [gateway aim gateway account]
