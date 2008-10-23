@@ -34,7 +34,6 @@ try:
 	from include import database_updater
 except ImportError:
 	CAN_UPDATE_DATABASE = False
-	raise
 else:
 	CAN_UPDATE_DATABASE = True
 	
