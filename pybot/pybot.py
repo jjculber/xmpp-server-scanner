@@ -281,7 +281,7 @@ elif UPDATE_DATABASE and CAN_UPDATE_DATABASE:
 		                                  DBDATABASE, servers )
 	except MySQLError:
 		# TODO: database_updater should raise a custom exception
-			logging.critical("Can't update the database.", exc_info=sys.exc_info())
+		logging.critical("Can't update the database.", exc_info=sys.exc_info())
 
 
 # And build the HTML pages and the XML
