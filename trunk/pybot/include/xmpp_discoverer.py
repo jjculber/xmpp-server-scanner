@@ -742,51 +742,38 @@ def _discover_item(clients, component, server):
 			   ) ):
 				needs_to_query_items = True
 	
-	elif u'jabber:iq:agents' in component[u'info'][1]:
-		#Fake identities. But we aren't really sure that it's a server?
-		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
-		                     component[u'info'][1] )
-		_handle_component_available(component, server, client)
-		needs_to_query_items = True
-	
-	elif u'jabber:iq:browse' in component[u'info'][1]: #Not sure if it's really used
-		# Adapt the information
-		# Process items
-		component[u'items'] = []
-		for item in component[u'info'][0]:
-			if _in_same_domain(component[u'jid'], item[u'jid']):
-				component[u'items'].append(_discover_item(clients, item, server))
-		
-		needs_to_query_items = False # We already have the items
-		#Fake identities. But we aren't really sure that it's a server?
-		component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
-		                       component[u'info'][1] )
-		_handle_component_available(component, server, client)
-	
 	elif (component[u'info'] == ([], [])):
 		# We have to guess what feature is using the JID
 		_handle_component_unavailable(component, server)
 	
 	else:
-		if u'available_services' in component:
-			# It's a server. It probably uses jabber:iq:browse
+		
+		if u'category' in component[u'info'][0][0]:
+			# It's a component
+			_handle_component_available(component, server, client)
+		elif u'jid' in component[u'info'][0][0]:
+			# if u'available_services' in component: -> It's a server
+			# else: ->  Maybe it's a server inside another server
+			# It probably uses jabber:iq:agents
 			# Adapt the information
 			# Process items
+			
 			component[u'items'] = []
 			for item in component[u'info'][0]:
 				if _in_same_domain(component[u'jid'], item[u'jid']):
-					component[u'items'].append(_discover_item(clients, item, server))
+					try:
+						component[u'items'].append(_discover_item(clients, item, server))
+					except:
+						logging.error('Can\'t discover item %s of %s', item[u'jid'],
+						              component[u'jid'], exc_info=sys.exc_info())
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
-			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}],
-			                       component[u'info'][1] )
+			component[u'info'] = ( [{u'category': u'server', u'type': u'im'}], [] )
 			_handle_component_available(component, server, client)
 		else:
-			#try:
-			_handle_component_available(component, server, client)
-			#except:
-				#_handle_component_unavailable(component, server)
+			logging.warning('Unknown information retrieved from %s', component[u'jid'])
+			_handle_component_unavailable(component, server)
 	
 	# If it's a server or a branch node, get the child items
 	
