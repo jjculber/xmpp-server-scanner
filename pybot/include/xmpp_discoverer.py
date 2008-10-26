@@ -288,11 +288,14 @@ def _try_register(client, jid, account, use_data_form):
 				# Error in login, was the account data correct?
 				time = max_wait
 				break
-			elif (roster.getShow(full_gw_jid) == roster.getShow(full_client_jid) and
-			      roster.getStatus(full_gw_jid) == roster.getStatus(full_client_jid)):
-				# Transport presence and status should be the equal to ours
-				# J2J Transport (http://JRuDevels.org) Twisted-version uses 'xa'
-				# and 'Logging in...' while trying to login
+			elif roster.getShow(full_gw_jid) == 'xa':
+				# J2J Transport (http://JRuDevels.org) Twisted-version uses 'xa' show
+				# and 'Logging in...' status while trying to login
+				pass
+			elif  (roster.getShow(full_gw_jid) == 'available' or
+			       (roster.getShow(full_gw_jid) == roster.getShow(full_client_jid) and
+			        roster.getStatus(full_gw_jid) == roster.getStatus(full_client_jid))):
+				# Transport seems to have logged in
 				break
 		client.Process(1)
 	
