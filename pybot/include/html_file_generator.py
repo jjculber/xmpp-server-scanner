@@ -75,29 +75,29 @@ ROWS_BETWEEN_TITLES = 10
 COLUMNS_DESCRIPTION = {
   'server': 'Server',
   # Pure MUC components are marked as x-muc by the xmpp_discoverer
-  ('conference', 'x-muc'): 'MultiUser Chat',
-  ('conference', 'irc'): 'IRC',
-  ('gateway', 'aim'): 'AIM',
-  ('gateway', 'gadu-gadu'): 'Gadu Gadu',
-  ('gateway', 'http-ws'): 'HTTP Web Services',
-  ('gateway', 'icq'): 'ICQ',
-  ('gateway', 'msn'): 'MSN',
-  ('gateway', 'qq'): 'QQ',
-  ('gateway', 'sms'): 'SMS',
-  ('gateway', 'smtp'): 'email',
-  ('gateway', 'tlen'): 'TLEN',
-  ('gateway', 'yahoo'): 'Yahoo!',
-  ('directory', 'user'): 'User Directory',
-  ('pubsub', 'service'): 'Publish-Subscribe',
-  ('pubsub', 'pep'): 'Personal Eventing Protocol',
-  ('component', 'presence'): 'Web Presence',
-  ('store', 'file'): 'File Storage',
-  ('headline', 'newmail'): 'New Mail Notifications',
-  ('headline', 'rss'): 'RSS',
-  ('headline', 'weather'): 'Weather',
-  ('proxy', 'bytestreams'): 'File transfer proxy',
-  'offline_since': 'Offline since',
-  'times_online': '% Availability'
+  ('conference', 'x-muc'): {'title': 'MUC', 'description': 'MultiUser Chat'},
+  ('conference', 'irc'): {'title': 'IRC', 'description': 'Internet Relay Chat Gateway'},
+  ('gateway', 'aim'): {'title': 'AIM', 'description': 'AIM Gateway'},
+  ('gateway', 'gadu-gadu'): {'title': 'GG', 'description': 'Gadu Gadu gateway'},
+  ('gateway', 'http-ws'): {'title': 'WS', 'description': 'HTTP Web Services'},
+  ('gateway', 'icq'): {'title': 'ICQ', 'description': 'ICQ gateway'},
+  ('gateway', 'msn'): {'title': 'MSN', 'description': 'MSN gateway'},
+  ('gateway', 'qq'): {'title': 'QQ', 'description': 'QQ gateway'},
+  ('gateway', 'sms'): {'title': 'SMS', 'description': 'Short Message Service gateway'},
+  ('gateway', 'smtp'): {'title': 'email', 'description': 'SMTP gateway'},
+  ('gateway', 'tlen'): {'title': 'TLEN', 'description': 'TLEN gateway'},
+  ('gateway', 'yahoo'): {'title': 'Y!', 'description': 'Yahoo! gateway'},
+  ('directory', 'user'): {'title': 'User Directory'},
+  ('pubsub', 'service'): {'title': 'PubSub', 'description': 'Publish-Subscribe'},
+  ('pubsub', 'pep'): {'title': 'PEP', 'description': 'Personal Eventing Protocol'},
+  ('component', 'presence'): {'title': 'Web Presence'},
+  ('store', 'file'): {'title': 'File Storage'},
+  ('headline', 'newmail'): {'title': 'Mail Alerts'},
+  ('headline', 'rss'): {'title': 'RSS', 'description': 'RSS notifications'},
+  ('headline', 'weather'): {'title': 'Weather'},
+  ('proxy', 'bytestreams'): {'title': 'Proxy', 'description': 'File transfer proxy'},
+  'offline_since': {'title': 'Offline since'},
+  'times_online': {'title': '% Uptime'}
 }
 
 
@@ -105,7 +105,9 @@ COLUMNS_DESCRIPTION = {
 SCRIPT_DIR = abspath(dirname(sys.argv[0]))
 cfg = SafeConfigParser()
 cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
-OUTPUT_DIRECTORY = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
+OUTPUT_DIRECTORY      = cfg.get("Output configuration", "OUTPUT_DIRECTORY")
+SHRINK_SERVERNAMES    = cfg.getboolean("Output configuration", "HTML_SHRINK_SERVERNAMES")
+SHRINK_SERVERNAMES_TO = cfg.getint("Output configuration", "HTML_SHRINK_SERVERNAMES_TO")
 
 def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 	if by is None:
@@ -114,6 +116,7 @@ def _get_filename(directory, filename_prefix, by=None, extension='.html'):
 		return join(directory, filename_prefix+'_by_'+by[0]+'_'+by[1]+extension)
 	else:
 		return join(directory, filename_prefix+'_by_'+by+extension)
+
 
 def _count_components(server, service_type=None, availability='both'):
 	"""Count server components.
@@ -173,15 +176,33 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	header += ( "<th class='server'>%s</th>" % 
 	                 link if sort_links is not None else text )
 	
-	for service_type in types:
+	columns = list(types)
+	columns.extend(['offline_since', 'times_online'])
+	for column_id in columns:
 		
-		text = COLUMNS_DESCRIPTION[service_type] if service_type in COLUMNS_DESCRIPTION else service_type
+		if column_id in COLUMNS_DESCRIPTION:
+			text = COLUMNS_DESCRIPTION[column_id]['title']
+			#if 'description' in COLUMNS_DESCRIPTION[column_id]:
+				#text = "<div class='tooltip_container'>%s<div class='tooltip'><span>%s</span></div></div>" % (
+				           #COLUMNS_DESCRIPTION[column_id]['title'],
+				           #COLUMNS_DESCRIPTION[column_id]['description'] )
+				#text = "<abbr title='%s'>%s</abbr>" % (
+				           #COLUMNS_DESCRIPTION[column_id]['description'],
+				           #COLUMNS_DESCRIPTION[column_id]['title'] )
+			#else:
+				#text = COLUMNS_DESCRIPTION[column_id]['title']
+		else:
+			if column_id in types:
+				text = column_id[1]
+			else:
+				text = column_id
 		
-		link = "<a href='%s'>%s</a>" % (
-			        _get_filename( sort_links['directory'], sort_links['filename_prefix'], service_type ),
+		link = "<a href='%s'%s>%s</a>" % (
+			        _get_filename( sort_links['directory'], sort_links['filename_prefix'], column_id ),
+		            " title='%s'" % COLUMNS_DESCRIPTION[column_id]['description'] if 'description' in COLUMNS_DESCRIPTION[column_id] else '',
 			        text )
-		header += "<th class='%s_%s'>%s</th>" % ( service_type[0], service_type[1],
-		                        link if sort_links is not None else text )
+		th_class = "%s_%s" % (column_id[0], column_id[1]) if column_id in types else column_id
+		header += "<th class='%s'>%s</th>" % ( th_class, link if sort_links is not None else text )
 		#if service_type in COLUMNS_DESCRIPTION:
 			#text = COLUMNS_DESCRIPTION[service_type]
 		#else:
@@ -202,21 +223,21 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	
 	#header += "<th class='times_offline'>Times Offline</th>"
 	
-	text = COLUMNS_DESCRIPTION['offline_since'] if 'offline_since' in COLUMNS_DESCRIPTION else 'Offline Since'
+	#text = COLUMNS_DESCRIPTION['offline_since'] if 'offline_since' in COLUMNS_DESCRIPTION else 'Offline Since'
 	
-	link = "<a href='%s'>%s</a>" % (
-	         _get_filename( sort_links['directory'], sort_links['filename_prefix'], 'offline_since'),
-	         text)
-	header += ( "<th class='offline_since'>%s</th>" % 
-	                 link if sort_links is not None else text )
+	#link = "<a href='%s'>%s</a>" % (
+	         #_get_filename( sort_links['directory'], sort_links['filename_prefix'], 'offline_since'),
+	         #text)
+	#header += ( "<th class='offline_since'>%s</th>" % 
+	                 #link if sort_links is not None else text )
 	
-	text = COLUMNS_DESCRIPTION['times_online'] if 'times_online' in COLUMNS_DESCRIPTION else 'Times Online'
+	#text = COLUMNS_DESCRIPTION['times_online'] if 'times_online' in COLUMNS_DESCRIPTION else 'Times Online'
 	
-	link = "<a href='%s'>%s</a>" % (
-	         _get_filename( sort_links['directory'], sort_links['filename_prefix'], 'times_online'),
-	         text)
-	header += ( "<th class='times_online'>%s</th>" % 
-	                 link if sort_links is not None else text )
+	#link = "<a href='%s'>%s</a>" % (
+	         #_get_filename( sort_links['directory'], sort_links['filename_prefix'], 'times_online'),
+	         #text)
+	#header += ( "<th class='times_online'>%s</th>" % 
+	                 #link if sort_links is not None else text )
 	
 	header += "</tr>\n"
 	
@@ -276,8 +297,14 @@ def get_rows(servers, types):
 			##row += " sortedby"
 		#row += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
 		
+		if SHRINK_SERVERNAMES and len(server[u'jid']) > SHRINK_SERVERNAMES_TO:
+			server_text = "<div class='tooltip_container'>%s...<div class='tooltip'><span>%s</span></div></div>" % (
+			           server[u'jid'][:SHRINK_SERVERNAMES_TO-3], server[u'jid'] )
+		else:
+			server_text = server[u'jid']
+		
 		row = ( "<td class='server'><a name='%s'>%s</a></td>" %
-		                                    (server[u'jid'], server[u'jid']) )
+		                                    (server[u'jid'], server_text) )
 		
 		for service_type in types:
 			
@@ -303,15 +330,15 @@ def get_rows(servers, types):
 				           'available' if service_available else 'unavailable',
 				           service_type[0], service_type[1] )
 				
-				#row += "<div class='container'><img src=\""
+				#row += "<div class='tooltip_container'><img src=\""
 				#row += _get_image_filename(service_type, service_available)
 				#row += "\" width=\"16\" height=\"16\" alt=\"Yes\" />"
 				
-				row += "<div class='container'>"
+				row += "<div class='tooltip_container'>"
 				row += ("""<img src='%s' width='16' height='16' alt='Yes' />""" %
 				           _get_image_filename(service_type, service_available))
 				
-				row += "<div class='components'>"
+				row += "<div class='tooltip'>"
 				if service_type in server['available_services']:
 					for component in sorted(server['available_services'][service_type]):
 						row += """<span class='available'>%s</span>""" % (
@@ -544,27 +571,27 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	
 	f.write(
 """
-			div.components span{
+			div.tooltip span{
 				display: block;
 				/*font-size: 0.7em;*/
 				white-space: nowrap;
 			}
-			/*td div.components{
+			/*td div.tooltip{
 				display: none;
 			}
-			td:hover div.components{
+			td:hover div.tooltip{
 				display: block;
 			}*/
-			td div.container{
+			div.tooltip_container{
 				position: relative;
 				display: inline;
 			}
-			td div.components{
+			div.tooltip{
 				display: none;
 				background: #FFC;
 				z-index: 1;
 			}
-			td:hover div.components{
+			th:hover div.tooltip, td:hover div.tooltip{
 				display: block;
 				margin: 0px auto;
 				position: absolute;
@@ -572,7 +599,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 				left: 15px;
 				padding: 3px;
 			}
-			div.components span{
+			div.tooltip span{
 			}
 		</style>
 	</head>
