@@ -142,6 +142,10 @@ COMPRESS_FILES      = True
 HTML_UPTIME_FILTER   = 0.75
 XML_UPTIME_FILTER   = 0.75
 
+# Shrink names in the server column to N characters
+HTML_SHRINK_SERVERNAMES    = True
+HTML_SHRINK_SERVERNAMES_TO = 20
+
 #The directory where will be generated the HTML and XML files
 OUTPUT_DIRECTORY    = ..
 
