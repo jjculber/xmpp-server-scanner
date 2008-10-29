@@ -150,6 +150,7 @@ if DO_DISCOVERY:
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
+	#server_list=['swissjabber.ch','default.co.yu','chrome.pl','codingteam.net','coruscant.info','core.segfault.pl','deshalbfrei.org','zweilicht.org','volgograd.ru','silper.cz','kingshomeworld.com','jabjab.de']
 	
 	if len(server_list) == 0:
 		logging.critical('The list of servers to check is empty')
@@ -287,9 +288,9 @@ elif UPDATE_DATABASE and CAN_UPDATE_DATABASE:
 # Pure MUC components are marked as x-muc by the xmpp_discoverer
 show_types = [ ('conference','x-muc'), ('conference','irc'),
                ('gateway', 'aim'), ('gateway', 'gadu-gadu'), ('gateway', 'icq'),
-               ('gateway', 'msn'), ('gateway', 'sms'), ('gateway', 'smtp'),
-               ('gateway', 'tlen'), ('gateway', 'yahoo'),
-               ('directory', 'user'), ('pubsub', 'pep'),
+               ('gateway', 'icq'), ('gateway', 'msn'), ('gateway', 'qq'),
+               ('gateway', 'sms'), ('gateway', 'smtp'), ('gateway', 'tlen'),
+               ('gateway', 'yahoo'), ('directory', 'user'), ('pubsub', 'pep'),
                ('component', 'presence'), ('store', 'file'),
                ('headline', 'newmail'), ('headline', 'rss'), ('headline', 'weather'),
                ('proxy', 'bytestreams') ]
