@@ -10,10 +10,6 @@
 #
 
 
-# TODO: Multithread
-# TODO: Testing
-# TODO: Simplify _discover_item()
-
 
 from ConfigParser import SafeConfigParser
 import logging
@@ -807,28 +803,6 @@ def _discover_item(clients, component, server):
 	return component
 
 
-def _show_node(node, indent=0):
-	'''Print the node and its childs'''
-	print node
-	print ' '*indent,
-	print 'JID:     ' + node[u'jid']
-	
-	print ' '*indent,
-	print 'node:     ' + node[u'node']
-	
-	if u'info' in node:
-		for identity in node[u'info'][0]:
-			print ' '*indent,
-			print 'INFO: id: ' + str(identity)
-		for feature in node[u'info'][1]:
-			print ' '*indent,
-			print 'INFO: ft: ' + str(feature)
-	
-	if u'items' in node:
-		for item in node[u'items']:
-			_show_node(item, indent+4)
-	
-
 def _get_clients(jabber_accounts, use_several_accounts):
 	'''Connect clients to the jabber accounts'''
 	
@@ -865,13 +839,6 @@ def _get_clients(jabber_accounts, use_several_accounts):
 	
 	return clients
 
-def _get_dispatchers(clients):
-	'''Return a dispatcher list'''
-	dispatchers = []
-	for client in clients:
-		dispatchers.append(client.Dispatcher)
-	
-	return dispatchers
 
 def _keep_alive_clients(clients):
 	'''Prevent client disconnections. Not sure if it really does something.'''
@@ -890,6 +857,7 @@ def _disconnect_clients(clients):
 			# invalid stanzas)
 			pass
 
+
 SERVER_LIST = None
 def discover_servers(server_list):
 	
@@ -903,18 +871,8 @@ def discover_servers(server_list):
 		                 u'unavailable_services': {} }
 	
 	# Connect to server
-		
-	#cl = Client(jabber_server, debug=[])
-	#if not cl.connect(secure=0):
-		#raise IOError('Can not connect to server.')
-	#if not cl.auth(jabber_user, jabber_password, jabber_resource):
-		#raise IOError('Can not auth with server.')
-	
-	#cl.sendInitPresence()
-	#cl.Process(1)
-	
+
 	clients = _get_clients(JABBER_ACCOUNTS, USE_MULTIPLE_QUERY_ACCOUNTS)
-	#dispatchers = _get_dispatchers(clients)
 	
 	logging.info('Begin discovery')
 	
@@ -934,15 +892,7 @@ def discover_servers(server_list):
 				_disconnect_clients(clients)
 				clients = _get_clients(JABBER_ACCOUNTS,
 				                       USE_MULTIPLE_QUERY_ACCOUNTS)
-				#dispatchers = _get_dispatchers(clients)
 				
-				#cl = Client(jabber_server, debug=[])
-				#if not cl.connect(secure=0):
-					#raise IOError('Can not connect to server.')
-				#if not cl.auth(jabber_user, jabber_password, jabber_resource):
-					#raise IOError('Can not auth with server.')
-				#cl.sendInitPresence()
-				#cl.Process(1)
 	except:
 		logging.critical( 'Aborting discovery on %s server.',
 		                  server[u'jid'], exc_info=sys.exc_info() )
@@ -951,10 +901,5 @@ def discover_servers(server_list):
 		logging.info('Discovery Finished Succesfully')
 	finally:
 		_disconnect_clients(clients)
-		#cl.Process(10)
-		#for server in servers:
-		#	show_node(server)
-		#cl.disconnect()
-	
 	
 	return servers
