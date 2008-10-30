@@ -158,16 +158,6 @@ def _count_components(server, service_type=None, availability='both'):
 def _get_table_header(types, sort_by=None, sort_links=None):
 	header = "\t<tr class='table_header'>"
 	
-	#header += "<th class='server'>"
-	#if sort_links is None:
-		#header += "Server"
-	#else:
-		#header += "<a href='%s'>Server</a>" % _get_filename(
-		                                          #sort_links['directory'],
-		                                          #sort_links['filename_prefix'])
-	#header += "</th>"
-	
-	
 	text = COLUMNS_DESCRIPTION['server'] if 'server' in COLUMNS_DESCRIPTION else 'Server'
 	
 	link = "<a href='%s'>%s</a>" % (
@@ -182,15 +172,6 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 		
 		if column_id in COLUMNS_DESCRIPTION:
 			text = COLUMNS_DESCRIPTION[column_id]['title']
-			#if 'description' in COLUMNS_DESCRIPTION[column_id]:
-				#text = "<div class='tooltip_container'>%s<div class='tooltip'><span>%s</span></div></div>" % (
-				           #COLUMNS_DESCRIPTION[column_id]['title'],
-				           #COLUMNS_DESCRIPTION[column_id]['description'] )
-				#text = "<abbr title='%s'>%s</abbr>" % (
-				           #COLUMNS_DESCRIPTION[column_id]['description'],
-				           #COLUMNS_DESCRIPTION[column_id]['title'] )
-			#else:
-				#text = COLUMNS_DESCRIPTION[column_id]['title']
 		else:
 			if column_id in types:
 				text = column_id[1]
@@ -203,41 +184,6 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 			        text )
 		th_class = "%s_%s" % (column_id[0], column_id[1]) if column_id in types else column_id
 		header += "<th class='%s'>%s</th>" % ( th_class, link if sort_links is not None else text )
-		#if service_type in COLUMNS_DESCRIPTION:
-			#text = COLUMNS_DESCRIPTION[service_type]
-		#else:
-			#text = service_type
-			
-		#header += "<th class='%s'>" % service_type
-		#if sort_links is None:
-			#header += text
-		#else:
-			#header += link
-			
-			##header += "<a href='%s'>%s</a>" % ( _get_filename(
-			                                       ##sort_links['directory'],
-			                                       ##sort_links['filename_prefix'],
-			                                       ##service_type ),
-			                                     ##text )
-		#header += "</th>"
-	
-	#header += "<th class='times_offline'>Times Offline</th>"
-	
-	#text = COLUMNS_DESCRIPTION['offline_since'] if 'offline_since' in COLUMNS_DESCRIPTION else 'Offline Since'
-	
-	#link = "<a href='%s'>%s</a>" % (
-	         #_get_filename( sort_links['directory'], sort_links['filename_prefix'], 'offline_since'),
-	         #text)
-	#header += ( "<th class='offline_since'>%s</th>" % 
-	                 #link if sort_links is not None else text )
-	
-	#text = COLUMNS_DESCRIPTION['times_online'] if 'times_online' in COLUMNS_DESCRIPTION else 'Times Online'
-	
-	#link = "<a href='%s'>%s</a>" % (
-	         #_get_filename( sort_links['directory'], sort_links['filename_prefix'], 'times_online'),
-	         #text)
-	#header += ( "<th class='times_online'>%s</th>" % 
-	                 #link if sort_links is not None else text )
 	
 	header += "</tr>\n"
 	
@@ -279,24 +225,6 @@ def get_rows(servers, types):
 	
 	for server_key, server in servers.iteritems():
 		
-		#row = "\t<tr class='"
-		#if (  len(server['available_services']) == 0 and
-		      #len(server['unavailable_services']) == 0 and
-		      #len(server[u'info'][0]) == 0 and
-		      #len(server[u'info'][1]) == 0  ):
-			#row += 'offline'
-		#elif row_number % 2 == 1:
-			#row += 'odd'
-		#else:
-			#row += 'even'
-		
-		#row += "'>\n"
-		
-		#row = "<td class='server"
-		##if sort_by == 'server':
-			##row += " sortedby"
-		#row += "'><a name='"+server[u'jid']+"'>"+server[u'jid']+"</a></td>"
-		
 		if SHRINK_SERVERNAMES and len(server[u'jid']) > SHRINK_SERVERNAMES_TO:
 			server_text = "<div class='tooltip_container'>%s...<div class='tooltip'><span>%s</span></div></div>" % (
 			           server[u'jid'][:SHRINK_SERVERNAMES_TO-3], server[u'jid'] )
@@ -313,26 +241,14 @@ def get_rows(servers, types):
 				row += """<td class='feature no %s_%s'></td>""" % (
 				                            service_type[0], service_type[1])
 			else:
-				
-				#row += "<td class='feature yes"
-				
 				if service_type in server['available_services']:
-					#row += " available"
 					service_available = True
 				else:
-					#row += " unavailable"
 					service_available = False
-				
-				#row += " " + service_type
-				#row += "'>"
 				
 				row += """<td class='feature yes %s %s_%s'>""" % (
 				           'available' if service_available else 'unavailable',
 				           service_type[0], service_type[1] )
-				
-				#row += "<div class='tooltip_container'><img src=\""
-				#row += _get_image_filename(service_type, service_available)
-				#row += "\" width=\"16\" height=\"16\" alt=\"Yes\" />"
 				
 				row += "<div class='tooltip_container'>"
 				row += ("""<img src='%s' width='16' height='16' alt='Yes' />""" %
@@ -354,14 +270,6 @@ def get_rows(servers, types):
 		        '' if server['offline_since'] is None else server['offline_since'].strftime('%d-%B-%Y %H:%M UTC'),
 		        server['times_queried_online'], server['times_queried'],
 		        int(100*server['times_queried_online']/server['times_queried']) )
-		
-		#FIX: don't display times_offline this way
-		#TODO: display it (needs a access to the DB) or mark the tr as offline?
-		#cell = "\t\t<td class='times_offline"
-		#cell += "'>4</td>"
-		#f.write(cell+"\n")
-		
-		#row += "</tr>\n"
 		
 		ROWS[server_key] = row
 	
@@ -400,21 +308,17 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		server_keys.sort()
 	elif sort_by is 'server':
 		# If it's a explicit request, then sort
-		#jid = lambda key: servers[key][u'jid']
-		#server_keys.sort(key=jid)
 		server_keys.sort()
 	elif sort_by is 'offline_since':
 		
 		# None is earlier than any date, so use current date
 		now = datetime.utcnow()
 		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
-		#server_keys.sort(key=jid)
 		server_keys.sort()
 		server_keys.sort(key=date)
 	elif sort_by is 'times_online':
 		
 		times = lambda key: float(servers[key]['times_queried_online'])/servers[key]['times_queried']
-		#server_keys.sort(key=jid)
 		server_keys.sort()
 		server_keys.sort(key=times, reverse=True)
 	else:
@@ -426,10 +330,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		num_unavailable_components = (
 		    lambda key: _count_components( servers[key], service_type=sort_by,
 		                                   availability='unavailable') )
-		#jid = lambda key: servers[key][u'jid']
 		
 		# Stable sort
-		#server_keys.sort(key=jid)
 		server_keys.sort()
 		server_keys.sort(key=num_unavailable_components, reverse=True)
 		server_keys.sort(key=num_available_components, reverse=True)
@@ -617,7 +519,6 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	cols = "\t\t\t<col class='server' />"
 	for service_type in types:
 		cols += "<col class='%s_%s' />" % (service_type[0], service_type[1])
-	#cols += "<col class='times_offline' />"
 	cols += "<col class='offline_since' /><col class='times_online' />\n"
 	
 	f.write(cols)
@@ -627,40 +528,16 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	
 	for row_number, server_key in enumerate(server_keys):
 		
-		#server = servers[server_key]
-		
 		if row_number % ROWS_BETWEEN_TITLES == 0:
 			f.write(table_header)
 		
-		#offline = ( len(servers[server_key][u'info'][0]) == 0 and
-		            #len(servers[server_key][u'info'][1]) == 0  )
 		offline = servers[server_key]['offline_since'] is not None
-		
-		#row = 'odd' if row_number % 2 == 1 else 'even'
 		
 		f.write( ("<tr class='%s%s'>%s</tr>\n" %
 		                     ( 'offline ' if offline else '',
 		                       'odd' if row_number % 2 == 1 else 'even',
 		                       rows[server_key] )) )
 		
-		#if (  len(server['available_services']) == 0 and
-		      #len(server['unavailable_services']) == 0 and
-		      #len(server[u'info'][0]) == 0 and
-		      #len(server[u'info'][1]) == 0  ):
-			#if row_number % 2 == 1:
-				#f.write("\t<tr class='offline odd'>")
-			#else:
-				#f.write("\t<tr class='offline even'>")
-		#else:
-			#if row_number % 2 == 1:
-				#f.write("\t<tr class='odd'>")
-			#else:
-				#f.write("\t<tr class='even'>")
-		
-		#f.write(rows[server[u'jid']])
-		#f.write("</tr>")
-		
-	
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header)
 	
@@ -677,7 +554,6 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		gzf.close()
 		shutil.move(tmpgzfilename, filename+'.gz')
 		
-	
 	f.close()
 	
 	shutil.move(tmpfilename, filename)
@@ -700,10 +576,6 @@ def generate_all( directory, filename_prefix, servers, types, minimun_uptime=0,
 	generate( _get_filename( directory, filename_prefix, extension=extension ),
 	          servers, types, sort_links=sort_links, minimun_uptime=minimun_uptime,
               compress=compress )
-	#generate( _get_filename( directory, filename_prefix, service_type='server',
-	                         #extension=extension ),
-	          #servers, types, sort_by='server', sort_links=sort_links,
-	          #compress=compress )
 	
 	for service_type in types:
 		generate( _get_filename( directory, filename_prefix, by=service_type,
