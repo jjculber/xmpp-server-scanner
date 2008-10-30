@@ -192,7 +192,6 @@ if DO_DISCOVERY:
 				try:
 					servers[jid] = old_servers[jid]
 					server = servers[jid]
-					#servers[jid]['times_queried'] += 1
 					if server['offline_since'] is None:
 						server['offline_since'] = now
 					server['uptime_data'][now] = False
@@ -201,20 +200,14 @@ if DO_DISCOVERY:
 					logging.debug("Initializing stability data for %s", jid)
 					server['uptime_data'] = {now: False}
 					server['offline_since'] = now
-					#server['times_queried_online'] = 0
-					#server['times_queried'] = 1
 			else:
 				server['offline_since'] = None
 				try:
 					server['uptime_data'] = old_servers[jid]['uptime_data']
 					server['uptime_data'][now] = True
-					#server['times_queried_online'] = old_servers[jid]['times_queried_online'] + 1
-					#server['times_queried'] =  old_servers[jid]['times_queried'] + 1
 				except KeyError: # It's a new server
 					logging.debug("Initializing stability data for %s", jid)
 					server['uptime_data'] = {now: True}
-					#server['times_queried_online'] = 1
-					#server['times_queried'] = 1
 			
 			# Delete old uptime information
 			
@@ -248,25 +241,6 @@ else:
 		                 exc_info=sys.exc_info())
 		raise
 
-#for jid, server in sorted(servers.iteritems()):
-	
-	#print 'Server: %s' % server[u'jid']
-	#if server['offline_since'] is None:
-		#print 'Online'
-	#else:
-		#print 'Offline Since: %s' % time.strftime('%d-%B-%Y %H:%M', server['offline_since'])
-	#print 'Times Online: %s/%s' % (str(server['times_queried_online']), str(server['times_queried']))
-	#print "Available:",
-	#for service in server[u'available_services']:
-		#print "\n %s provided by:" % service,
-		#print ' '.join(server[u'available_services'][service]),
-		
-	#print "\nUnavailable:",
-	#for service in server[u'unavailable_services']:
-		#print "\n %s provided by: " % service,
-		#print ' '.join(server[u'unavailable_services'][service]),
-	#print '\n'
-
 
 # Now dump the information to the dataabase
 
@@ -295,8 +269,6 @@ show_types = [ ('conference','x-muc'), ('conference','irc'),
                ('headline', 'newmail'), ('headline', 'rss'), ('headline', 'weather'),
                ('proxy', 'bytestreams') ]
 
-#known_types.sort()
-#html_file_generator.generate('../servers-pybot.html', servers, known_types)
 if GENERATE_HTML_FILES:
 	html_file_generator.generate_all( directory=OUTPUT_DIRECTORY,
 	                                  filename_prefix=HTML_FILES_PREFIX,
