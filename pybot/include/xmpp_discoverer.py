@@ -829,31 +829,39 @@ def _show_node(node, indent=0):
 			_show_node(item, indent+4)
 	
 
-def _get_clients(accounts):
+def _get_clients(jabber_accounts, use_several_accounts):
 	'''Connect clients to the jabber accounts'''
 	
 	clients = []
 	
-	for account in accounts:
-		client = Client(account['server'], debug=[])
-		if not client.connect(secure=0):
-			logging.error("Can not connect to %s server", account['server'])
-			#raise IOError('Can not connect to server.')
-			continue
-		if not client.auth(account['user'], account['password'], account['resource']):
-			logging.error("Can not auth as %s@%s", account['user'], account['server'])
-			#raise IOError('Can not auth with server.')
-			continue
+	accounts = jabber_accounts
+	
+	while len(clients) == 0 and len(jabber_accounts) > 0:
+		if not use_several_accounts:
+			accounts = [choice(jabber_accounts)]
 		
-		client.RegisterHandler('message', _handle_messages)
-		client.sendInitPresence()
-		client.Process(1)
+		for account in accounts:
+			client = Client(account['server'], debug=[])
+			if not client.connect(secure=0):
+				jabber_accounts.remove(account)
+				logging.error("Can not connect to %s server, please check your configuration", account['server'])
+				#raise IOError('Can not connect to server.')
+				continue
+			if not client.auth(account['user'], account['password'], account['resource']):
+				jabber_accounts.remove(account)
+				logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
+				#raise IOError('Can not auth with server.')
+				continue
 		
-		clients.append(client)
+			client.RegisterHandler('message', _handle_messages)
+			client.sendInitPresence()
+			client.Process(1)
+			
+			clients.append(client)
 	
 	if len(clients) == 0:
 		logging.critical("Can not login into any jabber account, please check your configuration")
-		raise Exception('No jabber accounts available')
+		raise IOError('Can not login into any jabber account, please check your configuration')
 	
 	return clients
 
@@ -888,11 +896,6 @@ def discover_servers(server_list):
 	global SERVER_LIST
 	SERVER_LIST = server_list
 	
-	if USE_MULTIPLE_QUERY_ACCOUNTS:
-		accounts = JABBER_ACCOUNTS
-	else:
-		accounts = [choice(JABBER_ACCOUNTS)]
-	
 	servers = {}
 	
 	for jid in server_list:
@@ -910,7 +913,7 @@ def discover_servers(server_list):
 	#cl.sendInitPresence()
 	#cl.Process(1)
 	
-	clients = _get_clients(accounts)
+	clients = _get_clients(JABBER_ACCOUNTS, USE_MULTIPLE_QUERY_ACCOUNTS)
 	#dispatchers = _get_dispatchers(clients)
 	
 	logging.info('Begin discovery')
@@ -929,7 +932,8 @@ def discover_servers(server_list):
 				                 server[u'jid'], exc_info=sys.exc_info() )
 				
 				_disconnect_clients(clients)
-				clients = _get_clients(accounts)
+				clients = _get_clients(JABBER_ACCOUNTS,
+				                       USE_MULTIPLE_QUERY_ACCOUNTS)
 				#dispatchers = _get_dispatchers(clients)
 				
 				#cl = Client(jabber_server, debug=[])
