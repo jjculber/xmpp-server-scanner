@@ -261,7 +261,7 @@ elif UPDATE_DATABASE and CAN_UPDATE_DATABASE:
 # http://www.xmpp.org/registrar/disco-categories.html
 # Pure MUC components are marked as x-muc by the xmpp_discoverer
 show_types = [ ('conference','x-muc'), ('conference','irc'),
-               ('gateway', 'aim'), ('gateway', 'gadu-gadu'), ('gateway', 'icq'),
+               ('gateway', 'aim'), ('gateway', 'gadu-gadu'),
                ('gateway', 'icq'), ('gateway', 'msn'), ('gateway', 'qq'),
                ('gateway', 'sms'), ('gateway', 'smtp'), ('gateway', 'tlen'),
                ('gateway', 'yahoo'), ('directory', 'user'), ('pubsub', 'pep'),
