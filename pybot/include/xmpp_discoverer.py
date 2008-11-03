@@ -816,7 +816,7 @@ def _get_clients(jabber_accounts, use_several_accounts):
 		
 		for account in accounts:
 			client = Client(account['server'], debug=[])
-			if not client.connect(secure=0):
+			if not client.connect():
 				jabber_accounts.remove(account)
 				logging.error("Can not connect to %s server, please check your configuration", account['server'])
 				#raise IOError('Can not connect to server.')
