@@ -225,6 +225,8 @@ def get_rows(servers, types):
 	
 	ROWS = {}
 	
+	component_jid = lambda component: component.get('jid')
+	
 	for server_key, server in servers.iteritems():
 		
 		if SHRINK_SERVERNAMES and len(server[u'jid']) > SHRINK_SERVERNAMES_TO:
@@ -258,11 +260,13 @@ def get_rows(servers, types):
 				
 				row += "<div class='tooltip'>"
 				if service_type in server['available_services']:
-					for component in sorted(server['available_services'][service_type]):
+					for component in sorted( server['available_services'][service_type],
+					                         key=component_jid ):
 						row += """<span class='available'>%s</span>""" % (
 						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
 				if service_type in server['unavailable_services']:
-					for component in sorted(server['unavailable_services'][service_type]):
+					for component in sorted( server['unavailable_services'][service_type],
+					        key=component_jid ):
 						row += """<span class='unavailable'>%s</span>""" % (
 						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
 				row += "</div></div></td>"
