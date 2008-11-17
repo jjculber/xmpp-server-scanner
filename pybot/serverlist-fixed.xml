@@ -36,6 +36,8 @@
   <item jid='core.segfault.pl'/>
   <item jid='coruscant.info'/>
   <item jid='default.co.yu'/>
+  <!-- core.im was not in the original file -->
+  <item jid='core.im'/>
   <item jid='deshalbfrei.org'/>
 <!--   <item jid='dimaz.homelinux.org'/> -->
   <item jid='downtempo.de'/>
