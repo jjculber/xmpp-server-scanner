@@ -61,7 +61,7 @@
 
 from ConfigParser import SafeConfigParser
 from datetime import datetime
-from glob import iglob
+from glob import glob
 import gzip
 import logging
 from os.path import abspath, dirname, basename, join
@@ -160,13 +160,13 @@ def _count_components(server, service_type=None, availability='both'):
 def _get_table_header(types, sort_by=None, sort_links=None):
 	header = "\t<tr class='table_header'>"
 	
-	text = COLUMNS_DESCRIPTION['server'] if 'server' in COLUMNS_DESCRIPTION else 'Server'
+	text = ('server' in COLUMNS_DESCRIPTION) and COLUMNS_DESCRIPTION['server'] or 'Server'
 	
 	link = "<a href='%s'>%s</a>" % (
 	         _get_filename( sort_links['directory'], sort_links['filename_prefix']),
 	         text)
-	header += ( "<th class='server'>%s</th>" % 
-	                 link if sort_links is not None else text )
+	header += ( "<th class='server'>%s</th>" % (
+	                 (sort_links is not None) and link or text ) )
 	
 	columns = list(types)
 	columns.extend(['offline_since', 'times_online'])
@@ -182,16 +182,16 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 		
 		link = "<a href='%s'%s>%s</a>" % (
 			        _get_filename( sort_links['directory'], sort_links['filename_prefix'], column_id ),
-		            " title='%s'" % COLUMNS_DESCRIPTION[column_id]['description'] if 'description' in COLUMNS_DESCRIPTION[column_id] else '',
+			        ('description' in COLUMNS_DESCRIPTION[column_id]) and (" title='%s'" % COLUMNS_DESCRIPTION[column_id]['description']) or '',
 			        text )
-		th_class = "%s_%s" % (column_id[0], column_id[1]) if column_id in types else column_id
-		header += "<th class='%s'>%s</th>" % ( th_class, link if sort_links is not None else text )
+		th_class = (column_id in types) and ("%s_%s" % (column_id[0], column_id[1])) or column_id
+		header += "<th class='%s'>%s</th>" % ( th_class, (sort_links is not None) and link or text )
 	
 	header += "</tr>\n"
 	
 	return header
 
-FILES = [basename(f) for f in iglob(join(OUTPUT_DIRECTORY, 'images', '*.png'))]
+FILES = [basename(f) for f in glob(join(OUTPUT_DIRECTORY, 'images', '*.png'))]
 def _get_image_filename(service_type, available):
 	
 	if not isinstance(service_type, tuple):
@@ -251,7 +251,7 @@ def get_rows(servers, types):
 					service_available = False
 				
 				row += """<td class='feature yes %s %s_%s'>""" % (
-				           'available' if service_available else 'unavailable',
+				           service_available and 'available' or 'unavailable',
 				           service_type[0], service_type[1] )
 				
 				row += "<div class='tooltip_container'>"
@@ -263,17 +263,17 @@ def get_rows(servers, types):
 					for component in sorted( server['available_services'][service_type],
 					                         key=component_jid ):
 						row += """<span class='available'>%s</span>""" % (
-						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
+						  ('node' in component) and ("%s (%s)" % (component[u'jid'], component[u'node'])) or component[u'jid'] )
 				if service_type in server['unavailable_services']:
 					for component in sorted( server['unavailable_services'][service_type],
 					        key=component_jid ):
 						row += """<span class='unavailable'>%s</span>""" % (
-						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
+						  ('node' in component) and ("%s (%s)" % (component[u'jid'], component[u'node'])) or component[u'jid'] )
 				row += "</div></div></td>"
 				
 			
 		row += "<td class='offline_since'>%s</td><td class='times_online'>%d/%d (%d%%)</td>" % (
-		        '' if server['offline_since'] is None else server['offline_since'].strftime('%d-%B-%Y %H:%M UTC'),
+		        (server['offline_since'] is not None)  and server['offline_since'].strftime('%d-%B-%Y %H:%M UTC') or '',
 		        server['times_queried_online'], server['times_queried'],
 		        int(100*server['times_queried_online']/server['times_queried']) )
 		
@@ -319,7 +319,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		
 		# None is earlier than any date, so use current date
 		now = datetime.utcnow()
-		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
+		date = lambda key: (servers[key]['offline_since'] is not None) and servers[key]['offline_since'] or now
 		server_keys.sort()
 		server_keys.sort(key=date)
 	elif sort_by is 'times_online':
@@ -540,8 +540,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		offline = servers[server_key]['offline_since'] is not None
 		
 		f.write( ("<tr class='%s%s'>%s</tr>\n" %
-		                     ( 'offline ' if offline else '',
-		                       'odd' if row_number % 2 == 1 else 'even',
+		                     ( offline and 'offline ' or '',
+		                       (row_number % 2 == 1) and 'odd' or 'even',
 		                       rows[server_key] )) )
 		
 	if row_number % ROWS_BETWEEN_TITLES != 1:

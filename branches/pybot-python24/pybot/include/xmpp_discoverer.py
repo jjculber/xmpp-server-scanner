@@ -336,7 +336,7 @@ def _test_gateway(client, jid, service_category, service_type):
 			              jid, service_category, service_type, str(fields_not_available))
 			return True
 		
-		account = dict([(field, account[field] if field in account else value) for field, value in required_fields.iteritems()])
+		account = dict([(field, (field in account) and account[field] or value) for field, value in required_fields.iteritems()])
 		
 		# Openfire XMPP gateway uses username as the Jabber ID
 		# J2J Transport (http://JRuDevels.org) Twisted-version uses username and server
@@ -372,81 +372,90 @@ def _guess_component_info(component):
 	
 	logging.debug('Guessing type of %s', jid)
 	
+	def startswith(string, value):
+		if type(value) in (tuple, list):
+			for v in value:
+				if string.startswith(v):
+					return True
+			return False
+		else:
+			return string.startswith(value)
+	
 	# Server
 	if jid in SERVER_LIST:
 		info = ( [{u'category': u'server', u'type': u'im'}], [] )
 	# Conference
-	elif ( jid.startswith((u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
+	elif ( startswith(jid, (u'conference.', u'conf.', u'muc.', u'chat.', u'rooms.'))
 	     and not ( '.yahoo.' in jid or '.irc.' in jid ) ):
 		# MUC
 		info = ( [ {u'category': u'conference', u'type': u'text'},
 		           {u'category': u'conference', u'type': u'x-muc'} ],
 		         [u'http://jabber.org/protocol/muc'] )
-	elif jid.startswith(u'irc.'):
+	elif startswith(jid, u'irc.'):
 		info = ( [{u'category': u'conference', u'type': u'irc'}], [] )
 	
 	# Transports
-	elif jid.startswith((u'aim.', u'aim-jab.')):
+	elif startswith(jid, (u'aim.', u'aim-jab.')):
 		info = ( [{u'category': u'gateway', u'type': u'aim'}], [] )
-	elif jid.startswith(u'aim-icq.'):
+	elif startswith(jid, u'aim-icq.'):
 		info = ( [ {u'category': u'gateway', u'type': u'aim'},
 	               {u'category': u'gateway', u'type': u'icq'} ], [] )
-	elif jid.startswith((u'gg.', u'gadugadu.', u'gadu-gadu.')):
+	elif startswith(jid, (u'gg.', u'gadugadu.', u'gadu-gadu.')):
 		info = ( [{u'category': u'gateway', u'type': u'gadu-gadu'}], [] )
-	elif jid.startswith(u'http-ws.'):
+	elif startswith(jid, u'http-ws.'):
 		info = ( [{u'category': u'gateway', u'type': u'http-ws'}], [] )
-	elif jid.startswith((u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2.')):
+	elif startswith(jid, (u'icq.', u'icqt.', u'jit-icq.', u'icq-jab.', u'icq2.')):
 		info = ( [{u'category': u'gateway', u'type': u'icq'}], [] )
-	elif jid.startswith((u'msn.', u'msnt.', u'pymsnt.')):
+	elif startswith(jid, (u'msn.', u'msnt.', u'pymsnt.')):
 		info = ( [{u'category': u'gateway', u'type': u'msn'}], [] )
-	elif jid.startswith(u'qq.'):
+	elif startswith(jid, u'qq.'):
 		info = ( [{u'category': u'gateway', u'type': u'qq'}], [] )
-	elif jid.startswith(u'sms.'):
+	elif startswith(jid, u'sms.'):
 		info = ( [{u'category': u'gateway', u'type': u'sms'}], [] )
-	elif jid.startswith(u'smtp.'):
+	elif startswith(jid, u'smtp.'):
 		info = ( [{u'category': u'gateway', u'type': u'smtp'}], [] )
-	elif jid.startswith(u'tlen.'):
+	elif startswith(jid, u'tlen.'):
 		info = ( [{u'category': u'gateway', u'type': u'tlen'}], [] )
-	elif jid.startswith(u'xfire.'):
+	elif startswith(jid, u'xfire.'):
 		info = ( [{u'category': u'gateway', u'type': u'xfire'}], [] )
-	elif jid.startswith((u'xmpp.', u'j2j.')):
+	elif startswith(jid, (u'xmpp.', u'j2j.')):
 		info = ( [{u'category': u'gateway', u'type': u'xmpp'}], [] )
-	elif jid.startswith(u'yahoo.'):
+	elif startswith(jid, u'yahoo.'):
 		info = ( [{u'category': u'gateway', u'type': u'yahoo'}], [] )
 	
 	# Directories
-	elif jid.startswith((u'jud.', u'vjud.', u'search.', u'users.')):
+	elif startswith(jid, (u'jud.', u'vjud.', u'search.', u'users.')):
 		info = ( [{u'category': u'directory', u'type': u'user'}], [] )
 	
 	# PubSub
-	elif jid.startswith(u'pubsub.'):
+	elif startswith(jid, u'pubsub.'):
 		info = ( [{u'category': u'pubsub', u'type': u'service'}], [] )
-	elif jid.startswith(u'pep.'):
+	elif startswith(jid, u'pep.'):
 		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
-	elif jid.startswith((u'presence.', u'webpresence.', u'status.')):
+	elif startswith(jid, (u'presence.', u'webpresence.', u'status.')):
 		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
-	elif jid.startswith((u'newmail.', u'mail.', u'jmc.')):
+	elif startswith(jid, (u'newmail.', u'mail.', u'jmc.')):
 		info = ( [{u'category': u'headline', u'type': u'newmail'}], [] )
-	elif jid.startswith(u'rss.'):
+	elif startswith(jid, u'rss.'):
 		info = ( [{u'category': u'headline', u'type': u'rss'}], [] )
-	elif jid.startswith(u'weather.'):
+	elif startswith(jid, u'weather.'):
 		info = ( [{u'category': u'headline', u'type': u'weather'}], [] )
 	
 	# Proxy
-	elif jid.startswith((u'proxy.', u'proxy65.')):
+	elif startswith(jid, (u'proxy.', u'proxy65.')):
 		info = ( [{u'category': u'proxy', u'type': u'bytestreams'}], [] )
 		
 	# Store
-	elif jid.startswith((u'file.', u'disk.', u'jdisk.', u'dysk.')):
+	elif startswith(jid, (u'file.', u'disk.', u'jdisk.', u'dysk.')):
 		info = ( [{u'category': u'store', u'type': u'file'}], [] )
 	
 	
 	# Non standard
-	elif jid.startswith(u'gtalk.'):
+	elif startswith(jid, u'gtalk.'):
 		info = ( [{u'category': u'gateway', u'type': u'gtalk'}], [] )
 	
 	
@@ -877,28 +886,29 @@ def discover_servers(server_list):
 	logging.info('Begin discovery')
 	
 	try:
-		for jid in sorted(servers.keys()):
-			server = servers[jid]
-			_keep_alive_clients(clients)
-			
-			try:
-				_discover_item(clients, server, server)
-			
-			except xml.parsers.expat.ExpatError: # Restart the clients
-				#cl.disconnect()
-				logging.warning( 'Aborting discovery of %s server. Restart clients and continue',
-				                 server[u'jid'], exc_info=sys.exc_info() )
+		try:
+			for jid in sorted(servers.keys()):
+				server = servers[jid]
+				_keep_alive_clients(clients)
 				
-				_disconnect_clients(clients)
-				clients = _get_clients(JABBER_ACCOUNTS,
-				                       USE_MULTIPLE_QUERY_ACCOUNTS)
+				try:
+					_discover_item(clients, server, server)
 				
-	except:
-		logging.critical( 'Aborting discovery on %s server.',
-		                  server[u'jid'], exc_info=sys.exc_info() )
-		raise
-	else:
-		logging.info('Discovery Finished Succesfully')
+				except xml.parsers.expat.ExpatError: # Restart the clients
+					#cl.disconnect()
+					logging.warning( 'Aborting discovery of %s server. Restart clients and continue',
+					                 server[u'jid'], exc_info=sys.exc_info() )
+					
+					_disconnect_clients(clients)
+					clients = _get_clients(JABBER_ACCOUNTS,
+					                       USE_MULTIPLE_QUERY_ACCOUNTS)
+					
+		except:
+			logging.critical( 'Aborting discovery on %s server.',
+							server[u'jid'], exc_info=sys.exc_info() )
+			raise
+		else:
+			logging.info('Discovery Finished Succesfully')
 	finally:
 		_disconnect_clients(clients)
 	

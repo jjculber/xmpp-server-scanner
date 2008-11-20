@@ -170,61 +170,62 @@ if DO_DISCOVERY:
 	uptime_log_days = timedelta(UPTIME_LOG_DAYS)
 	
 	try:
-		f = open(SERVERS_DUMP_FILE, 'rb')
-		old_servers = pickle.load(f)
-		f.close()
-		
-	except IOError:
-		logging.warning( "Error loading servers data in file %s. Is the script executed for first time?" % SERVERS_DUMP_FILE,
-		                 exc_info=sys.exc_info() )
-		for server in servers.itervalues():
-			if offline(server):
-				server['offline_since'] = now
-				server['uptime_data'] = {now: False}
-				server['times_queried_online'] = 0
-				server['times_queried'] = 1
-			else:
-				server['offline_since'] = None
-				server['uptime_data'] = {now: True}
-				server['times_queried_online'] = 1
-				server['times_queried'] = 1
-		
-	else:
-		for jid, server in servers.iteritems():
-			if offline(server):
-				try:
-					servers[jid] = old_servers[jid]
-					server = servers[jid]
-					if server['offline_since'] is None:
-						server['offline_since'] = now
-					server['uptime_data'][now] = False
-					logging.warning("%s server seems to be offline, using old data", jid)
-				except KeyError: # It's a new server
-					logging.debug("Initializing stability data for %s", jid)
-					server['uptime_data'] = {now: False}
+		try:
+			f = open(SERVERS_DUMP_FILE, 'rb')
+			old_servers = pickle.load(f)
+			f.close()
+			
+		except IOError:
+			logging.warning( "Error loading servers data in file %s. Is the script executed for first time?" % SERVERS_DUMP_FILE,
+							exc_info=sys.exc_info() )
+			for server in servers.itervalues():
+				if offline(server):
 					server['offline_since'] = now
-			else:
-				server['offline_since'] = None
-				try:
-					server['uptime_data'] = old_servers[jid]['uptime_data']
-					server['uptime_data'][now] = True
-				except KeyError: # It's a new server
-					logging.debug("Initializing stability data for %s", jid)
-					server['uptime_data'] = {now: True}
-			
-			# Delete old uptime information
-			
-			for log_date in sorted(server['uptime_data']):
-				if (now - log_date) > uptime_log_days:
-					del(server['uptime_data'][log_date])
+					server['uptime_data'] = {now: False}
+					server['times_queried_online'] = 0
+					server['times_queried'] = 1
 				else:
-					break
+					server['offline_since'] = None
+					server['uptime_data'] = {now: True}
+					server['times_queried_online'] = 1
+					server['times_queried'] = 1
 			
-			#Recalculate times_queried_online and times_queried
+		else:
+			for jid, server in servers.iteritems():
+				if offline(server):
+					try:
+						servers[jid] = old_servers[jid]
+						server = servers[jid]
+						if server['offline_since'] is None:
+							server['offline_since'] = now
+						server['uptime_data'][now] = False
+						logging.warning("%s server seems to be offline, using old data", jid)
+					except KeyError: # It's a new server
+						logging.debug("Initializing stability data for %s", jid)
+						server['uptime_data'] = {now: False}
+						server['offline_since'] = now
+				else:
+					server['offline_since'] = None
+					try:
+						server['uptime_data'] = old_servers[jid]['uptime_data']
+						server['uptime_data'][now] = True
+					except KeyError: # It's a new server
+						logging.debug("Initializing stability data for %s", jid)
+						server['uptime_data'] = {now: True}
+				
+				# Delete old uptime information
+				
+				for log_date in sorted(server['uptime_data']):
+					if (now - log_date) > uptime_log_days:
+						del(server['uptime_data'][log_date])
+					else:
+						break
+				
+				#Recalculate times_queried_online and times_queried
+				
+				server['times_queried_online'] = server['uptime_data'].values().count(True)
+				server['times_queried'] = len(server['uptime_data'])
 			
-			server['times_queried_online'] = server['uptime_data'].values().count(True)
-			server['times_queried'] = len(server['uptime_data'])
-		
 	finally:
 		try:
 			f = open(SERVERS_DUMP_FILE, 'wb')

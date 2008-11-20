@@ -66,7 +66,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 	
 	for server in servers.itervalues():
 		
-		offline_since = None if server['offline_since'] is None else server['offline_since'].strftime('%Y-%m-%d %H:%M:%S')
+		offline_since = (server['offline_since'] is not None) and server['offline_since'].strftime('%Y-%m-%d %H:%M:%S' or None)
 		
 		# Add server
 		logging.debug('Add server %s', server[u'jid'])
@@ -104,7 +104,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 					                       category = %s, type = %s, available = %s
 					                     ON DUPLICATE KEY UPDATE available = %s""",
 					                (component[u'jid'],
-					                 component[u'node'] if 'node' in component else None,
+					                 ('node' in component) and component[u'node'] or None,
 					                 server[u'jid'], service_type[0], service_type[1],
 					                 True, True) )
 			
@@ -118,7 +118,7 @@ def update_database(db_user, db_password, db_host, db_database, servers):
 					                      category = %s, type = %s, available = %s
 					                    ON DUPLICATE KEY UPDATE available = %s""",
 					                (component[u'jid'],
-					                 component[u'node'] if 'node' in component else None,
+					                 ('node' in component) and component[u'node'] or None,
 					                 server[u'jid'], service_type[0], service_type[1],
 					                 False, False) )
 		
