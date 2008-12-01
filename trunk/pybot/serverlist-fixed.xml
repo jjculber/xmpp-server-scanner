@@ -95,7 +95,7 @@
   <item jid='jabber.cc'/>
   <item jid='jabber.ccc.de'/>
   <item jid='jabber.chaotic.de'/>
-<!--   <item jid='jabber.cl'/> -->
+  <item jid='jabber.cl'/>
   <item jid='jabber.cn'/>
 <!--   <item jid='jabber.cocoacastle.com'/> -->
   <item jid='jabber.com.ar'/>
@@ -129,7 +129,7 @@
   <item jid='jabber.mbod.net'/>
   <item jid='jabber.me.uk'/>
   <item jid='jabber.minus273.org'/>
-<!--   <item jid='jabber.mobi'/> -->
+  <item jid='jabber.mobi'/>
 <!--   <item jid='jabber.n-club.de'/> -->
 <!--   <item jid='jabber.net-line.net.ua'/> -->
 <!--   <item jid='jabber.networx-bg.com'/> -->
@@ -212,7 +212,7 @@
   <item jid='neko.im'/>
   <item jid='netcube.pl'/>
   <item jid='njs.netlab.cz'/>
-<!--   <item jid='noicq.org'/> -->
+  <item jid='noicq.org'/>
 <!--   <item jid='nulani.net'/> -->
 <!--   <item jid='om.tlt.ru'/> -->
   <item jid='opendigital.org'/>
@@ -258,6 +258,7 @@
 <!--   <item jid='udias.com'/> -->
 <!--   <item jid='unilans.net'/> -->
   <item jid='unstable.nl'/>
+  <item jid='vayusphere.com'/>
   <item jid='verdammung.org'/>
   <item jid='vilinkup.com'/>
   <item jid='vke.ru'/>
@@ -268,7 +269,7 @@
 <!--   <item jid='wankoo.org'/> -->
 <!--   <item jid='www.wigiwigi.com'/> -->
   <item jid='x23.eu'/>
-<!--   <item jid='x23.eu'/> -->
+  <item jid='x23.eu'/>
   <item jid='xabber.de'/>
   <item jid='xim.ca'/>
 <!--   <item jid='xmpp-im.net'/> -->
@@ -280,8 +281,7 @@
   <item jid='xmpp.mdve.net'/>
 <!--   <item jid='xmpp.nl'/> -->
   <item jid='xmpp.org.ru'/>
-<!--   <item jid='xmpp.us'/> -->
-<!--   <item jid='xmpp.vayusphere.com'/> -->
+  <item jid='xmpp.us'/>
   <item jid='xmpp.ws'/>
   <item jid='xmppnet.de'/>
   <item jid='zweilicht.org'/>
