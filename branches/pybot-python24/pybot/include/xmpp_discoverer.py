@@ -434,7 +434,7 @@ def _guess_component_info(component):
 		info = ( [{u'category': u'pubsub', u'type': u'pep'}], [] )
 	
 	# Presence
-	elif startswith(jid, (u'presence.', u'webpresence.', u'status.')):
+	elif startswith(jid, (u'presence.', u'webpresence.', u'status.', u'webstatus.')):
 		info = ( [{u'category': u'component', u'type': u'presence'}], [] )
 	
 	# Headline
