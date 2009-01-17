@@ -550,13 +550,13 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		f.write( ("<tr class='%s%s'>%s</tr>\n" %
 		                     ( 'offline ' if offline else '',
 		                       'odd' if row_number % 2 == 1 else 'even',
-		                       rows[server_key] )) )
+		                       rows[server_key] )).encode("utf-8") )
 		
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header)
 	
-	f.write("</table><div class='footer'>Page generated on %s</div></body></html>\n" %
-	                    datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC') )
+	f.write(("</table><div class='footer'>Page generated on %s</div></body></html>\n" %
+	                    datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC')) )
 	
 	
 	if compress:
