@@ -555,6 +555,10 @@ def _handle_component_available(component, server, client):
 	
 	_normalize_identities(component)
 	
+	version = _get_version(component, client)
+	if version != {}:
+		component['version'] = version
+	
 	available = True
 	
 	# If it's a gateway, be sure that we can register on it, if not, treat it as a unavailable component
@@ -569,7 +573,8 @@ def _handle_component_available(component, server, client):
 			for identity in component[u'info'][0]:
 				if _test_gateway(client, component[u'jid'], identity[u'category'], identity[u'type']) == False:
 					available = False
-	elif component[u'jid'].startswith('conference.irc.'):
+	elif component[u'jid'].startswith('conference.irc.') and (
+			'name' in version and version['name'].startswith('Openfire ')):
 		# It's likely to be part of the old Openfire IRC Gateway.
 		# Their transport was separated in two components ( irc.server and conference.irc.server)
 		# Their gateways were blocked for external users.

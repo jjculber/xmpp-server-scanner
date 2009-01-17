@@ -262,13 +262,21 @@ def get_rows(servers, types):
 				if service_type in server['available_services']:
 					for component in sorted( server['available_services'][service_type],
 					                         key=component_jid ):
-						row += """<span class='available'>%s</span>""" % (
-						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
+						component_text = component[u'jid']
+						if 'node' in component:
+							component_text += " (%s)" % component[u'node']
+						if 'version' in component:
+							component_text += " [%s %s]" % (component[u'version']['name'], component[u'version']['version'])
+						row += """<span class='available'>%s</span>""" % component_text
 				if service_type in server['unavailable_services']:
 					for component in sorted( server['unavailable_services'][service_type],
 					        key=component_jid ):
-						row += """<span class='unavailable'>%s</span>""" % (
-						  "%s (%s)" % (component[u'jid'], component[u'node']) if 'node' in component else component[u'jid'] )
+						component_text = component[u'jid']
+						if 'node' in component:
+							component_text += " (%s)" % component[u'node']
+						if 'version' in component:
+							component_text += " [%s %s]" % (component[u'version']['name'], component[u'version']['version'])
+						row += """<span class='unavailable'>%s</span>""" % component_text
 				row += "</div></div></td>"
 				
 			
