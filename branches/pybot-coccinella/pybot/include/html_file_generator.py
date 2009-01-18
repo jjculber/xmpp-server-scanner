@@ -157,6 +157,72 @@ def _count_components(server, service_type=None, availability='both'):
 			return num
 
 
+
+def _sort_by_name_and_version(servers, server_keys, service_type):
+	'''Sort by name and version'''
+	server_list = []
+	components = {}
+	unversioned_components = []
+	servers_without_component = []
+	
+	for server_jid, server in servers.iteritems():
+		server_components = []
+		if service_type in server['available_services']:
+			server_components.extend(server['available_services'][service_type])
+		if service_type in server['unavailable_services']:
+			server_components.extend(server['unavailable_services'][service_type])
+		if len(server_components) == 0:
+			servers_without_component.append(server_jid)
+			continue
+	
+	#for server_jid,server_components in component_list:
+		server_component = server_components[0] # Only use the first one
+		if 'version' in server_component:
+			name = server_component['version']['name']
+			version = server_component['version']['version']
+			
+			if name in components:
+				if version in components[name]:
+					components[name][version].append(server_jid)
+				else:
+					components[name][version] = [server_jid]
+			else:
+				components[name] = {version: [server_jid]}
+		else:
+			unversioned_components.append(server_jid)
+	
+	versions = {}
+	
+	for name in components:
+		versions[name] = sorted(components[name].keys(), key=lambda x: None if x is None else x.replace('.',chr(127)), reverse=True) #.replace(' ',chr(126)))
+	
+	while len(components) > 0:
+		for name in components.keys():
+			if name in components:
+				if len(components[name][versions[name][0]]) > 0:
+					server_list.append(components[name][versions[name][0]].pop())
+				else:
+					# There aren't more components with the same version
+					# Look if other components also have reached the last component of their current version
+					# If so, proceed with the next version
+					end = True
+					for name in components:
+						if len(components[name][versions[name][0]]) > 0:
+							end = False
+							break
+					if end:
+						for name in components.keys():
+							del components[name][versions[name][0]]
+							del versions[name][0]
+							if len(versions[name]) == 0:
+								del versions[name]
+								del components[name]
+				
+	server_list.extend(unversioned_components)
+	server_list.extend(servers_without_component)
+	return server_list
+
+
 def _get_table_header(types, sort_by=None, sort_links=None):
 	header = "\t<tr class='table_header'>"
 	
@@ -347,6 +413,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		
 		# Stable sort
 		server_keys.sort()
+		server_keys = _sort_by_name_and_version(servers, server_keys, sort_by)
 		server_keys.sort(key=num_unavailable_components, reverse=True)
 		server_keys.sort(key=num_available_components, reverse=True)
 	
