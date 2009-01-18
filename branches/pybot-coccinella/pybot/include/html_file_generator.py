@@ -165,7 +165,8 @@ def _sort_by_name_and_version(servers, server_keys, service_type):
 	unversioned_components = []
 	servers_without_component = []
 	
-	for server_jid, server in servers.iteritems():
+	for server_jid in server_keys:
+ 		server = servers[server_jid]
 		server_components = []
 		if service_type in server['available_services']:
 			server_components.extend(server['available_services'][service_type])
