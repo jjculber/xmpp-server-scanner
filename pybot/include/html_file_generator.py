@@ -158,7 +158,7 @@ def _count_components(server, service_type=None, availability='both'):
 
 
 
-def _sort_class_name_and_version(servers, server_keys, service_type):
+def _sort_by_name_and_version(servers, server_keys, service_type):
 	'''Sort by name and version'''
 	server_list = []
 	components = {}
@@ -224,7 +224,7 @@ def _sort_class_name_and_version(servers, server_keys, service_type):
 	return server_list
 
 
-def _get_table_header(types, sort_class=None, sort_links=None):
+def _get_table_header(types, sort_by=None, sort_links=None):
 	header = "\t<tr class='table_header'>"
 	
 	text = COLUMNS_DESCRIPTION['server'] if 'server' in COLUMNS_DESCRIPTION else 'Server'
@@ -358,7 +358,7 @@ def get_rows(servers, types):
 	
 
 
-def generate( filename, servers, types, sort_class=None, sort_links=None,
+def generate( filename, servers, types, sort_by=None, sort_links=None,
               minimun_uptime=0, compress=False ):
 	"""Generate a html file with the servers information.
 	Don't display times_offline, to avoid a database access.
@@ -374,7 +374,7 @@ def generate( filename, servers, types, sort_class=None, sort_links=None,
 	
 	tmpfilename = "%s.tmp" % filename
 	
-	logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_class)
+	logging.info('Writing HTML file  temporary "%s" ordered by %s', tmpfilename, sort_by)
 	
 	# Get the table rows in HTML (without <tr> element)
 	rows = get_rows(servers, types)
@@ -383,21 +383,21 @@ def generate( filename, servers, types, sort_class=None, sort_links=None,
 	# Sort servers by columns
 	server_keys = servers.keys()
 	
-	if sort_class is None:
+	if sort_by is None:
 		# Assume that the servers are sorted by name
-		sort_class = 'server'
+		sort_by = 'server'
 		server_keys.sort()
-	elif sort_class is 'server':
+	elif sort_by is 'server':
 		# If it's a explicit request, then sort
 		server_keys.sort()
-	elif sort_class is 'offline_since':
+	elif sort_by is 'offline_since':
 		
 		# None is earlier than any date, so use current date
 		now = datetime.utcnow()
 		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
 		server_keys.sort()
 		server_keys.sort(key=date)
-	elif sort_class is 'times_online':
+	elif sort_by is 'times_online':
 		
 		times = lambda key: float(servers[key]['times_queried_online'])/servers[key]['times_queried']
 		server_keys.sort()
@@ -406,15 +406,15 @@ def generate( filename, servers, types, sort_class=None, sort_links=None,
 		# Sort servers
 		
 		num_available_components = (
-		    lambda key: _count_components( servers[key], service_type=sort_class,
+		    lambda key: _count_components( servers[key], service_type=sort_by,
 		                                   availability='available') )
 		num_unavailable_components = (
-		    lambda key: _count_components( servers[key], service_type=sort_class,
+		    lambda key: _count_components( servers[key], service_type=sort_by,
 		                                   availability='unavailable') )
 		
 		# Stable sort
 		server_keys.sort()
-		server_keys = _sort_class_name_and_version(servers, server_keys, sort_class)
+		server_keys = _sort_by_name_and_version(servers, server_keys, sort_by)
 		server_keys.sort(key=num_unavailable_components, reverse=True)
 		server_keys.sort(key=num_available_components, reverse=True)
 	
@@ -530,7 +530,7 @@ def generate( filename, servers, types, sort_class=None, sort_links=None,
 	)
 	
 	# Apply a different style to sorted columns
-	sort_class = sort_class if not isinstance(sort_class, tuple) else "%s_%s" % sort_class
+	sort_class = sort_by if not isinstance(sort_by, tuple) else "%s_%s" % sort_by
 	f.write(
 """
 			tr.table_header th.%s{
@@ -606,7 +606,7 @@ def generate( filename, servers, types, sort_class=None, sort_links=None,
 	
 	f.write(cols)
 	
-	table_header = _get_table_header(types, sort_class, sort_links)
+	table_header = _get_table_header(types, sort_by, sort_links)
 	row_number = 0
 	
 	for row_number, server_key in enumerate(server_keys):
@@ -663,14 +663,14 @@ def generate_all( directory, filename_prefix, servers, types, minimun_uptime=0,
 	for service_type in types:
 		generate( _get_filename( directory, filename_prefix, by=service_type,
 		                         extension=extension ),
-		          servers, types, sort_class=service_type, sort_links=sort_links,
+		          servers, types, sort_by=service_type, sort_links=sort_links,
 		          minimun_uptime=minimun_uptime, compress=compress )
 	
 	generate( _get_filename( directory, filename_prefix, by='offline_since',
 	                         extension=extension ),
-	          servers, types, sort_class='offline_since', sort_links=sort_links,
+	          servers, types, sort_by='offline_since', sort_links=sort_links,
 	          minimun_uptime=minimun_uptime, compress=compress )
 	generate( _get_filename( directory, filename_prefix, by='times_online',
 	                         extension=extension ),
-	          servers, types, sort_class='times_online', sort_links=sort_links,
+	          servers, types, sort_by='times_online', sort_links=sort_links,
 	          minimun_uptime=minimun_uptime, compress=compress )
