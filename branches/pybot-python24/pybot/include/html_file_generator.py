@@ -454,7 +454,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	)
 	
 	# Apply a different style to sorted columns
-	sort_class = sort_class if not isinstance(sort_class, tuple) else "%s_%s" % sort_class
+	sort_class = isinstance(sort_by, tuple) and "%s_%s" % sort_by or sort_by
 	f.write(
 """
 			tr.table_header th.%s{
