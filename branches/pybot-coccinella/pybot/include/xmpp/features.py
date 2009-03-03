@@ -51,9 +51,11 @@ def discoverItems(disp,jid,node=None):
         item: MUST HAVE jid attribute and MAY HAVE name, node, action attributes.
         action attribute of item can be either of remove or update value."""
     ret=[]
-    for i in _discover(disp,NS_DISCO_ITEMS,jid,node):
-        if i.getName()=='agent' and i.getTag('name'): i.setAttr('name',i.getTagData('name'))
-        ret.append(i.attrs)
+    disco_result = _discover(disp,NS_DISCO_ITEMS,jid,node)
+    if disco_result is not None:
+        for i in disco_result:
+            if i.getName()=='agent' and i.getTag('name'): i.setAttr('name',i.getTagData('name'))
+            ret.append(i.attrs)
     return ret
 
 def discoverInfo(disp,jid,node=None):
@@ -63,19 +65,21 @@ def discoverInfo(disp,jid,node=None):
         identity: MUST HAVE category and name attributes and MAY HAVE type attribute.
         feature: MUST HAVE var attribute"""
     identities , features = [] , []
-    for i in _discover(disp,NS_DISCO_INFO,jid,node):
-        try:
-            if i.getName()=='identity': identities.append(i.attrs)
-            elif i.getName()=='feature': features.append(i.getAttr('var'))
-            elif i.getName()=='agent':
-                if i.getTag('name'): i.setAttr('name',i.getTagData('name'))
-                if i.getTag('description'): i.setAttr('name',i.getTagData('description'))
-                identities.append(i.attrs)
-                if i.getTag('groupchat'): features.append(NS_GROUPCHAT)
-                if i.getTag('register'): features.append(NS_REGISTER)
-                if i.getTag('search'): features.append(NS_SEARCH)
-        except AttributeError:
-            pass
+    disco_result = _discover(disp,NS_DISCO_INFO,jid,node)
+    if disco_result is not None:
+        for i in disco_result:
+            try:
+                if i.getName()=='identity': identities.append(i.attrs)
+                elif i.getName()=='feature': features.append(i.getAttr('var'))
+                elif i.getName()=='agent':
+                    if i.getTag('name'): i.setAttr('name',i.getTagData('name'))
+                    if i.getTag('description'): i.setAttr('name',i.getTagData('description'))
+                    identities.append(i.attrs)
+                    if i.getTag('groupchat'): features.append(NS_GROUPCHAT)
+                    if i.getTag('register'): features.append(NS_REGISTER)
+                    if i.getTag('search'): features.append(NS_SEARCH)
+            except AttributeError:
+                pass
     return identities , features
 
 ### Registration ### jabber:iq:register ### JEP-0077 ###########################
