@@ -820,23 +820,28 @@ def _get_clients(jabber_accounts, use_several_accounts):
 			accounts = [choice(jabber_accounts)]
 		
 		for account in accounts:
-			client = Client(account['server'], debug=[])
-			if not client.connect():
+			try:
+				client = Client(account['server'], debug=[])
+				if not client.connect():
+					jabber_accounts.remove(account)
+					logging.error("Can not connect to %s server, please check your configuration", account['server'])
+					#raise IOError('Can not connect to server.')
+					continue
+				if not client.auth(account['user'], account['password'], account['resource']):
+					jabber_accounts.remove(account)
+					logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
+					#raise IOError('Can not auth with server.')
+					continue
+			except:
 				jabber_accounts.remove(account)
-				logging.error("Can not connect to %s server, please check your configuration", account['server'])
-				#raise IOError('Can not connect to server.')
-				continue
-			if not client.auth(account['user'], account['password'], account['resource']):
-				jabber_accounts.remove(account)
-				logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
-				#raise IOError('Can not auth with server.')
-				continue
-		
-			client.RegisterHandler('message', _handle_messages)
-			client.sendInitPresence()
-			client.Process(1)
-			
-			clients.append(client)
+				logging.error( "Exception while trying to log in on %s@%s",
+				               account['user'], account['password'], exc_info=True )
+			else:
+				client.RegisterHandler('message', _handle_messages)
+				client.sendInitPresence()
+				client.Process(1)
+				
+				clients.append(client)
 	
 	if len(clients) == 0:
 		logging.critical("Can not login into any jabber account, please check your configuration")
