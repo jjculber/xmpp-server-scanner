@@ -1,6 +1,7 @@
 <!-- This file lists the open Jabber servers registered with the XMPP Federation. The format of this file is defined by the Service Discovery protocol: http://www.xmpp.org/extensions/xep-0030.html ... To add your server to the list, register at https://www.xmpp.net/ -->
 
 <query xmlns='http://jabber.org/protocol/disco#items'>
+  <item jid='0nl1ne.at'/>
   <item jid='12jabber.com'/>
   <item jid='12jabber.net'/>
   <item jid='21region.org'/>
@@ -23,14 +24,16 @@
   <item jid='boxbox.org'/>
   <item jid='brauchen.info'/>
   <item jid='chrome.pl'/>
+  <item jid='climm.org'/>
   <item jid='cnmsteam.net'/>
   <item jid='codingteam.net'/>
+  <item jid='core.im'/>
   <item jid='core.segfault.pl'/>
   <item jid='coruscant.info'/>
-  <item jid='default.co.yu'/>
-  <item jid='core.im'/>
   <item jid='darkdna.net'/>
   <item jid='darkskies.za.net'/>
+  <item jid='default.co.yu'/>
+  <item jid='default.rs'/>
   <item jid='deshalbfrei.org'/>
   <item jid='downtempo.de'/>
   <item jid='draugr.de'/>
@@ -69,6 +72,7 @@
   <item jid='isgeek.info'/>
   <item jid='jab.undernet.cz'/>
   <item jid='jabber-hispano.org'/>
+  <item jid='jabber-me.de'/>
   <item jid='jabber-server.is-a-geek.org'/>
   <item jid='jabber80.com'/>
   <item jid='jabber.ambrero.nl'/>
@@ -76,7 +80,6 @@
   <item jid='jabber.as250.net'/>
   <item jid='jabber.bglinux.org'/>
   <item jid='jabber.bluendo.com'/>
-  <item jid='jabber.cc'/>
   <item jid='jabber.cc'/>
   <item jid='jabber.ccc.de'/>
   <item jid='jabber.chaotic.de'/>
@@ -108,6 +111,7 @@
   <item jid='jabber.linux.it'/>
   <item jid='jabber.linuxbs.org'/>
   <item jid='jabber.linuxlovers.at'/>
+  <item jid='jabber.loudas.com'/>
   <item jid='jabber.lvivnet.org'/>
   <item jid='jabber.mbod.net'/>
   <item jid='jabber.me.uk'/>
@@ -146,7 +150,9 @@
   <item jid='jabber.verbrennung.org'/>
   <item jid='jabber.wolfbeast.com'/>
   <item jid='jabber.workaround.org'/>
+  <item jid='jabber.yeahnah.co.nz'/>
   <item jid='jabber.yorktondigital.ca'/>
+  <item jid='jabberbr.com'/>
   <item jid='jabberchat.eu'/>
   <item jid='jabbercn.org'/>
   <item jid='jabberes.org'/>
@@ -174,6 +180,7 @@
   <item jid='linuxlovers.eu'/>
   <item jid='macjabber.de'/>
   <item jid='meleeweb.net'/>
+  <item jid='moo.im'/>
   <item jid='myjabber.ru'/>
   <item jid='mytlt.ru'/>
   <item jid='nedbsd.be'/>
@@ -181,6 +188,7 @@
   <item jid='nedbsd.nl'/>
   <item jid='neko.im'/>
   <item jid='netcube.pl'/>
+  <item jid='netmindz.net'/>
   <item jid='njs.netlab.cz'/>
   <item jid='noicq.org'/>
   <item jid='offlinemode.org'/>
@@ -238,5 +246,6 @@
   <item jid='xmpp.us'/>
   <item jid='xmpp.ws'/>
   <item jid='xmppnet.de'/>
+  <item jid='zlosnik.net'/>
   <item jid='zweilicht.org'/>
 </query>
