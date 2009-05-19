@@ -832,6 +832,7 @@ def _get_clients(jabber_accounts, use_several_accounts):
 				logging.error( "Exception while trying to log in on %s@%s",
 				               account['user'], account['password'], exc_info=True )
 			else:
+				logging.info("Logged in as %s@%s", account['user'], account['server'])
 				client.RegisterHandler('message', _handle_messages)
 				client.sendInitPresence()
 				client.Process(1)
