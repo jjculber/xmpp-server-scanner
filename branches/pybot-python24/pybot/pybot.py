@@ -17,6 +17,8 @@
 from ConfigParser import SafeConfigParser
 from datetime import datetime, timedelta
 import logging
+from logging.handlers import RotatingFileHandler
+import os
 from os.path import abspath, dirname, isabs, join
 try:
 	import cPickle as pickle
@@ -117,12 +119,17 @@ if LOGFILE is None:
 	    format='%(asctime)s %(levelname)s %(message)s'
 	    )
 else:
-	logging.basicConfig(
-	    level=logging.DEBUG,
-	    format='%(asctime)s %(levelname)s %(message)s',
-	    filename=LOGFILE,
-	    filemode='w'
-	    )
+	if os.access(LOGFILE, os.F_OK):
+		do_rollover = True
+	else:
+		do_rollover = False
+	logger = logging.getLogger()
+	logger.setLevel(logging.DEBUG)
+	handler = RotatingFileHandler(LOGFILE, backupCount=10)
+	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+	if do_rollover:
+		handler.doRollover()
+	logger.addHandler(handler)
 
 
 if DO_DISCOVERY:
