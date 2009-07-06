@@ -158,7 +158,7 @@ XML_FILENAME        = servers.xml
 USE_URL             = False
 USE_URL_AND_FILE    = False
 SERVERS_URL         = http://xmpp.org/services/services.xml
-SERVERS_FILE        = serverlist-fixed.xml
+SERVERS_FILE        = serverlist.xml
 
 [Logs]
 # If it's not configured, the logs will be written to the standrard output
