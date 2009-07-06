@@ -161,7 +161,7 @@ SERVERS_URL         = http://xmpp.org/services/services.xml
 SERVERS_FILE        = serverlist.xml
 
 [Logs]
-# If it's not configured, the logs will be written to the standrard output
+# If it's not configured, the logs will be written to the standard output
 LOGFILE             = out.log
 
 [Debug]
