@@ -14,7 +14,7 @@
 
 # TODO: Make the code prettier, pylint
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoOptionError
 from datetime import datetime, timedelta
 import logging
 from logging.handlers import RotatingFileHandler
@@ -99,7 +99,7 @@ del(cfg)
 
 
 
-if not isabs(LOGFILE):
+if LOGFILE is not None and not isabs(LOGFILE):
 	LOGFILE = join(SCRIPT_DIR, LOGFILE)
 
 if not isabs(SERVERS_FILE):
