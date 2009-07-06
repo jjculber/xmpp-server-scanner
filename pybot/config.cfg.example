@@ -155,8 +155,9 @@ HTML_FILES_PREFIX   = servers
 XML_FILENAME        = servers.xml
 
 [Server list]
-USEURL              = False
-SERVERS_URL         = http://www.jabber.org/basicservers.xml
+USE_URL             = False
+USE_URL_AND_FILE    = False
+SERVERS_URL         = http://xmpp.org/services/services.xml
 SERVERS_FILE        = serverlist-fixed.xml
 
 [Logs]

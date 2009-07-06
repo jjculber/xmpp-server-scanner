@@ -75,7 +75,8 @@ XML_FILENAME        = cfg.get("Output configuration", "XML_FILENAME")
 
 
 # Server list
-USEURL              = cfg.getboolean("Server list", "USEURL")
+USE_URL             = cfg.getboolean("Server list", "USE_URL")
+USE_URL_AND_FILE    = cfg.getboolean("Server list", "USE_URL_AND_FILE")
 SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
 #SERVERS_FILE       = "servers-fixed.xml"
 SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
@@ -136,27 +137,30 @@ if DO_DISCOVERY:
 	# Get server list
 	
 	try:
-		if USEURL:
+		if USE_URL_AND_FILE:
+			print "USE_URL_AND_FILE"
 			f = urllib.urlopen(SERVERS_URL)
-		else:
+			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
 			f = open(SERVERS_FILE, 'r')
+			file_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
+			server_list = set(url_servers + file_servers)
+		elif USE_URL:
+			print "USE_URL"
+			f = urllib.urlopen(SERVERS_URL)
+			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
+			server_list = set(url_servers)
+		else:
+			print "FILE"
+			f = open(SERVERS_FILE, 'r')
+			file_servers= [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
+			server_list = set(file_servers)
 	except IOError:
 		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
 		raise
-	
-	xmldata = f.read()
-	f.close()
-	
-	node = simplexml.XML2Node(xmldata)
-	
-	#items = node.getChildren()
-	items = node.getTags(name="item")
-	
-	server_list = []
-	
-	for item in items:
-		if item.getAttr("jid") not in server_list:
-			server_list.append(item.getAttr("jid"))
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
