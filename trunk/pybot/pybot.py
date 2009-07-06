@@ -138,7 +138,6 @@ if DO_DISCOVERY:
 	
 	try:
 		if USE_URL_AND_FILE:
-			print "USE_URL_AND_FILE"
 			f = urllib.urlopen(SERVERS_URL)
 			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
 			f.close()
@@ -147,13 +146,11 @@ if DO_DISCOVERY:
 			f.close()
 			server_list = set(url_servers + file_servers)
 		elif USE_URL:
-			print "USE_URL"
 			f = urllib.urlopen(SERVERS_URL)
 			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
 			f.close()
 			server_list = set(url_servers)
 		else:
-			print "FILE"
 			f = open(SERVERS_FILE, 'r')
 			file_servers= [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
 			f.close()
