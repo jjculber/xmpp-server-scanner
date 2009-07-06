@@ -155,8 +155,8 @@ HTML_FILES_PREFIX   = servers
 XML_FILENAME        = servers.xml
 
 [Server list]
-USE_URL             = False
-USE_URL_AND_FILE    = False
+USE_URL             = True
+USE_FILE            = True
 SERVERS_URL         = http://xmpp.org/services/services.xml
 SERVERS_FILE        = serverlist.xml
 

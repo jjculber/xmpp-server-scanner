@@ -76,7 +76,7 @@ XML_FILENAME        = cfg.get("Output configuration", "XML_FILENAME")
 
 # Server list
 USE_URL             = cfg.getboolean("Server list", "USE_URL")
-USE_URL_AND_FILE    = cfg.getboolean("Server list", "USE_URL_AND_FILE")
+USE_FILE            = cfg.getboolean("Server list", "USE_FILE")
 SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
 #SERVERS_FILE       = "servers-fixed.xml"
 SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
@@ -137,27 +137,27 @@ if DO_DISCOVERY:
 	# Get server list
 	
 	try:
-		if USE_URL_AND_FILE:
-			f = urllib.urlopen(SERVERS_URL)
-			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
-			f.close()
+		if USE_FILE:
 			f = open(SERVERS_FILE, 'r')
 			file_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
 			f.close()
-			server_list = set(url_servers + file_servers)
-		elif USE_URL:
+		if USE_URL:
 			f = urllib.urlopen(SERVERS_URL)
 			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
 			f.close()
-			server_list = set(url_servers)
-		else:
-			f = open(SERVERS_FILE, 'r')
-			file_servers= [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
-			f.close()
-			server_list = set(file_servers)
 	except IOError:
 		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
 		raise
+	
+	if USE_URL and USE_FILE:
+		server_list = set(url_servers + file_servers)
+	elif USE_FILE:
+		server_list = set(file_servers)
+	elif USE_URL:
+		server_list = set(url_servers)
+	else:
+		logging.critical('You must configure the script to load the server list from the file, the url, or both')
+		raise Exception('You must configure the script to load the server list from the file, the url, or both')
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
