@@ -138,6 +138,17 @@ def _get_version(component, client):
 	return version
 
 
+def _get_uptime(component, client):
+	
+	seconds = None
+	node = client.Dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
+	                                            queryNS='jabber:iq:last'))
+	if isResultNode(node):
+		seconds = int(node.getTag('query').getAttr('seconds'))
+	
+	return seconds
+
+
 def _get_reg_fields(client, jid, only_required=True):
 	'''Get the input fields from the registration form.
 	Returns a dictionary {field:value} where value is None if the form field is empty'''
@@ -577,6 +588,12 @@ def _handle_component_available(component, server, client):
 		
 	if available:
 		component['available'] = True
+		
+		if component['jid'] in SERVER_LIST:
+			seconds_uptime = _get_uptime(component, client)
+			if seconds_uptime is not None:
+				component[u'uptime'] = seconds_uptime
+		
 		#Add the component
 		for identity in component[u'info'][0]:
 			_add_to_services_list(server[u'available_services'], (identity[u'category'], identity[u'type']), component)
