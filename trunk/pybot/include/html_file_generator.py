@@ -209,7 +209,23 @@ def _get_image_filename(service_type, available):
 			return 'images/yes.png'
 		else:
 			return 'images/yes-grey.png'
+
+def _get_server_logo_filename(server_version):
 	
+	if server_version is not None:
+		if server_version['name'] == 'jabberd' and server_version['version'].startswith('1.'):
+			servername = 'jabberd14'
+		elif server_version['name'] == 'jabberd' and server_version['version'].startswith('2.'):
+			servername = 'jabberd2'
+		elif server_version['name'] in ('Wildfire', 'Openfire Enterprise'):
+			servername = 'openfire'
+		else:
+			servername = server_version['name'].lower()
+		
+		if '%s.png' % servername in FILES:
+			return 'images/%s.png' % servername
+	
+	return 'images/transparent.png'
 
 
 ROWS = None
@@ -235,8 +251,15 @@ def get_rows(servers, types):
 		else:
 			server_text = server[u'jid']
 		
-		row = ( "<td class='server'><a name='%s'>%s</a></td>" %
-		                                    (server[u'jid'], server_text) )
+		if 'version' in server:
+			logo = _get_server_logo_filename(server['version'])
+			version_info = "%s - %s" % (server['version']['name'], server['version']['version'])
+		else:
+			logo = _get_server_logo_filename(None)
+			version_info = ''
+		
+		row = ( """<td class='server'><img src='%s' width='16' height='16' alt='%s' title='%s'/> <a name='%s'>%s</a></td>""" %
+		        (logo, version_info, version_info, server[u'jid'], server_text) )
 		
 		for service_type in types:
 			
