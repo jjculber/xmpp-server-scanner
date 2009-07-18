@@ -593,6 +593,10 @@ def _handle_component_available(component, server, client):
 			seconds_uptime = _get_uptime(component, client)
 			if seconds_uptime is not None:
 				component[u'uptime'] = seconds_uptime
+				
+			version = _get_version(component, client)
+			if version != {}:
+				component['version'] = version
 		
 		#Add the component
 		for identity in component[u'info'][0]:
