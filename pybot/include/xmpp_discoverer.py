@@ -129,22 +129,26 @@ def _handle_messages(con, message):
 
 def _get_version(component, client):
 	version = {}
-	node = client.Dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
-	                                            queryNS='jabber:iq:version'))
-	if isResultNode(node):
-		for element in node.getTag('query').getChildren():
-			version[element.getName()] = element.getData()
 	
+	if 'jabber:iq:version' in component[u'info'][1] or not 'info' in component:
+		node = client.Dispatcher.SendAndWaitForResponse(
+		        Iq(to=component[u'jid'], typ='get', queryNS='jabber:iq:version'))
+		if isResultNode(node):
+			for element in node.getTag('query').getChildren():
+				version[element.getName()] = element.getData()
+		
 	return version
 
 
 def _get_uptime(component, client):
 	
 	seconds = None
-	node = client.Dispatcher.SendAndWaitForResponse(Iq(to=component[u'jid'], typ='get',
-	                                            queryNS='jabber:iq:last'))
-	if isResultNode(node):
-		seconds = int(node.getTag('query').getAttr('seconds'))
+	
+	if 'jabber:iq:last' in component[u'info'][1] or not 'info' in component:
+		node = client.Dispatcher.SendAndWaitForResponse(
+		        Iq(to=component[u'jid'], typ='get', queryNS='jabber:iq:last'))
+		if isResultNode(node): # Openfire gives a 403 error
+			seconds = int(node.getTag('query').getAttr('seconds'))
 	
 	return seconds
 
