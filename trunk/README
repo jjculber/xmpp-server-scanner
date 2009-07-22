@@ -1,10 +1,24 @@
 
+XMPP Server Scanner
+http://code.google.com/p/xmpp-server-scanner/
+
 Author/Autor: Cesar Alcalde
 e-mail: lambda512@gmail.com
 JabberID: lambda512@jabberes.org
 
 
+--------------------------------------------------------------------------------
 
+Usage Instructions
+
+Copy the config.cfg.example file as config.cfg and setup the configuration to
+match your needs. Configure the output directory where you want to generate the
+pages and copy the images folder there. Then run the bot (pybot.py). A good idea
+is to run it from cron.
+
+
+
+About this Project
 
 I started this project because it seemed neccesary to update the old servers and
 services list on the jabber.org website and I wanted to write some code related 
@@ -41,12 +55,20 @@ cleaned and updated. That list has been superseeded by another list on xmpp.org
 lists can be used and can be merged to get a bigger list.
 
 
+--------------------------------------------------------------------------------
+
+Instrucciones
+
+Copia el archivo config.cfg como config.cfg y modificalo a tu gusto. Configura
+el directorio donde se generaran los archivos (output directory) y copia a ese
+directorio el directorio images. El bot (pybot.py) ya está listo para ser
+ejecutado. Te sugiero que lo añadas a cron para ejecutarlo regularmente.
 
 
 
+Acerca de este proyecto
 
-
-Empece este proyecto debido a que parecia necesario actualizar la vieja lista de 
+Empece este proyecto debido a que parecía necesario actualizar la vieja lista de 
 servidores y servicios de jabber.org y queria programar algo relacionado con
 Jabber/XMPP. No es un proyecto serio, sino que simplemente es un proyecto para
 experimentar y aprender. Pero funciona, (o al menos eso parece ;) ) y a algunas
@@ -86,10 +108,13 @@ ahora, menos servidores. Por tanto, ambas listas se incluyen y pueden ser
 usadas, e incluso mezcladas para obtener una lista mayor.
 
 
+--------------------------------------------------------------------------------
 
 
+Credits
 
 xmpppy
+Alexey Nezhdanov
 http://xmpppy.sourceforge.net
 
 
