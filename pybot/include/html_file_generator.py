@@ -1,6 +1,14 @@
 
 # $Id$
 
+#
+# Under GNU General Public License
+#
+# Author:   noalwin
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
 # TODO: Make the HTML and the CSS less verbose
 
 """This module generates html files from the data gathered by the xmpp_discoverer
