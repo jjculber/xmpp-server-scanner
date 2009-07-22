@@ -1,6 +1,14 @@
 
 # $Id$
 
+#
+# Under GNU General Public License
+#
+# Author:   noalwin
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
 """XML generator in the coccinella requested format
 
 <?xml version="1.0" ?>
