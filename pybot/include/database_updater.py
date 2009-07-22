@@ -5,7 +5,7 @@
 #
 # Under GNU General Public License
 #
-# Author:   noalwin
+# Author:   Cesar Alcalde
 # Email:    lambda512@gmail.com
 # JabberID: lambda512@jabberes.com
 #

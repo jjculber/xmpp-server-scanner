@@ -1,6 +1,14 @@
 
 #$Id$
 
+#
+# Under GNU General Public License
+#
+# Author:   Cesar Alcalde
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
 """XML generator"""
 
 import gzip
