@@ -1,6 +1,14 @@
 
 #$Id$
 
+#
+# Under GNU General Public License
+#
+# Author:   noalwin
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
 import logging
 import shutil
 from xml.dom.minidom import getDOMImplementation
