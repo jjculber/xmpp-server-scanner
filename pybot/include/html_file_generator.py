@@ -1,6 +1,14 @@
 
 # $Id$
 
+#
+# Under GNU General Public License
+#
+# Author:   noalwin
+# Email:    lambda512@gmail.com
+# JabberID: lambda512@jabberes.com
+#
+
 # TODO: Make the HTML and the CSS less verbose
 
 """This module generates html files from the data gathered by the xmpp_discoverer
@@ -60,7 +68,7 @@
 
 
 from ConfigParser import SafeConfigParser
-from datetime import datetime
+from datetime import datetime, timedelta
 from glob import iglob
 import gzip
 import logging
@@ -98,7 +106,7 @@ COLUMNS_DESCRIPTION = {
   ('headline', 'rss'): {'title': 'RSS', 'description': 'RSS notifications'},
   ('headline', 'weather'): {'title': 'Weather'},
   ('proxy', 'bytestreams'): {'title': 'Proxy', 'description': 'File transfer proxy'},
-  'offline_since': {'title': 'Offline since'},
+  'uptime': {'title': 'Uptime'},
   'times_online': {'title': '% Uptime'}
 }
 
@@ -236,7 +244,7 @@ def _get_table_header(types, sort_by=None, sort_links=None):
 	                 link if sort_links is not None else text )
 	
 	columns = list(types)
-	columns.extend(['offline_since', 'times_online'])
+	columns.extend(['uptime', 'times_online'])
 	for column_id in columns:
 		
 		if column_id in COLUMNS_DESCRIPTION:
@@ -276,7 +284,23 @@ def _get_image_filename(service_type, available):
 			return 'images/yes.png'
 		else:
 			return 'images/yes-grey.png'
+
+def _get_server_logo_filename(server_version):
 	
+	if server_version is not None:
+		if server_version['name'] == 'jabberd' and server_version['version'].startswith('1.'):
+			servername = 'jabberd14'
+		elif server_version['name'] == 'jabberd' and server_version['version'].startswith('2.'):
+			servername = 'jabberd2'
+		elif server_version['name'] in ('Wildfire', 'Openfire Enterprise'):
+			servername = 'openfire'
+		else:
+			servername = server_version['name'].lower()
+		
+		if '%s.png' % servername in FILES:
+			return 'images/%s.png' % servername
+	
+	return 'images/transparent.png'
 
 
 ROWS = None
@@ -302,8 +326,15 @@ def get_rows(servers, types):
 		else:
 			server_text = server[u'jid']
 		
-		row = ( "<td class='server'><a name='%s'>%s</a></td>" %
-		                                    (server[u'jid'], server_text) )
+		if 'version' in server:
+			logo = _get_server_logo_filename(server['version'])
+			version_info = "%s - %s" % (server['version']['name'], server['version']['version'])
+		else:
+			logo = _get_server_logo_filename(None)
+			version_info = ''
+		
+		row = ( """<td class='server'><img src='%s' width='16' height='16' alt='%s' title='%s'/> <a name='%s'>%s</a></td>""" %
+		        (logo, version_info, version_info, server[u'jid'], server_text) )
 		
 		for service_type in types:
 			
@@ -346,11 +377,23 @@ def get_rows(servers, types):
 						row += """<span class='unavailable'>%s</span>""" % component_text
 				row += "</div></div></td>"
 				
-			
-		row += "<td class='offline_since'>%s</td><td class='times_online'>%d/%d (%d%%)</td>" % (
-		        '' if server['offline_since'] is None else server['offline_since'].strftime('%d-%B-%Y %H:%M UTC'),
+		if server['offline_since'] is None:
+			if 'uptime' in server:
+				uptime = timedelta(seconds=server['uptime'])
+				#uptime_text = "%dd, %dh, %dm, %ds" % (
+				               #uptime.days, uptime.seconds / 3600,
+				               #uptime.seconds % 3600 / 60, uptime.seconds % 60 )
+				uptime_text = str(uptime)
+			else:
+				uptime_text = ''
+		else:
+			uptime_text = "Offline since %s" % server['offline_since'].strftime('%d %b %Y %H:%M UTC')
+		
+		row += "<td class='uptime'>%s</td>" % uptime_text
+		
+		row += "<td class='times_online'>%d/%d (%d%%)</td>" % (
 		        server['times_queried_online'], server['times_queried'],
-		        int(100*server['times_queried_online']/server['times_queried']) )
+		        int(100*server['times_queried_online']/server['times_queried']))
 		
 		ROWS[server_key] = row
 	
@@ -390,13 +433,16 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	elif sort_by is 'server':
 		# If it's a explicit request, then sort
 		server_keys.sort()
-	elif sort_by is 'offline_since':
+	elif sort_by is 'uptime':
 		
 		# None is earlier than any date, so use current date
 		now = datetime.utcnow()
-		date = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
+		offline_since = lambda key: servers[key]['offline_since'] if servers[key]['offline_since'] is not None else now
+		uptime = lambda key: servers[key]['uptime'] if 'uptime' in servers[key] else 0
+		
 		server_keys.sort()
-		server_keys.sort(key=date)
+		server_keys.sort(key=uptime, reverse=True)
+		server_keys.sort(key=offline_since, reverse=True)
 	elif sort_by is 'times_online':
 		
 		times = lambda key: float(servers[key]['times_queried_online'])/servers[key]['times_queried']
@@ -602,7 +648,7 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	cols = "\t\t\t<col class='server' />"
 	for service_type in types:
 		cols += "<col class='%s_%s' />" % (service_type[0], service_type[1])
-	cols += "<col class='offline_since' /><col class='times_online' />\n"
+	cols += "<col class='uptime' /><col class='times_online' />\n"
 	
 	f.write(cols)
 	
@@ -666,9 +712,9 @@ def generate_all( directory, filename_prefix, servers, types, minimun_uptime=0,
 		          servers, types, sort_by=service_type, sort_links=sort_links,
 		          minimun_uptime=minimun_uptime, compress=compress )
 	
-	generate( _get_filename( directory, filename_prefix, by='offline_since',
+	generate( _get_filename( directory, filename_prefix, by='uptime',
 	                         extension=extension ),
-	          servers, types, sort_by='offline_since', sort_links=sort_links,
+	          servers, types, sort_by='uptime', sort_links=sort_links,
 	          minimun_uptime=minimun_uptime, compress=compress )
 	generate( _get_filename( directory, filename_prefix, by='times_online',
 	                         extension=extension ),

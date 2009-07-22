@@ -14,9 +14,11 @@
 
 # TODO: Make the code prettier, pylint
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoOptionError
 from datetime import datetime, timedelta
 import logging
+from logging.handlers import RotatingFileHandler
+import os
 from os.path import abspath, dirname, isabs, join
 try:
 	import cPickle as pickle
@@ -71,7 +73,8 @@ XML_UPTIME_FILTER   = cfg.getfloat("Output configuration", "XML_UPTIME_FILTER")
 HTML_FILES_PREFIX   = cfg.get("Output configuration", "HTML_FILES_PREFIX")
 
 # Server list
-USEURL              = cfg.getboolean("Server list", "USEURL")
+USE_URL             = cfg.getboolean("Server list", "USE_URL")
+USE_FILE            = cfg.getboolean("Server list", "USE_FILE")
 SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
 #SERVERS_FILE       = "servers-fixed.xml"
 SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
@@ -94,7 +97,7 @@ del(cfg)
 
 
 
-if not isabs(LOGFILE):
+if LOGFILE is not None and not isabs(LOGFILE):
 	LOGFILE = join(SCRIPT_DIR, LOGFILE)
 
 if not isabs(SERVERS_FILE):
@@ -114,39 +117,44 @@ if LOGFILE is None:
 	    format='%(asctime)s %(levelname)s %(message)s'
 	    )
 else:
-	logging.basicConfig(
-	    level=logging.DEBUG,
-	    format='%(asctime)s %(levelname)s %(message)s',
-	    filename=LOGFILE,
-	    filemode='w'
-	    )
+	if os.access(LOGFILE, os.F_OK):
+		do_rollover = True
+	else:
+		do_rollover = False
+	logger = logging.getLogger()
+	logger.setLevel(logging.DEBUG)
+	handler = RotatingFileHandler(LOGFILE, backupCount=10)
+	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+	if do_rollover:
+		handler.doRollover()
+	logger.addHandler(handler)
 
 
 if DO_DISCOVERY:
 	# Get server list
 	
 	try:
-		if USEURL:
-			f = urllib.urlopen(SERVERS_URL)
-		else:
+		if USE_FILE:
 			f = open(SERVERS_FILE, 'r')
+			file_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
+		if USE_URL:
+			f = urllib.urlopen(SERVERS_URL)
+			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			f.close()
 	except IOError:
 		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
 		raise
 	
-	xmldata = f.read()
-	f.close()
-	
-	node = simplexml.XML2Node(xmldata)
-	
-	#items = node.getChildren()
-	items = node.getTags(name="item")
-	
-	server_list = []
-	
-	for item in items:
-		if item.getAttr("jid") not in server_list:
-			server_list.append(item.getAttr("jid"))
+	if USE_URL and USE_FILE:
+		server_list = set(url_servers + file_servers)
+	elif USE_FILE:
+		server_list = set(file_servers)
+	elif USE_URL:
+		server_list = set(url_servers)
+	else:
+		logging.critical('You must configure the script to load the server list from the file, the url, or both')
+		raise Exception('You must configure the script to load the server list from the file, the url, or both')
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
