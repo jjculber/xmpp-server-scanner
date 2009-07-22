@@ -22,7 +22,8 @@ SERVER              = jabber.example.com
 # SERVER              = jabberes.org
 
 
-# Accounts to test gateways
+# Accounts to test gateways. If no account is defined, the bot will try to guess
+# if the gateway accepts registrations or not.
 # [service_category service_type gateway account]
 # # AIM Terms of Service seems to forbid use with bots or third party software
 # [gateway aim gateway account]
