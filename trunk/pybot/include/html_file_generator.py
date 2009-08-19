@@ -316,9 +316,9 @@ def get_rows(servers, types):
 		
 		row += "<td class='uptime'>%s</td>" % uptime_text
 		
-		row += "<td class='times_online'>%d/%d (%d%%)</td>" % (
-		        server['times_queried_online'], server['times_queried'],
-		        int(100*server['times_queried_online']/server['times_queried']))
+		row += "<td class='times_online'>%d%% (%d/%d)</td>" % (
+		        int(100*server['times_queried_online']/server['times_queried']),
+		        server['times_queried_online'], server['times_queried'])
 		
 		ROWS[server_key] = row
 	
