@@ -474,6 +474,10 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			h6{
 				font-size: 1.2em;
 			}
+			a[href]{
+				text-decoration: none;
+				color: #0000AA;
+			}
 			a img{
 				border: 0px;
 			}
