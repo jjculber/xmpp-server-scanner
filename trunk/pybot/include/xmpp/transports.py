@@ -27,7 +27,7 @@ Transports are stackable so you - f.e. TLS use HTPPROXYsocket or TCPsocket as mo
 Also exception 'error' is defined to allow capture of this module specific exceptions.
 """
 
-import socket,select,base64,dispatcher,sys
+import socket,ssl,select,base64,dispatcher,sys
 from simplexml import ustr
 from client import PlugIn
 from protocol import *
@@ -144,7 +144,7 @@ class TCPsocket(PlugIn):
         """ Reads all pending incoming data.
             In case of disconnection calls owner's disconnected() method and then raises IOError exception."""
         try: received = self._recv(BUFLEN)
-        except socket.sslerror,e:
+        except ssl.SSLError,e:
             self._seen_data=0
             if e[0]==2: return ''
             self.DEBUG('Socket error while receiving data','error')
@@ -302,9 +302,9 @@ class TLS(PlugIn):
         """ Immidiatedly switch socket to TLS mode. Used internally."""
         """ Here we should switch pending_data to hint mode."""
         tcpsock=self._owner.Connection
-        tcpsock._sslObj    = socket.ssl(tcpsock._sock, None, None)
-        tcpsock._sslIssuer = tcpsock._sslObj.issuer()
-        tcpsock._sslServer = tcpsock._sslObj.server()
+        tcpsock._sslObj    = ssl.wrap_socket(tcpsock._sock, None, None)
+        #tcpsock._sslIssuer = tcpsock._sslObj.issuer()
+        #tcpsock._sslServer = tcpsock._sslObj.server()
         tcpsock._recv = tcpsock._sslObj.read
         tcpsock._send = tcpsock._sslObj.write
 
