@@ -89,7 +89,7 @@ def resolve_ipv6(cname):
 			DNS.ParseResolvConf()
 			response = DNS.Request().req(cname, qtype='AAAA')
 			answers = response.answers
-			raise NotImplemented
+			raise NotImplementedError('PyDNS has no support for IPv6 yet.')
 			if len(answers) > 0:
 				# ignore the priority and weight for now
 				_, _, port, host = answers[0]['data']
