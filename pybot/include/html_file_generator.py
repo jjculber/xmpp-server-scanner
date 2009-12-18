@@ -285,14 +285,16 @@ def get_rows(servers, types):
 		else:
 			server_name = "<a name='%s' >%s</a>" % (jid, server_name)
 		
-		tooltip = u"%s" % tooltip
+		tooltip = u"<strong>%s</strong><ul>" % tooltip
 		
 		if 'about' in server and (server['about']['latitude'] is not None and server['about']['longitude'] is not None):
-			tooltip = u"%s [<a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Map</a>]" % (
+			tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location</a></li>" % (
 			          tooltip, server['about']['latitude'], server['about']['longitude'], jid)
 		
 		if 'ipv6_ready' in server and server['ipv6_ready']:
-			tooltip = u"%s [IPv6 Ready]" % tooltip
+			tooltip = u"%s<li>IPv6 Ready</li>" % tooltip
+		
+		tooltip = u"%s</ul>" % tooltip
 		
 		if 'about' in server and 'description' in server['about']:
 			tooltip = u"%s<p>%s</p>" % (tooltip, html_escape(server['about']['description']))
@@ -542,10 +544,10 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			td.feature{
 /* 				font-size: 2em; */
 			}
-			td.no{
+			.no{
 				color: #E90900;/*firebrick;*/
 			}
-			.available{
+			.yes, .available{
 				color: #0A0;/*green;*/
 			}
 			.unavailable{
@@ -612,9 +614,18 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			td.server div.tooltip{
 				padding: 5px 10px;
 				width: 200px;
+				text-align: center;
 			}
 			td.server div.tooltip span{
 				white-space: normal;
+			}
+			td.server div.tooltip ul{
+				list-style-type: none;
+				margin-left: 0px;
+				padding-left: 0px;
+			}
+			td.server div.tooltip p{
+				text-align: left;
 			}
 		</style>
 	</head>
