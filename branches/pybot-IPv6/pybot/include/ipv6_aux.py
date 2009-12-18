@@ -118,13 +118,15 @@ def is_ipv6_ready(server):
 		return True # We can't test the connection, so we trust the DNS record
 	
 	try:
-		with socket.create_connection((ipv6, port)) as s:
-			pass
+		s = socket.create_connection((ipv6, port))
+		s.close()
 	except socket.error as err:
 		if err.errno == 97: # errno.EAFNOSUPPORT ([Errno 97] Address family not supported by protocol)
 			HAVE_IPv6 = False
 			logging.warning("There is no support for IPv6 in this machine. IPv6 connection test will be skipped.")
 			return True # We can't test the connection, so we trust the DNS record
+		elif err.errno == 111: # errno.ECONNREFUSED ([Errno 111] Connection refused)
+			return False
 		
 		logging.error("The socket has failed while trying to connect to %s: %s, %s,%d." % (server, host, ipv6, port), exc_info=sys.exc_info())
 		raise NotImplementedError("TODO: The socket has failed. Check the reason of the error. If it means that the server implementation has no IPv6 support, return False.")
