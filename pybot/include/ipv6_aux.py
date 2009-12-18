@@ -30,6 +30,7 @@ HAVE_DNSPYTHON = False
 HAVE_PYDNS = False
 try:
 	import dns.resolver # http://dnspython.org/
+	import dns.exception
 	HAVE_DNSPYTHON = True
 except ImportError:
 	
@@ -60,6 +61,9 @@ def get_server_host_port(host, use_srv=True):
 						answers = [x for x in dns.resolver.query(query, 'SRV')]
 					except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
 						logging.debug('%s has no SRV records, using "%s:5222"' % (host, host))
+						break
+					except dns.exception.Timeout:
+						logging.debug('A timeout occurred while looking up %s. Their DNS settings may be bad configured.' % query)
 						break
 					else:
 						if answers:
@@ -93,7 +97,10 @@ def resolve_ipv6(host):
 			except dns.resolver.NoAnswer:
 				return None
 			except dns.resolver.NXDOMAIN:
-				logging.warning('%s domain doesn\'t seems to exist' % host)
+				logging.info('%s domain doesn\'t seems to exist' % host)
+				return None
+			except dns.exception.Timeout:
+				logging.debug('A timeout occurred while looking up %s. Their DNS settings may be bad configured.' % host)
 				return None
 			if answers:
 				ipv6 = str(answers[0].address)
@@ -132,21 +139,26 @@ def is_ipv6_ready(server):
 	if not HAVE_IPv6:
 		return True # We can't test the connection, so we trust the DNS record
 	
-	logging.debug("Trying to connect using IPv6 to %s: %s, %s,%d." % (server, host, ipv6, port))
+	logging.debug("Trying to connect using IPv6 to %s: host %s, IPv6 %s, port %d." % (server, host, ipv6, port))
 	try:
 		s = socket.create_connection((ipv6, port))
 		s.close()
 	except socket.error as err:
 		if err.errno == 97: # errno.EAFNOSUPPORT ([Errno 97] Address family not supported by protocol)
 			HAVE_IPv6 = False
-			logging.warning("There is no support for IPv6 in this machine. IPv6 connection test will be skipped.")
+			logging.warning("There is no support for IPv6 in this machine: %s. IPv6 connection test will be skipped." % err)
 			return True # We can't test the connection, so we trust the DNS record
 		elif err.errno == 111: # errno.ECONNREFUSED ([Errno 111] Connection refused)
 			# The server implementation doesn't have IPv6 support
+			logging.debug("The server implementation of %s doesn't seems to have IPv6 support: %s." % (host, err))
+			return False
+		elif err.errno == 113: # errno.EHOSTUNREACH ([Errno 113] No route to host)
+			# The server implementation doesn't have IPv6 support
+			logging.debug("The server %s is unreachable: %s." % (host, err))
 			return False
 		else:
 			# Unknown error
-			logging.error("The socket has failed while trying to connect to %s: %s, %s,%d." % (server, host, ipv6, port), exc_info=sys.exc_info())
+			logging.warning("Connection attempt to %s (host %s, ip %s, port %d) failed while trying to test its IPv6-readyness. The error was: %s." % (server, host, ipv6, port, err), exc_info=sys.exc_info())
 			return False
 	else:
 		return True
