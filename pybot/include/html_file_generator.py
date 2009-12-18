@@ -291,6 +291,9 @@ def get_rows(servers, types):
 			tooltip = u"%s [<a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Map</a>]" % (
 			          tooltip, server['about']['latitude'], server['about']['longitude'], jid)
 		
+		if 'ipv6_ready' in server and server['ipv6_ready']:
+			tooltip = u"%s [IPv6 Ready]" % tooltip
+		
 		if 'about' in server and 'description' in server['about']:
 			tooltip = u"%s<p>%s</p>" % (tooltip, html_escape(server['about']['description']))
 			

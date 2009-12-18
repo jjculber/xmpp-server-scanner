@@ -31,7 +31,12 @@ try:
 except ImportError:
 	import xml.etree.ElementTree as ET
 
-from include import xmpp_discoverer
+try:
+	from include.ipv6_aux import is_ipv6_ready
+except ImportError:
+	CHECK_IPv6 = False
+else:
+	CHECK_IPv6 = True
 
 try:
 	from MySQLdb import MySQLError
@@ -41,6 +46,7 @@ except ImportError:
 else:
 	CAN_UPDATE_DATABASE = True
 	
+from include import xmpp_discoverer
 from include import html_file_generator, xml_file_generator
 
 
@@ -187,6 +193,10 @@ if DO_DISCOVERY:
 	for server in servers:
 		if server in server_data:
 			servers[server]['about'] = server_data[server]
+			
+	if CHECK_IPv6:
+		for server in servers:
+			servers[server]['ipv6_ready'] = is_ipv6_ready(server)
 	
 	# Manage offline servers and stability information
 	
