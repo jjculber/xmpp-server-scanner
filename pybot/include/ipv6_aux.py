@@ -56,11 +56,16 @@ def get_server_host_port(host, use_srv=True):
 		for query in possible_queries:
 			try:
 				if HAVE_DNSPYTHON:
-					answers = [x for x in dns.resolver.query(query, 'SRV')]
-					if answers:
-						host = str(answers[0].target)
-						port = int(answers[0].port)
+					try:
+						answers = [x for x in dns.resolver.query(query, 'SRV')]
+					except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+						logging.debug('%s has no SRV records, using "%s:5222"' % (host, host))
 						break
+					else:
+						if answers:
+							host = str(answers[0].target)
+							port = int(answers[0].port)
+							break
 				elif HAVE_PYDNS:
 					# ensure we haven't cached an old configuration
 					DNS.ParseResolvConf()
@@ -86,6 +91,9 @@ def resolve_ipv6(host):
 			try:
 				answers = [x for x in dns.resolver.query(host, 'AAAA')]
 			except dns.resolver.NoAnswer:
+				return None
+			except dns.resolver.NXDOMAIN:
+				logging.warning('%s domain doesn\'t seems to exist' % host)
 				return None
 			if answers:
 				ipv6 = str(answers[0].address)
