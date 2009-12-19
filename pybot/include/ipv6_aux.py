@@ -153,7 +153,7 @@ def is_ipv6_ready(server):
 			logging.debug("The server implementation of %s doesn't seems to have IPv6 support: %s." % (host, err))
 			return False
 		elif err.errno == 113: # errno.EHOSTUNREACH ([Errno 113] No route to host)
-			# The server implementation doesn't have IPv6 support
+			# The server is unreachable
 			logging.debug("The server %s is unreachable: %s." % (host, err))
 			return False
 		else:
