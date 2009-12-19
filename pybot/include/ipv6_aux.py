@@ -156,6 +156,10 @@ def is_ipv6_ready(server):
 			# The server is unreachable
 			logging.debug("The server %s is unreachable: %s." % (host, err))
 			return False
+		elif err.errno == 110: # errno.ETIMEDOUT ([Errno 110] Connection timed out)
+			# Server offline?
+			logging.debug("The server %s seems to be offline: %s." % (host, err))
+			return True # We can't test the connection, so we trust the DNS record
 		else:
 			# Unknown error
 			logging.warning("Connection attempt to %s (host %s, ip %s, port %d) failed while trying to test its IPv6-readyness. The error was: %s." % (server, host, ipv6, port, err), exc_info=sys.exc_info())

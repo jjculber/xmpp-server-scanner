@@ -195,8 +195,9 @@ if DO_DISCOVERY:
 			servers[server]['about'] = server_data[server]
 			
 	if CHECK_IPv6:
-		for server in servers:
-			servers[server]['ipv6_ready'] = is_ipv6_ready(server)
+		for jid, server in servers.iteritems():
+			if server['available']:
+				server['ipv6_ready'] = is_ipv6_ready(jid)
 	
 	# Manage offline servers and stability information
 	
