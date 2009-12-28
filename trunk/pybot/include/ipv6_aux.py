@@ -143,7 +143,7 @@ def is_ipv6_ready(server):
 	try:
 		s = socket.create_connection((ipv6, port))
 		s.close()
-	except socket.error as err:
+	except socket.error, err:
 		if err.errno == 97: # errno.EAFNOSUPPORT ([Errno 97] Address family not supported by protocol)
 			HAVE_IPv6 = False
 			logging.warning("There is no support for IPv6 in this machine: %s. IPv6 connection test will be skipped." % err)
