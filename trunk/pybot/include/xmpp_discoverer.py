@@ -201,7 +201,17 @@ def _get_reg_fields(client, jid, only_required=True):
 
 
 def _unregister(client, roster, jid):
-	'''Unregister from gaweway. Used internally by _test_gateway()'''
+	'''Unregister from gateway. Used internally by _test_gateway()'''
+	
+	# Clean spammy contacts from gateways
+	if '@' not in jid:
+		f = lambda contact: contact.endswith('@'+jid)
+		gateway_jids = filter(f, roster.getItems())
+		for contact in gateway_jids:
+			roster.delItem(contact)
+	else:
+		# The gateway is an user? We didn't expected this
+		pass
 	
 	if features.unregister(client, jid) != 1:
 		logging.error('Error unregistering from %s gateway', jid)
