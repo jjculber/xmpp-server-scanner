@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: iso-8859-15 -*-
+# -*- coding: utf-8 -*-
 
 # $Id$
 
@@ -26,10 +26,17 @@ except ImportError:
 	import pickle
 import sys
 import urllib
+try:
+	import xml.etree.cElementTree as ET
+except ImportError:
+	import xml.etree.ElementTree as ET
 
-from include.xmpp import simplexml
-
-from include import xmpp_discoverer
+try:
+	from include.ipv6_aux import is_ipv6_ready
+except ImportError:
+	CHECK_IPv6 = False
+else:
+	CHECK_IPv6 = True
 
 try:
 	from MySQLdb import MySQLError
@@ -39,6 +46,7 @@ except ImportError:
 else:
 	CAN_UPDATE_DATABASE = True
 	
+from include import xmpp_discoverer
 from include import html_file_generator, cc_xml_file_generator
 
 
@@ -136,12 +144,24 @@ if DO_DISCOVERY:
 	try:
 		if USE_FILE:
 			f = open(SERVERS_FILE, 'r')
-			file_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			tree = ET.parse(f)
+			file_servers = [item.get('jid') for item in tree.getroot().getchildren()]
 			f.close()
-		if USE_URL:
+		if USE_URL and SERVERS_URL is not 'http://xmpp.org/services/services.xml':
+			# Since we will check xmpp.org's services-full.xml to get the aditional data,
+			# to check xmpp.org's services.xml would be redundant
 			f = urllib.urlopen(SERVERS_URL)
-			url_servers = [item.getAttr("jid") for item in simplexml.XML2Node(f.read()).getTags(name="item")]
+			tree = ET.parse(f)
+			url_servers = [item.get('jid') for item in tree.findall("/item")]
 			f.close()
+		
+		f = urllib.urlopen('http://xmpp.org/services/services-full.xml')
+		tree = ET.parse(f)
+		f.close()
+		if USE_URL and SERVERS_URL is 'http://xmpp.org/services/services.xml':
+			url_servers = [item.get('jid') for item in tree.findall("/item")]
+		server_data = dict((item.get('jid'), dict((element.tag, element.text) for element in item.getchildren())) for item in tree.findall("/item"))
+		
 	except IOError:
 		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
 		raise
@@ -166,6 +186,15 @@ if DO_DISCOVERY:
 
 	servers = xmpp_discoverer.discover_servers(server_list)
 	
+	# Add extra data to the servers dictionary
+	for server in servers:
+		if server in server_data:
+			servers[server]['about'] = server_data[server]
+			
+	if CHECK_IPv6:
+		for jid, server in servers.iteritems():
+			if server['available']:
+				server['ipv6_ready'] = is_ipv6_ready(jid)
 	
 	# Manage offline servers and stability information
 	
@@ -249,8 +278,7 @@ else:
 		                 exc_info=sys.exc_info())
 		raise
 
-
-# Now dump the information to the dataabase
+# Now dump the information to the database
 
 if UPDATE_DATABASE and not CAN_UPDATE_DATABASE:
 	logging.critical("Can't update the database. Is MySQLdb module available?")

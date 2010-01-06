@@ -122,8 +122,30 @@ class TCPsocket(PlugIn):
         """ Try to connect. Returns non-empty string on success. """
         try:
             if not server: server=self._server
-            self._sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._sock.connect((server[0], int(server[1])))
+            
+            # Since python2.6 we can do
+            #self._sock=socket.create_connection((server[0], int(server[1])))
+            # But for compatibility with previous versions
+            s = None
+            for res in socket.getaddrinfo(server[0], int(server[1]), socket.AF_UNSPEC, socket.SOCK_STREAM):
+                af, socktype, proto, canonname, sa = res
+                try:
+                    s = socket.socket(af, socktype, proto)
+                except socket.error, msg:
+                    s = None
+                    continue
+                try:
+                    s.connect(sa)
+                except socket.error, msg:
+                    s.close()
+                    s = None
+                    continue
+                break
+            if s is None:
+                raise socket.error, msg
+            
+            self._sock=s
+            
             self._send=self._sock.sendall
             self._recv=self._sock.recv
             self.DEBUG("Successfully connected to remote host %s"%`server`,'start')
