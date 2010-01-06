@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # $Id$
 
@@ -75,6 +76,7 @@ import logging
 from os.path import abspath, dirname, basename, join
 import shutil
 import sys
+from xml.sax.saxutils import escape as html_escape
 
 ROWS_BETWEEN_TITLES = 10
 
@@ -110,6 +112,14 @@ COLUMNS_DESCRIPTION = {
   'times_online': {'title': '% Uptime'}
 }
 
+SERVERS_HOMEPAGE = {
+	'jabberd14': 'http://jabberd.org/',
+	'jabberd2': 'http://jabberd2.xiaoka.com/',
+	'ejabberd': 'http://www.process-one.net/en/ejabberd/',
+	'openfire': 'http://www.igniterealtime.org/projects/openfire/index.jsp',
+	'prosody': 'http://prosody.im/',
+	'tigase': 'http://www.tigase.org/'
+}
 
 # Load the configuration
 SCRIPT_DIR = abspath(dirname(sys.argv[0]))
@@ -285,11 +295,12 @@ def _get_image_filename(service_type, available):
 		else:
 			return 'images/yes-grey.png'
 
-def _get_server_logo_filename(server_version):
+def _get_server_implementation_info(server_version):
 	
 	if server_version is not None:
 		if server_version['name'] == 'jabberd' and server_version['version'].startswith('1.'):
 			servername = 'jabberd14'
+			serverweb = 'http://jabberd.org/'
 		elif server_version['name'] == 'jabberd' and server_version['version'].startswith('2.'):
 			servername = 'jabberd2'
 		elif server_version['name'] in ('Wildfire', 'Openfire Enterprise'):
@@ -297,10 +308,16 @@ def _get_server_logo_filename(server_version):
 		else:
 			servername = server_version['name'].lower()
 		
+		serverweb = SERVERS_HOMEPAGE.get(servername, None)
+		
 		if '%s.png' % servername in FILES:
-			return 'images/%s.png' % servername
-	
-	return 'images/transparent.png'
+			image = 'images/%s.png' % servername
+		else:
+			image = 'images/transparent.png'
+		
+		return (servername, serverweb, image)
+	else:
+		return (None, None, 'images/transparent.png')
 
 
 ROWS = None
@@ -320,21 +337,54 @@ def get_rows(servers, types):
 	
 	for server_key, server in servers.iteritems():
 		
-		if SHRINK_SERVERNAMES and len(server[u'jid']) > SHRINK_SERVERNAMES_TO:
-			server_text = "<div class='tooltip_container'>%s...<div class='tooltip'><span>%s</span></div></div>" % (
-			           server[u'jid'][:SHRINK_SERVERNAMES_TO-3], server[u'jid'] )
+		jid = server['jid']
+		
+		if SHRINK_SERVERNAMES and len(jid) > SHRINK_SERVERNAMES_TO:
+			server_name = (jid[:SHRINK_SERVERNAMES_TO-3] + '...')
 		else:
-			server_text = server[u'jid']
+			server_name = jid
+		
+		tooltip = jid
+		
+		if 'about' in server and 'homepage' in server['about']:
+			server_name = "<a href='%s' name='%s' >%s</a>" % (server['about']['homepage'], jid, server_name)
+			tooltip = u"<a href='%s'>%s</a>" % (server['about']['homepage'], tooltip)
+		else:
+			server_name = "<a name='%s' >%s</a>" % (jid, server_name)
+		
+		tooltip = u"<strong>%s</strong><ul>" % tooltip
+		
+		if 'about' in server and (server['about']['latitude'] is not None and server['about']['longitude'] is not None):
+			tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location</a></li>" % (
+			          tooltip, server['about']['latitude'], server['about']['longitude'], jid)
+		
+		if 'ipv6_ready' in server and server['ipv6_ready']:
+			tooltip = u"%s<li>IPv6 Ready</li>" % tooltip
+		
+		tooltip = u"%s</ul>" % tooltip
+		
+		if 'about' in server and 'description' in server['about']:
+			tooltip = u"%s<p>%s</p>" % (tooltip, html_escape(server['about']['description']))
+			
+		
+		server_text = u"<div class='tooltip_container'>%s<div class='tooltip'><span>%s</span></div></div>" % (
+					server_name, tooltip )
 		
 		if 'version' in server:
-			logo = _get_server_logo_filename(server['version'])
-			version_info = "%s - %s" % (server['version']['name'], server['version']['version'])
+			(impl_name, impl_web, impl_logo) = _get_server_implementation_info(server['version'])
+			version_info = u"%s - %s" % (server['version']['name'], server['version']['version'])
 		else:
-			logo = _get_server_logo_filename(None)
+			(impl_name, impl_web, impl_logo) = _get_server_implementation_info(None)
 			version_info = ''
 		
-		row = ( """<td class='server'><img src='%s' width='16' height='16' alt='%s' title='%s'/> <a name='%s'>%s</a></td>""" %
-		        (logo, version_info, version_info, server[u'jid'], server_text) )
+		impl_text = "<img src='%s' width='16' height='16' alt='%s' title='%s'/>" % (
+				impl_logo, version_info, version_info)
+		
+		if impl_web:
+			impl_text = "<a href='%s'>%s</a>" % (impl_web, impl_text)
+		
+		row = ( u"""<td class='server'>%s %s</td>""" %
+		        (impl_text,  server_text) )
 		
 		for service_type in types:
 			
@@ -391,9 +441,9 @@ def get_rows(servers, types):
 		
 		row += "<td class='uptime'>%s</td>" % uptime_text
 		
-		row += "<td class='times_online'>%d/%d (%d%%)</td>" % (
-		        server['times_queried_online'], server['times_queried'],
-		        int(100*server['times_queried_online']/server['times_queried']))
+		row += "<td class='times_online'>%d%% (%d/%d)</td>" % (
+		        int(100*server['times_queried_online']/server['times_queried']),
+		        server['times_queried_online'], server['times_queried'])
 		
 		ROWS[server_key] = row
 	
@@ -505,6 +555,13 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			h6{
 				font-size: 1.2em;
 			}
+			a[href]{
+				text-decoration: none;
+				color: #0000AA;
+			}
+			a img{
+				border: 0px;
+			}
 			.note{
 				padding: 5px;
 				margin:2px auto;
@@ -563,10 +620,10 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 			td.feature{
 /* 				font-size: 2em; */
 			}
-			td.no{
+			.no{
 				color: #E90900;/*firebrick;*/
 			}
-			.available{
+			.yes, .available{
 				color: #0A0;/*green;*/
 			}
 			.unavailable{
@@ -630,7 +687,21 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 				left: 15px;
 				padding: 3px;
 			}
-			div.tooltip span{
+			td.server div.tooltip{
+				padding: 5px 10px;
+				width: 200px;
+				text-align: center;
+			}
+			td.server div.tooltip span{
+				white-space: normal;
+			}
+			td.server div.tooltip ul{
+				list-style-type: none;
+				margin-left: 0px;
+				padding-left: 0px;
+			}
+			td.server div.tooltip p{
+				text-align: left;
 			}
 		</style>
 	</head>
@@ -662,15 +733,15 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 		
 		offline = servers[server_key]['offline_since'] is not None
 		
-		f.write( ("<tr class='%s%s'>%s</tr>\n" %
+		f.write( (u"<tr class='%s%s'>%s</tr>\n" %
 		                     ( 'offline ' if offline else '',
 		                       'odd' if row_number % 2 == 1 else 'even',
-		                       rows[server_key] )).encode("utf-8") )
+		                       rows[server_key] )).encode('utf-8') )
 		
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header)
 	
-	f.write("""</table><div class='footer'>Page generated on %s by <a href='http://code.google.com/p/xmpp-server-scanner/'>XMPP Server Scanner</a></div></body></html>\n""" %
+	f.write(u"""</table><div class='footer'>Page generated on %s by <a href='http://code.google.com/p/xmpp-server-scanner/'>XMPP Server Scanner</a></div></body></html>\n""" %
 	                    datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC') )
 	
 	
