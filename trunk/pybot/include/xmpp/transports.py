@@ -142,7 +142,7 @@ class TCPsocket(PlugIn):
                     continue
                 break
             if s is None:
-                raise socket.error, msg
+                raise socket.error, "Can't open the socket"
             
             self._sock=s
             
