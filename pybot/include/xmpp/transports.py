@@ -124,10 +124,10 @@ class TCPsocket(PlugIn):
             if not server: server=self._server
             
             # Since python2.6 we can do
-            #self._sock=socket.create_connection((server[0], int(server[1])))
+            #self._sock=socket.create_connection((host, port))
             # But for compatibility with previous versions
             s = None
-            for res in socket.getaddrinfo(server[0], int(server[1]), socket.AF_UNSPEC, socket.SOCK_STREAM):
+            for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
                 af, socktype, proto, canonname, sa = res
                 try:
                     s = socket.socket(af, socktype, proto)
