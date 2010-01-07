@@ -31,6 +31,37 @@ try:
 except ImportError:
 	import xml.etree.ElementTree as ET
 
+# Load the logging configuration and configure the logger
+SCRIPT_DIR = abspath(dirname(sys.argv[0]))
+cfg = SafeConfigParser()
+cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
+
+try:
+	LOGFILE         = cfg.get("Logs", "LOGFILE")
+except NoOptionError:
+	LOGFILE         = None
+	logging.basicConfig(
+#	    level=logging.WARNING,
+	    level=logging.DEBUG,
+	    format='%(asctime)s %(levelname)s %(message)s'
+	    )
+else:
+	if not isabs(LOGFILE):
+		LOGFILE = join(SCRIPT_DIR, LOGFILE)
+	if os.access(LOGFILE, os.F_OK):
+		do_rollover = True
+	else:
+		do_rollover = False
+	logger = logging.getLogger()
+	logger.setLevel(logging.DEBUG)
+	handler = RotatingFileHandler(LOGFILE, backupCount=10)
+	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+	if do_rollover:
+		handler.doRollover()
+	logger.addHandler(handler)
+
+# Now import our modules (some use logging)
+
 try:
 	from include.ipv6_aux import is_ipv6_ready
 except ImportError:
@@ -50,11 +81,7 @@ from include import xmpp_discoverer
 from include import html_file_generator, xml_file_generator
 
 
-# Load the configuration
-SCRIPT_DIR = abspath(dirname(sys.argv[0]))
-cfg = SafeConfigParser()
-cfg.readfp(open(join(SCRIPT_DIR, 'config.cfg')))
-
+# Load the rest of the configuration
 
 
 # Misc
@@ -89,13 +116,7 @@ SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
 #SERVERS_FILE       = "servers-fixed.xml"
 SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
 
-# Logs
-#LOGFILE            = 'out.log'
-try:
-	LOGFILE         = cfg.get("Logs", "LOGFILE")
-except NoOptionError:
-	LOGFILE         = None
-#LOGFILE            = None
+
 
 # Debug
 # If false, load the discovery results from servers.dump file,
@@ -107,8 +128,6 @@ del(cfg)
 
 
 
-if LOGFILE is not None and not isabs(LOGFILE):
-	LOGFILE = join(SCRIPT_DIR, LOGFILE)
 
 if not isabs(SERVERS_FILE):
 	SERVERS_FILE = join(SCRIPT_DIR, SERVERS_FILE)
@@ -120,25 +139,6 @@ XML_FILE = join(OUTPUT_DIRECTORY, XML_FILENAME)
 
 SERVERS_DUMP_FILE = join(SCRIPT_DIR, 'servers.dump')
 
-
-if LOGFILE is None:
-	logging.basicConfig(
-#	    level=logging.WARNING,
-	    level=logging.DEBUG,
-	    format='%(asctime)s %(levelname)s %(message)s'
-	    )
-else:
-	if os.access(LOGFILE, os.F_OK):
-		do_rollover = True
-	else:
-		do_rollover = False
-	logger = logging.getLogger()
-	logger.setLevel(logging.DEBUG)
-	handler = RotatingFileHandler(LOGFILE, backupCount=10)
-	handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
-	if do_rollover:
-		handler.doRollover()
-	logger.addHandler(handler)
 
 
 if DO_DISCOVERY:
