@@ -141,7 +141,26 @@ def is_ipv6_ready(server):
 	
 	logging.debug("Trying to connect using IPv6 to %s: host %s, IPv6 %s, port %d." % (server, host, ipv6, port))
 	try:
-		s = socket.create_connection((ipv6, port))
+		#In Python 2.6 and later
+		#s = socket.create_connection((ipv6, port))
+		s = None
+		for res in socket.getaddrinfo(server[0], int(server[1]), socket.AF_UNSPEC, socket.SOCK_STREAM):
+			af, socktype, proto, canonname, sa = res
+			try:
+				s = socket.socket(af, socktype, proto)
+			except socket.error, msg:
+				s = None
+				continue
+			try:
+				s.connect(sa)
+			except socket.error, msg:
+				s.close()
+				s = None
+				continue
+			break
+		if s is None:
+			raise socket.error, msg
+		
 		s.close()
 	except socket.error, err:
 		if err.errno == 97: # errno.EAFNOSUPPORT ([Errno 97] Address family not supported by protocol)
