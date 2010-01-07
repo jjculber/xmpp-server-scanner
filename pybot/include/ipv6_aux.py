@@ -159,7 +159,7 @@ def is_ipv6_ready(server):
 				continue
 			break
 		if s is None:
-			raise socket.error, "Can't open the socket"
+			return False
 		
 		s.close()
 	except socket.error, err:
