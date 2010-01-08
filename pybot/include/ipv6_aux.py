@@ -144,7 +144,7 @@ def is_ipv6_ready(server):
 		#In Python 2.6 and later
 		#s = socket.create_connection((ipv6, port))
 		s = None
-		for res in socket.getaddrinfo(server[0], int(server[1]), socket.AF_UNSPEC, socket.SOCK_STREAM):
+		for res in socket.getaddrinfo(ipv6, port, socket.AF_UNSPEC, socket.SOCK_STREAM):
 			af, socktype, proto, canonname, sa = res
 			try:
 				s = socket.socket(af, socktype, proto)
