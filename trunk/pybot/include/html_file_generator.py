@@ -116,6 +116,7 @@ SERVERS_HOMEPAGE = {
 	'jabberd14': 'http://jabberd.org/',
 	'jabberd2': 'http://jabberd2.xiaoka.com/',
 	'ejabberd': 'http://www.process-one.net/en/ejabberd/',
+    'isode m-link': 'http://www.isode.com/evaluate/instant-messaging-xmpp.html',
 	'openfire': 'http://www.igniterealtime.org/projects/openfire/index.jsp',
 	'prosody': 'http://prosody.im/',
 	'tigase': 'http://www.tigase.org/'
