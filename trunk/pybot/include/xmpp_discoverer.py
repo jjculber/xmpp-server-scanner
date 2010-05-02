@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # $Id$
 
@@ -680,8 +681,7 @@ def _get_item_info(client, component, retries=0):
 
 
 def _get_items(client, component, retries=0):
-	'''Query the child items and nodes of component.
-	Only returns items whose address it's equal or a subdomain of component'''
+	'''Query the child items and nodes of component.'''
 	
 	retry = retries
 	while retry >= 0:
@@ -706,19 +706,6 @@ def _get_items(client, component, retries=0):
 			raise
 			
 		if len(items) > 0:
-			# Process items
-			for item in list(items):
-				# Remove items from other servers
-				if not _in_same_domain(component[u'jid'], item[u'jid']):
-					items.remove(item)
-				
-				# Remove itself if the server includes itself in the items list
-				if component[u'jid'] == item[u'jid']:
-					if 'node' in component and 'node' in item:
-						if component[u'node'] == item[u'node']:
-							items.remove(item)
-					elif 'node' not in component and 'node' not in item:
-						items.remove(item)
 			return items
 		
 		retry -= 1
@@ -728,10 +715,36 @@ def _get_items(client, component, retries=0):
 		return []
 
 
-def _discover_item(clients, component, server):
+def _filter_items(items, component, discovered_items):
+	'''Return a list of items without the components from other domains or
+	those already discovered'''
+	filtered_items = []
+	for item in items:
+		
+		# Ignore those from other domains
+		if not _in_same_domain(component[u'jid'], item[u'jid']):
+			continue
+		
+		# Ignore those already discovered
+		if u'node' in item and (item[u'jid'], item[u'node']) in discovered_items:
+			continue
+		if item[u'jid'] in discovered_items:
+			continue
+		
+		filtered_items.append(item)
+		
+	return filtered_items
+
+
+def _discover_item(clients, component, server, discovered_items=[]):
 	'''Explore the component and its childs and 
 	update the component list in server.
 	Both, component and server, variables are modified.'''
+	
+	if u'node' in component:
+		discovered_items.append((component[u'jid'], component[u'node']))
+	else:
+		discovered_items.append(component[u'jid'])
 	
 	needs_to_query_items = False
 	#cl.Process(1)
@@ -793,13 +806,13 @@ def _discover_item(clients, component, server):
 			# Process items
 			
 			component[u'items'] = []
-			for item in component[u'info'][0]:
-				if _in_same_domain(component[u'jid'], item[u'jid']):
-					try:
-						component[u'items'].append(_discover_item(clients, item, server))
-					except:
-						logging.error('Can\'t discover item %s of %s', item[u'jid'],
-						              component[u'jid'], exc_info=sys.exc_info())
+			items = _filter_items(component[u'info'][0], component, discovered_items)
+			for item in items:
+				try:
+					component[u'items'].append(_discover_item(clients, item, server, discovered_items))
+				except:
+					logging.error('Can\'t discover item %s of %s', item[u'jid'],
+					              component[u'jid'], exc_info=sys.exc_info())
 			
 			needs_to_query_items = False # We already have the items
 			#Fake identities. But we aren't really sure that it's a server?
@@ -814,7 +827,8 @@ def _discover_item(clients, component, server):
 	if needs_to_query_items:
 		for client in clients:
 			try:
-				component[u'items'] = _get_items(client, component, item_retries)
+				component[u'items'] = _filter_items( _get_items(client, component, item_retries),
+				                                     component, discovered_items )
 			except xml.parsers.expat.ExpatError:
 				component[u'items'] = []
 				raise
@@ -827,13 +841,13 @@ def _discover_item(clients, component, server):
 		
 		for item in list(component[u'items']):
 			if (component[u'jid'] != item[u'jid']):
-				item = _discover_item(clients, item, server)
+				item = _discover_item(clients, item, server, discovered_items)
 			elif u'node' in component and u'node' in item:
 				if (  (component[u'jid'] == item[u'jid']) &
 					  (component[u'node'] != item[u'node'])  ):
-					item = _discover_item(clients, item, server)
+					item = _discover_item(clients, item, server, discovered_items)
 			else:
-				item = _discover_item(clients, item, server)
+				item = _discover_item(clients, item, server, discovered_items)
 	
 	return component
 
