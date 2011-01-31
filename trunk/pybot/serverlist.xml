@@ -1,4 +1,10 @@
-<!-- This file lists the open Jabber servers registered with the XMPP Federation. The format of this file is defined by the Service Discovery protocol: http://www.xmpp.org/extensions/xep-0030.html ... To add your server to the list, register at https://www.xmpp.net/ -->
+<!--
+The canonical list of Jabber/XMPP services is at http://xmpp.org/services/ ( http://xmpp.org/services/services.xml http://xmpp.org/services/services-full.xml)
+This file lists servers registered on the old jabber.org list which was removed in 2008
+It also includes servers that have request to be added in the xmpp.org list but that have been ignored. No verification has been done on the information provided in the requests.
+Some servers are virtual hosts.
+
+This list does not include the services listed at xmpp.org's list (maybe it should)-->
 
 <query xmlns='http://jabber.org/protocol/disco#items'>
   <item jid='0nl1ne.at'/>
@@ -20,8 +26,10 @@
   <item jid='aszlig.net'/>
   <item jid='bbs.docksud.com.ar'/>
   <item jid='binaryfreedom.info'/>
+  <item jid='boese-ban.de'/>
   <item jid='boxbox.org'/>
   <item jid='brauchen.info'/>
+  <item jid='chatme.im'/>
   <item jid='chrome.pl'/>
   <item jid='climm.org'/>
   <item jid='codingteam.net'/>
@@ -31,13 +39,16 @@
   <item jid='darkdna.net'/>
   <item jid='default.co.yu'/>
   <item jid='default.rs'/>
+<!--   <item jid='defcon-cc.dyndns.org'/> Dinamic DNS, No S2S -->
   <item jid='deshalbfrei.org'/>
   <item jid='draugr.de'/>
   <item jid='e-utp.net'/>
   <item jid='egbers.info'/>
   <item jid='el-tramo.be'/>
   <item jid='ezvan.fr'/>
+  <item jid='freamware.net'/>
   <item jid='freies-im.de'/>
+  <item jid='freize.org'/>
   <item jid='fritz-elfert.de'/>
   <item jid='funkyjoh.de'/>
   <item jid='gabbler.de'/>
@@ -47,6 +58,7 @@
   <item jid='gabfest.net'/>
   <item jid='gajim.org'/>
   <item jid='gmx.net'/>
+  <item jid='groar.com'/>
   <item jid='hapi.pl'/>
   <item jid='headcounter.org'/>
   <item jid='helheim.net'/>
@@ -58,13 +70,18 @@
   <item jid='im.thiessen.it'/>
   <item jid='intar.web.ve'/>
   <item jid='isgeek.info'/>
+  <item jid='jabb3r.net'/>
+  <item jid='jab.cyberlugar.com'/>
   <item jid='jab.undernet.cz'/>
   <item jid='jabber-hispano.org'/>
+  <item jid='jabber-hosting.de'/>
+  <item jid='jabber-me.de'/>
   <item jid='jabber-server.is-a-geek.org'/>
   <item jid='jabber80.com'/>
   <item jid='jabber.ambrero.nl'/>
   <item jid='jabber.anywise.com'/>
   <item jid='jabber.as250.net'/>
+  <item jid='jabber.at'/>
   <item jid='jabber.bglinux.org'/>
   <item jid='jabber.bluendo.com'/>
   <item jid='jabber.cc'/>
@@ -72,6 +89,7 @@
   <item jid='jabber.chaotic.de'/>
   <item jid='jabber.cl'/>
   <item jid='jabber.cn'/>
+  <item jid='jabber.co.nz'/>
   <item jid='jabber.crimea.ua'/>
   <item jid='jabber.cv.ua'/>
   <item jid='jabber.cz'/>
@@ -80,6 +98,7 @@
   <item jid='jabber.dol.ru'/>
   <item jid='jabber.drap.in.ua'/>
   <item jid='jabber.eban-meban.com'/>
+  <item jid='jabber.earth.li'/>
   <item jid='jabber.eu'/>
   <item jid='jabber.fourecks.de'/>
   <item jid='jabber.freenet.de'/>
@@ -90,6 +109,7 @@
   <item jid='jabber.hot-chilli.eu'/>
   <item jid='jabber.hot-chilli.net'/>
   <item jid='jabber.i-pobox.net'/>
+  <item jid='jabber.iitsp.com'/>
   <item jid='jabber.keinsinn.de'/>
   <item jid='jabber.kg'/>
   <item jid='jabber.linux.it'/>
@@ -97,6 +117,7 @@
   <item jid='jabber.linuxlovers.at'/>
   <item jid='jabber.loudas.com'/>
   <item jid='jabber.mbod.net'/>
+  <item jid='jabber.me'/>
   <item jid='jabber.me.uk'/>
   <item jid='jabber.minus273.org'/>
   <item jid='jabber.mobi'/>
@@ -106,10 +127,12 @@
   <item jid='jabber.org'/>
   <item jid='jabber.org.au'/>
   <item jid='jabber.org.by'/>
+  <item jid='jabber.org.lv'/>
   <item jid='jabber.pilgerer.de'/>
   <item jid='jabber.planetteamspeak.com'/>
   <item jid='jabber.rootbash.com'/>
   <item jid='jabber.rovno.ua'/>
+  <item jid='jabber.rueckgr.at'/>
   <item jid='jabber.scha.de'/>
   <item jid='jabber.schnied.net'/>
   <item jid='jabber.schwarzvogel.de'/>
@@ -121,7 +144,9 @@
   <item jid='jabber.sow.as'/>
   <item jid='jabber.stammtisch.it'/>
   <item jid='jabber.tcweb.org'/>
+  <item jid='jabber.theforest.us'/>
   <item jid='jabber.tf-network.de'/>
+  <item jid='jabber.tk'/>
   <item jid='jabber.tutnot.de'/>
   <item jid='jabber.ukrwest.net'/>
   <item jid='jabber.ulm.ccc.de'/>
@@ -133,6 +158,7 @@
   <item jid='jabberchat.eu'/>
   <item jid='jabbercn.org'/>
   <item jid='jabberes.org'/>
+  <item jid='jabberim.de'/>
   <item jid='jabberlive.org'/>
   <item jid='jabbermx.org'/>
   <item jid='jabbernet.eu'/>
@@ -140,17 +166,28 @@
   <item jid='jabberworld.org'/>
   <item jid='jabbim.com'/>
   <item jid='jabbim.cz'/>
+  <item jid='jabbim.pl'/>
   <item jid='jabbim.sk'/>
   <item jid='jabjab.de'/>
+  <item jid='jabme.de'/>
+  <item jid='jabr.in'/>
   <item jid='jabster.pl'/>
   <item jid='jacquin.eu'/>
   <item jid='jaim.at'/>
+  <item jid='jaim.im'/>
+  <item jid='jappix.com'/>
   <item jid='jb.tr3.ru'/>
   <item jid='jid.pl'/>
   <item jid='jis.mit.edu'/>
   <item jid='jtalk.ru'/>
   <item jid='jwchat.org'/>
+  <item jid='koosy.nl'/>
+  <item jid='hot-chilli.eu'/>
+  <item jid='hot-chilli.net'/>
+  <item jid='im.hot-chilli.eu'/>
+  <item jid='im.hot-chilli.net'/>
   <item jid='lethyro.net'/>
+  <item jid='lightwitch.org'/>
   <item jid='linuxlovers.at'/>
   <item jid='macjabber.de'/>
   <item jid='meleeweb.net'/>
@@ -166,16 +203,22 @@
   <item jid='njs.netlab.cz'/>
   <item jid='noicq.org'/>
   <item jid='offlinemode.org'/>
+  <item jid='orcalab.net'/>
+  <item jid='paimport.de'/>
   <item jid='paranoia-interactive.de'/>
   <item jid='phcn.de'/>
   <item jid='pluser.ru'/>
   <item jid='portal-on.ru'/>
   <item jid='programmer-art.org'/>
   <item jid='prolly.org'/>
+  <item jid='qip.ru'/>
+  <item jid='rkquery.de'/>
+  <item jid='richim.org'/>
   <item jid='schokokeks.org'/>
   <item jid='shady.nl'/>
   <item jid='silper.cz'/>
   <item jid='smoula.net'/>
+  <item jid='stalkx.net'/>
   <item jid='startcom.org'/>
   <item jid='sternenschweif.de'/>
   <item jid='swissjabber.ch'/>
@@ -185,25 +228,32 @@
   <item jid='swissjabber.org'/>
   <item jid='syndicon.de'/>
   <item jid='szsport.org'/>
+  <item jid='talkr.im'/>
+  <item jid='thiessen.org'/>
   <item jid='tidesofwar.net'/>
+  <item jid='tigase.im'/>
   <item jid='tigase.org'/>
   <item jid='tiggerswelt.net'/>
   <item jid='tlug.up.ac.za'/>
+  <item jid='tr0lit.name'/>
   <item jid='tronet.ru'/>
   <item jid='uaznia.net'/>
   <item jid='ubuntu-jabber.de'/>
   <item jid='ubuntu-jabber.net'/>
   <item jid='udaff.com'/>
+  <item jid='univers-libre.net'/>
   <item jid='unstable.nl'/>
   <item jid='vayusphere.com'/>
   <item jid='verdammung.org'/>
   <item jid='vke.ru'/>
   <item jid='vodka-pomme.net'/>
   <item jid='volgograd.ru'/>
+  <item jid='weavver.com'/>
   <item jid='wolfjabber.homeip.net'/>
   <item jid='x23.eu'/>
   <item jid='xabber.de'/>
   <item jid='xim.ca'/>
+  <item jid='xmpp-hosting.de'/>
   <item jid='xmpp.at'/>
   <item jid='xmpp.be'/>
   <item jid='xmpp.de'/>
@@ -211,7 +261,9 @@
   <item jid='xmpp.org.ru'/>
   <item jid='xmpp.kz'/>
   <item jid='xmpp.us'/>
+  <item jid='xmpp.ws'/>
   <item jid='xmppnet.de'/>
+  <item jid='yeahnah.co.nz'/>
   <item jid='zlosnik.net'/>
   <item jid='zsim.de'/>
 </query>
