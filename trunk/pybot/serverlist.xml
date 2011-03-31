@@ -31,8 +31,10 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='boxbox.org'/>
   <item jid='brauchen.info'/>
   <item jid='chatme.im'/>
+  <item jid='chirimoyas.es'/>
   <item jid='chrome.pl'/>
   <item jid='climm.org'/>
+  <item jid='coderollers.com'/>
   <item jid='codingteam.net'/>
   <item jid='core.im'/>
   <item jid='core.segfault.pl'/>
@@ -45,6 +47,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='draugr.de'/>
   <item jid='e-utp.net'/>
   <item jid='egbers.info'/>
+  <item jid='einfachjabber.de'/>
   <item jid='el-tramo.be'/>
   <item jid='ezvan.fr'/>
   <item jid='freamware.net'/>
@@ -71,6 +74,8 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='im.thiessen.it'/>
   <item jid='intar.web.ve'/>
   <item jid='isgeek.info'/>
+  <item jid='j4bb3r.com'/>
+  <item jid='jabb0r.de'/>
   <item jid='jabb3r.net'/>
   <item jid='jab.cyberlugar.com'/>
   <item jid='jab.undernet.cz'/>
@@ -79,6 +84,8 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='jabber-me.de'/>
   <item jid='jabber-server.is-a-geek.org'/>
   <item jid='jabber80.com'/>
+  <item jid='jabberheaven.com'/>
+  <item jid='jabberheaven.de'/>
   <item jid='jabber.ambrero.nl'/>
   <item jid='jabber.anywise.com'/>
   <item jid='jabber.as250.net'/>
@@ -180,6 +187,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='jappix.com'/>
   <item jid='jb.tr3.ru'/>
   <item jid='jid.pl'/>
+  <item jid='jim.dunklegedanken.de'/>
   <item jid='jis.mit.edu'/>
   <item jid='jtalk.ru'/>
   <item jid='jwchat.org'/>
@@ -192,6 +200,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='lightwitch.org'/>
   <item jid='linuxlovers.at'/>
   <item jid='macjabber.de'/>
+  <item jid='mayplaces.com'/>
   <item jid='meleeweb.net'/>
   <item jid='moo.im'/>
   <item jid='myjabber.ru'/>
@@ -231,6 +240,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='syndicon.de'/>
   <item jid='szsport.org'/>
   <item jid='talkr.im'/>
+  <item jid='the-hard-core.info'/>
   <item jid='thiessen.org'/>
   <item jid='tidesofwar.net'/>
   <item jid='tigase.im'/>
