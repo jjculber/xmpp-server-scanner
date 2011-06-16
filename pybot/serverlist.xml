@@ -65,6 +65,8 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='im.drazzib.com'/>
   <item jid='im.flosoft.biz'/>
   <item jid='im.thiessen.it'/>
+  <item jid='inbox.im'/>
+  <item jid='is-the-shit.com'/>
   <item jid='isgeek.info'/>
   <item jid='j4bb3r.com'/>
   <item jid='jabb0r.de'/>
@@ -76,6 +78,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='jabber80.com'/>
   <item jid='jabberheaven.com'/>
   <item jid='jabberheaven.de'/>
+  <item jid='jabberheaven.eu'/>
   <item jid='jabber.anywise.com'/>
   <item jid='jabber.as250.net'/>
   <item jid='jabber.at'/>
@@ -113,6 +116,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='jabber.mbod.net'/>
   <item jid='jabber.me'/>
   <item jid='jabber.me.uk'/>
+  <item jid='jabber.meta.net.nz'/>
   <item jid='jabber.minus273.org'/>
   <item jid='jabber.mobi'/>
   <item jid='jabber.ms'/>
@@ -200,6 +204,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='njs.netlab.cz'/>
   <item jid='noicq.org'/>
   <item jid='offlinemode.org'/>
+  <item jid='openjabber.de'/>
   <item jid='orcalab.net'/>
   <item jid='paimport.de'/>
   <item jid='paranoia-interactive.de'/>
@@ -208,6 +213,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='portal-on.ru'/>
   <item jid='programmer-art.org'/>
   <item jid='prolly.org'/>
+  <item jid='prosody.de'/>
   <item jid='qip.ru'/>
   <item jid='rkquery.de'/>
   <item jid='richim.org'/>
@@ -233,6 +239,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='tigase.org'/>
   <item jid='tiggerswelt.net'/>
   <item jid='tlug.up.ac.za'/>
+  <item jid='tpansky.us'/>
   <item jid='tr0lit.name'/>
   <item jid='tronet.ru'/>
   <item jid='uaznia.net'/>
