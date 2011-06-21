@@ -22,7 +22,7 @@ import xml
 
 
 from xmpp import Client, features, NodeProcessed
-from xmpp.protocol import DataForm, Iq, isResultNode, Message, Presence
+from xmpp.protocol import ConnectionTimeout, DataForm, Iq, isResultNode, Message, Presence
 
 
 # Load the configuration
@@ -660,10 +660,12 @@ def _get_item_info(client, component, retries=0):
 			except xml.parsers.expat.ExpatError:
 				logging.warning( '%s sent malformed XMPP', component[u'jid'],
 				                 exc_info=True)
-				#return ([], [])
-				#add_component_unavailable( component[u'jid'],
-				                            #server[u'unavailable_services'] )
-				raise
+				add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
+				client.reconnectAndReauth()
+				client.sendInitPresence()
+				client.Process(1)
+				return ([], [])
+				#raise
 			
 			if len(info[0]) != 0 or len(info[1]) != 0:
 				return info
@@ -702,8 +704,11 @@ def _get_items(client, component, retries=0):
 		except xml.parsers.expat.ExpatError:
 			logging.warning( '%s sent malformed XMPP', component[u'jid'],
 			                 exc_info=True)
-			#items = []
-			raise
+			items = []
+			client.reconnectAndReauth()
+			client.sendInitPresence()
+			client.Process(1)
+			#raise
 			
 		if len(items) > 0:
 			return items
@@ -762,12 +767,7 @@ def _discover_item(clients, component, server, discovered_items=[]):
 		item_retries = ITEM_QUERY_RETRIES
 	
 	for client in clients:
-		try:
-			component[u'info'] = _get_item_info(client, component, retries)
-		except xml.parsers.expat.ExpatError:
-			component[u'info'] = ([], [])
-			_handle_component_unavailable(component, server)
-			raise
+		component[u'info'] = _get_item_info(client, component, retries)
 		
 		if len(component[u'info'][0]) > 0 and len(component[u'info'][1]) > 0:
 			# Successfull discovery
@@ -826,12 +826,8 @@ def _discover_item(clients, component, server, discovered_items=[]):
 	
 	if needs_to_query_items:
 		for client in clients:
-			try:
-				component[u'items'] = _filter_items( _get_items(client, component, item_retries),
-				                                     component, discovered_items )
-			except xml.parsers.expat.ExpatError:
-				component[u'items'] = []
-				raise
+			component[u'items'] = _filter_items( _get_items(client, component, item_retries),
+			                                     component, discovered_items )
 			
 			if len(component[u'items']) > 0:
 				# Successfull discovery
@@ -896,8 +892,25 @@ def _get_clients(jabber_accounts, use_several_accounts):
 
 
 def _keep_alive_clients(clients):
-	'''Prevent client disconnections. Not sure if it really does something.'''
+	'''Prevent client disconnections. Not sure if it really does something, but
+	at least it captures some exceptions'''
 	for client in clients:
+		try:
+			#client.send(' ')
+			#client.send('<!--keepalive-->')
+			response=client.Dispatcher.SendAndWaitForResponse(
+			        Iq(to=client._Server[0], typ='get', queryNS='urn:xmpp:ping'))
+		except ConectionTimeout:
+			logging.error( 'ConectionTimeout exception on %s@%s/%s: Reconecting ' % (
+			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
+			client.reconnectAndReauth()
+			client.sendInitPresence()
+			client.Process(1)
+		except e,msg:
+			print e, msg
+			print type(e)
+			logging.critical( 'Uncaught exception on  %s@%s/%s ' % (
+			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
 		client.Process(0.1)
 
 
@@ -935,18 +948,7 @@ def discover_servers(server_list):
 		for jid in sorted(servers.keys()):
 			server = servers[jid]
 			_keep_alive_clients(clients)
-			
-			try:
-				_discover_item(clients, server, server)
-			
-			except xml.parsers.expat.ExpatError: # Restart the clients
-				#cl.disconnect()
-				logging.warning( 'Aborting discovery of %s server. Restart clients and continue',
-				                 server[u'jid'], exc_info=sys.exc_info() )
-				
-				_disconnect_clients(clients)
-				clients = _get_clients(JABBER_ACCOUNTS,
-				                       USE_MULTIPLE_QUERY_ACCOUNTS)
+			_discover_item(clients, server, server)
 				
 	except:
 		logging.critical( 'Aborting discovery on %s server.',
