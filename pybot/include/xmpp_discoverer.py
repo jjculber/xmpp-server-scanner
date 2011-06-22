@@ -900,8 +900,8 @@ def _keep_alive_clients(clients):
 			#client.send('<!--keepalive-->')
 			response=client.Dispatcher.SendAndWaitForResponse(
 			        Iq(to=client._Server[0], typ='get', queryNS='urn:xmpp:ping'))
-		except ConectionTimeout:
-			logging.error( 'ConectionTimeout exception on %s@%s/%s: Reconecting ' % (
+		except ConnectionTimeout:
+			logging.error( 'ConnectionTimeout exception on %s@%s/%s: Reconecting ' % (
 			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
 			client.reconnectAndReauth()
 			client.sendInitPresence()
