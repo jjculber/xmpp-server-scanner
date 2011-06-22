@@ -660,7 +660,6 @@ def _get_item_info(client, component, retries=0):
 			except xml.parsers.expat.ExpatError:
 				logging.warning( '%s sent malformed XMPP', component[u'jid'],
 				                 exc_info=True)
-				add_component_unavailable(component[u'jid'], server[u'unavailable_services'])
 				client.reconnectAndReauth()
 				client.sendInitPresence()
 				client.Process(1)
@@ -741,10 +740,12 @@ def _filter_items(items, component, discovered_items):
 	return filtered_items
 
 
-def _discover_item(clients, component, server, discovered_items=[]):
+def _discover_item(clients, component, server, discovered_items=None):
 	'''Explore the component and its childs and 
 	update the component list in server.
 	Both, component and server, variables are modified.'''
+	if discovered_items is None:
+		discovered_items = []
 	
 	if u'node' in component:
 		discovered_items.append((component[u'jid'], component[u'node']))
@@ -898,17 +899,15 @@ def _keep_alive_clients(clients):
 		try:
 			#client.send(' ')
 			#client.send('<!--keepalive-->')
-			response=client.Dispatcher.SendAndWaitForResponse(
-			        Iq(to=client._Server[0], typ='get', queryNS='urn:xmpp:ping'))
+			response = client.Dispatcher.SendAndWaitForResponse(
+			        Iq(to=client.Server, typ='get', queryNS='urn:xmpp:ping'))
 		except ConnectionTimeout:
 			logging.error( 'ConnectionTimeout exception on %s@%s/%s: Reconecting ' % (
 			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
 			client.reconnectAndReauth()
 			client.sendInitPresence()
 			client.Process(1)
-		except e,msg:
-			print e, msg
-			print type(e)
+		except:
 			logging.critical( 'Uncaught exception on  %s@%s/%s ' % (
 			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
 		client.Process(0.1)
