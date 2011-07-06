@@ -77,6 +77,7 @@ from os.path import abspath, dirname, basename, join
 import shutil
 import sys
 from xml.sax.saxutils import escape as html_escape
+from helpers import get_version
 
 ROWS_BETWEEN_TITLES = 10
 
@@ -666,8 +667,8 @@ def generate( filename, servers, types, sort_by=None, sort_links=None,
 	if row_number % ROWS_BETWEEN_TITLES != 1:
 		f.write(table_header)
 	
-	f.write(u"""</table><div class='footer'>Page generated on %s by <a href='http://code.google.com/p/xmpp-server-scanner/'>XMPP Server Scanner</a></div></body></html>\n""" %
-	                    datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC') )
+	f.write(u"""</table><div class='footer'>Page generated on %s by <a href='http://code.google.com/p/xmpp-server-scanner/'>XMPP Server Scanner</a><!-- %s --></div></body></html>\n""" %
+	                    (datetime.utcnow().strftime('%d-%B-%Y %H:%M UTC'), get_version()) )
 	
 	
 	if compress:

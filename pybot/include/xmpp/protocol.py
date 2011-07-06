@@ -222,6 +222,17 @@ stream_exceptions = {'bad-format': BadFormat,
                      'unsupported-version': UnsupportedVersion,
                      'xml-not-well-formed': XMLNotWellFormed}
 
+class ErrorStanzaException(Exception):
+    """ Base exception class for error stanzas."""
+    def __init__(self, code, name, type):
+        self.code = code
+        self.name = name
+        self.type = type
+    def __str__(self):
+        return "Error %d (%s): %s" % (self.value, self.type, self.name.replace('_',' '))
+
+
+
 class JID:
     """ JID object. JID can be built from string, modified, compared, serialised into string. """
     def __init__(self, jid=None, node='', domain='', resource=''):

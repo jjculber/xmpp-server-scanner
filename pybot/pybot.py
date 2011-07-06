@@ -78,6 +78,7 @@ else:
 	CAN_UPDATE_DATABASE = True
 	
 from include import xmpp_discoverer
+from include.helpers import get_version
 from include import html_file_generator, xml_file_generator
 
 
@@ -140,6 +141,7 @@ XML_FILE = join(OUTPUT_DIRECTORY, XML_FILENAME)
 SERVERS_DUMP_FILE = join(SCRIPT_DIR, 'servers.dump')
 
 
+logging.info('Starting execution of XMPP Server Scanner %s' % get_version())
 
 if DO_DISCOVERY:
 	# Get server list
