@@ -848,6 +848,23 @@ def _discover_item(clients, component, server, discovered_items=None):
 	
 	return component
 
+def _get_connected_client(account):
+	client = Client(account['server'], debug=[])
+	if not client.connect():
+		jabber_accounts.remove(account)
+		logging.error("Can not connect to %s server, please check your configuration", account['server'])
+		raise IOError('Can not connect to server.')
+	if not client.auth(account['user'], account['password'], account['resource']):
+		jabber_accounts.remove(account)
+		logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
+		raise IOError('Can not auth with server.')
+	
+	logging.info("Logged in as %s@%s", account['user'], account['server'])
+	client.RegisterHandler('message', _handle_messages)
+	client.sendInitPresence()
+	client.Process(1)
+	
+	return client
 
 def _get_clients(jabber_accounts, use_several_accounts):
 	'''Connect clients to the jabber accounts'''
@@ -862,21 +879,22 @@ def _get_clients(jabber_accounts, use_several_accounts):
 		
 		for account in accounts:
 			try:
-				client = Client(account['server'], debug=[])
-				if not client.connect():
-					jabber_accounts.remove(account)
-					logging.error("Can not connect to %s server, please check your configuration", account['server'])
-					#raise IOError('Can not connect to server.')
-					continue
-				if not client.auth(account['user'], account['password'], account['resource']):
-					jabber_accounts.remove(account)
-					logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
-					#raise IOError('Can not auth with server.')
-					continue
+				client = _get_connected_client(account)
+				#client = Client(account['server'], debug=[])
+				#if not client.connect():
+					#jabber_accounts.remove(account)
+					#logging.error("Can not connect to %s server, please check your configuration", account['server'])
+					##raise IOError('Can not connect to server.')
+					#continue
+				#if not client.auth(account['user'], account['password'], account['resource']):
+					#jabber_accounts.remove(account)
+					#logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
+					##raise IOError('Can not auth with server.')
+					#continue
 			except:
 				jabber_accounts.remove(account)
 				logging.error( "Exception while trying to log in on %s@%s",
-				               account['user'], account['password'], exc_info=True )
+				               account['user'], account['server'], exc_info=True )
 			else:
 				logging.info("Logged in as %s@%s", account['user'], account['server'])
 				client.RegisterHandler('message', _handle_messages)
@@ -895,22 +913,42 @@ def _get_clients(jabber_accounts, use_several_accounts):
 def _keep_alive_clients(clients):
 	'''Prevent client disconnections. Not sure if it really does something, but
 	at least it captures some exceptions'''
-	for client in clients:
+	for client in list(clients):
 		try:
 			#client.send(' ')
 			#client.send('<!--keepalive-->')
 			response = client.Dispatcher.SendAndWaitForResponse(
 			        Iq(to=client.Server, typ='get', queryNS='urn:xmpp:ping'))
+			raise ConnectionTimeout('lala')
+			client.Process(0.1)
 		except ConnectionTimeout:
 			logging.error( 'ConnectionTimeout exception on %s@%s/%s: Reconecting ' % (
 			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
-			client.reconnectAndReauth()
-			client.sendInitPresence()
-			client.Process(1)
+			
+			# Substitute the crashed client
+			
+			account = { 'user':client.User, 'server':client.Server,
+			            'password':client.User, 'resource':client.Resource }
+			index = clients.index(client)
+			
+			try:
+				client.disconnect()
+			except:
+				logging.info( 'Error while disconecting client', exc_info=sys.exc_info() )
+			finally:
+				try:
+					client = _get_connected_client(account)
+					clients[index] = client
+				except:
+					logging.error( "Exception while trying to log in on %s@%s",
+								account['user'], account['password'], exc_info=True )
+					del(clients[index])
+			#client.reconnectAndReauth()
+			#client.sendInitPresence()
+			#client.Process(1)
 		except:
 			logging.critical( 'Uncaught exception on  %s@%s/%s ' % (
 			        client.User, client.Server, client.Resource), exc_info=sys.exc_info() )
-		client.Process(0.1)
 
 
 def _disconnect_clients(clients):
