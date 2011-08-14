@@ -190,6 +190,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='lightwitch.org'/>
   <item jid='linuxlovers.at'/>
   <item jid='macjabber.de'/>
+  <item jid='masterion.com'/> <!-- No service discovery? -->
   <item jid='mayplaces.com'/>
   <item jid='meleeweb.net'/>
   <item jid='moo.im'/>
@@ -209,6 +210,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='paimport.de'/>
   <item jid='paranoia-interactive.de'/>
   <item jid='phcn.de'/>
+  <item jid='pidgin.su'/>
   <item jid='pluser.ru'/>
   <item jid='portal-on.ru'/>
   <item jid='programmer-art.org'/>
@@ -269,6 +271,7 @@ This list does not include the services listed at xmpp.org's list (maybe it shou
   <item jid='xmpp.ws'/>
   <item jid='xmppnet.de'/>
   <item jid='yeahnah.co.nz'/>
+  <item jid='zae-biz.com'/>
   <item jid='zlosnik.net'/>
   <item jid='zsim.de'/>
 </query>
