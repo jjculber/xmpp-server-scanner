@@ -851,11 +851,9 @@ def _discover_item(clients, component, server, discovered_items=None):
 def _get_connected_client(account):
 	client = Client(account['server'], debug=[])
 	if not client.connect():
-		jabber_accounts.remove(account)
 		logging.error("Can not connect to %s server, please check your configuration", account['server'])
 		raise IOError('Can not connect to server.')
 	if not client.auth(account['user'], account['password'], account['resource']):
-		jabber_accounts.remove(account)
 		logging.error("Can not auth as %s@%s, please check your configuration", account['user'], account['server'])
 		raise IOError('Can not auth with server.')
 	
@@ -919,7 +917,6 @@ def _keep_alive_clients(clients):
 			#client.send('<!--keepalive-->')
 			response = client.Dispatcher.SendAndWaitForResponse(
 			        Iq(to=client.Server, typ='get', queryNS='urn:xmpp:ping'))
-			raise ConnectionTimeout('lala')
 			client.Process(0.1)
 		except ConnectionTimeout:
 			logging.error( 'ConnectionTimeout exception on %s@%s/%s: Reconecting ' % (
@@ -928,7 +925,7 @@ def _keep_alive_clients(clients):
 			# Substitute the crashed client
 			
 			account = { 'user':client.User, 'server':client.Server,
-			            'password':client.User, 'resource':client.Resource }
+			            'password':client._Password, 'resource':client.Resource }
 			index = clients.index(client)
 			
 			try:
@@ -941,7 +938,7 @@ def _keep_alive_clients(clients):
 					clients[index] = client
 				except:
 					logging.error( "Exception while trying to log in on %s@%s",
-								account['user'], account['password'], exc_info=True )
+								account['user'], account['server'], exc_info=True )
 					del(clients[index])
 			#client.reconnectAndReauth()
 			#client.sendInitPresence()
