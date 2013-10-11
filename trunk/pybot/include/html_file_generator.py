@@ -289,9 +289,25 @@ def get_rows(servers, types):
 		
 		tooltip = u"<strong>%s</strong><ul>" % tooltip
 		
-		if 'about' in server and (server['about']['latitude'] is not None and server['about']['longitude'] is not None):
-			tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location</a></li>" % (
-			          tooltip, server['about']['latitude'], server['about']['longitude'], jid)
+		if 'about' in server:
+			if 'latitude' in server['about'] and 'longitude' in server['about']:
+				if 'city' in server['about'] and 'country' in server['about']:
+					tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location: %s, %s</a></li>" % (
+					          tooltip, server['about']['latitude'], server['about']['longitude'], jid,
+					          server['about']['city'], server['about']['country'])
+				elif 'country' in server['about']:
+					tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location: %s</a></li>" % (
+					          tooltip, server['about']['latitude'], server['about']['longitude'], jid,
+					          server['about']['country'])
+				else:
+					tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location</a></li>" % (
+					          tooltip, server['about']['latitude'], server['about']['longitude'], jid)
+			elif 'city' in server['about'] and 'country' in server['about']:
+				tooltip = u"%s<li><a href='http://maps.google.com/maps?q=%s,+%s+(%s)&iwloc=A&hl=en'>Location: %s, %s</a></li>" % (
+				          tooltip, server['about']['city'], server['about']['country'], jid,
+				          server['about']['city'], server['about']['country'])
+			elif 'country' in server['about']:
+				tooltip = u"%s<li>Location: %s</li>" % (tooltip, server['about']['country'])
 		
 		if 'ipv6_ready' in server and server['ipv6_ready']:
 			tooltip = u"%s<li>IPv6 Ready</li>" % tooltip
@@ -299,6 +315,7 @@ def get_rows(servers, types):
 		tooltip = u"%s</ul>" % tooltip
 		
 		if 'about' in server and 'description' in server['about']:
+			assert server['about']['description'] is not None
 			tooltip = u"%s<p>%s</p>" % (tooltip, html_escape(server['about']['description']))
 			
 		

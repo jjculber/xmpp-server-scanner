@@ -110,10 +110,38 @@ HTML_FILES_PREFIX   = cfg.get("Output configuration", "HTML_FILES_PREFIX")
 XML_FILENAME        = cfg.get("Output configuration", "XML_FILENAME")
 
 
+
+# TODO: Add compatibility with old config
+#
+# Configuration used to be:
+# [Server list]
+# USE_URL             = True
+# USE_FILE            = True
+# SERVERS_URL         = http://xmpp.org/services/services.xml
+# SERVERS_FILE        = serverlist.xml
+#
+# Now we add any setting wich starts with "SERVERS_URL"
+#
+#
+
 # Server list
-USE_URL             = cfg.getboolean("Server list", "USE_URL")
+USE_URLS            = cfg.getboolean("Server list", "USE_URL")
 USE_FILE            = cfg.getboolean("Server list", "USE_FILE")
-SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
+#SERVERS_URL         = cfg.get("Server list", "SERVERS_URL")
+
+# I add some sources by default, feel free to comment them
+SERVERS_URLS = set( (
+	"http://xmpp.org/services/services.xml",
+	"http://xmpp.org/services/services-full.xml",
+	"https://list.jabber.at/api/?format=services-full.xml"
+) )
+
+for option in cfg.options("Server list"):
+	if option.upper().startswith("SERVERS_URL"): 
+		SERVERS_URLS.add(cfg.get("Server list", option))
+
+
+
 #SERVERS_FILE       = "servers-fixed.xml"
 SERVERS_FILE        = cfg.get("Server list", "SERVERS_FILE")
 
@@ -152,34 +180,51 @@ if DO_DISCOVERY:
 			tree = ET.parse(f)
 			file_servers = [item.get('jid') for item in tree.getroot().getchildren()]
 			f.close()
-		if USE_URL and SERVERS_URL is not 'http://xmpp.org/services/services.xml':
-			# Since we will check xmpp.org's services-full.xml to get the aditional data,
-			# to check xmpp.org's services.xml would be redundant
-			f = urllib.urlopen(SERVERS_URL)
-			tree = ET.parse(f)
-			url_servers = [item.get('jid') for item in tree.findall("/item")]
-			f.close()
 		
-		f = urllib.urlopen('http://xmpp.org/services/services-full.xml')
-		tree = ET.parse(f)
-		f.close()
-		if USE_URL and SERVERS_URL is 'http://xmpp.org/services/services.xml':
-			url_servers = [item.get('jid') for item in tree.findall("/item")]
-		server_data = dict((item.get('jid'), dict((element.tag, element.text) for element in item.getchildren())) for item in tree.findall("/item"))
+		if USE_URLS:
+			server_data = dict()
+			for url in SERVERS_URLS:
+				f = urllib.urlopen(url)
+				tree = ET.parse(f)
+				f.close()
+				
+				#tmp_url_servers = [item.get('jid') for item in tree.findall("/item")]
+				
+				tmp_server_data = dict((item.get('jid'), dict((element.tag, element.text) for element in item.getchildren() if element.text is not None)) for item in tree.findall("./item"))
+				
+				for jid in tmp_server_data.iterkeys():
+					if jid in server_data:
+						# This server was already on the list, combine the data
+						for item in tmp_server_data[jid].iterkeys():
+							assert tmp_server_data[jid][item] is not None
+							
+							if item in server_data[jid]:
+								# The field (homepage, description... is in both lists
+								
+								if len(server_data[jid][item]) < len(tmp_server_data[jid][item]):
+									server_data[jid][item] = tmp_server_data[jid][item]
+							else:
+								server_data[jid][item] = tmp_server_data[jid][item]
+					else:
+						server_data[jid] = tmp_server_data[jid] #dict((k, v) for k, v in tmp_server_data[jid].iteritems() if v is not None)
+				
+			url_servers = list(server_data.iterkeys())
 		
 	except IOError:
 		logging.critical('The server list can not be loaded', exc_info=sys.exc_info())
 		raise
 	
-	if USE_URL and USE_FILE:
+	if USE_URLS and USE_FILE:
 		server_list = set(url_servers + file_servers)
 	elif USE_FILE:
 		server_list = set(file_servers)
-	elif USE_URL:
+	elif USE_URLS:
 		server_list = set(url_servers)
 	else:
 		logging.critical('You must configure the script to load the server list from the file, the url, or both')
 		raise Exception('You must configure the script to load the server list from the file, the url, or both')
+	
+	assert "description" not in server_list and "homepage" not in server_list
 	
 	#server_list=['jabberes.org', 'jab.undernet.cz', '12jabber.com', 'allchitchat.com', 'jabber.dk', 'amessage.be', 'jabber-hispano.org', 'example.net']
 	#server_list=['jabberes.org']
@@ -190,6 +235,9 @@ if DO_DISCOVERY:
 		raise Exception('The list of servers to check is empty')
 
 	servers = xmpp_discoverer.discover_servers(server_list)
+	#servers = {k : {'jid': k, 'available': False, 'available_services': {}, 'unavailable_services': {}} for k in server_list}
+	#from pprint import pprint
+	#pprint(servers)
 	
 	# Add extra data to the servers dictionary
 	for server in servers:
